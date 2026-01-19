@@ -38,17 +38,48 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     try {
-      // Mock login - remplacer par l'appel API réel
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock user data
-      const mockUser = {
-        id: '1',
-        email: data.email,
-        firstName: 'John',
-        lastName: 'Doe',
-        role: 'STUDENT' as const,
-      };
+      // Mock users selon l'email
+      let mockUser;
+      if (data.email === 'etudiant@campus.fr') {
+        mockUser = {
+          id: '1',
+          email: data.email,
+          firstName: 'Marie',
+          lastName: 'Dupont',
+          role: 'STUDENT' as const,
+          createdAt: new Date().toISOString(),
+        };
+      } else if (data.email === 'prof@campus.fr') {
+        mockUser = {
+          id: '2',
+          email: data.email,
+          firstName: 'Prof. Jean',
+          lastName: 'Martin',
+          role: 'TEACHER' as const,
+          createdAt: new Date().toISOString(),
+        };
+      } else if (data.email === 'admin@campus.fr') {
+        mockUser = {
+          id: '3',
+          email: data.email,
+          firstName: 'Admin',
+          lastName: 'Système',
+          role: 'ADMIN' as const,
+          createdAt: new Date().toISOString(),
+        };
+      } else {
+        // Utilisateur par défaut
+        mockUser = {
+          id: '1',
+          email: data.email,
+          firstName: 'John',
+          lastName: 'Doe',
+          role: 'STUDENT' as const,
+          createdAt: new Date().toISOString(),
+        };
+      }
       
       login(mockUser, 'mock-jwt-token');
       router.push(ROUTES.DASHBOARD);
@@ -145,7 +176,7 @@ export default function LoginPage() {
 
                 <Button
                   type="submit"
-                  className="w-full bg-academic-600 hover:bg-academic-700 text-white font-medium py-3 px-4 rounded-md transition-colors cursor-pointer"
+                  className="w-full bg-black hover:bg-gray-800 text-white"
                   disabled={isLoading}
                   size="lg"
                 >

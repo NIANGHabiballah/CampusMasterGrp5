@@ -1,15 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { USER_ROLES } from '@/lib/constants';
-
-export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  role: keyof typeof USER_ROLES;
-  avatar?: string;
-}
+import { User } from '@/types';
 
 interface AuthState {
   user: User | null;

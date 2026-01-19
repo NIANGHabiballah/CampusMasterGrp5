@@ -4,9 +4,9 @@ export const APP_DESCRIPTION = "Plateforme pédagogique avancée pour étudiants
 
 // Rôles utilisateurs
 export const USER_ROLES = {
-  STUDENT: 'student',
-  TEACHER: 'teacher',
-  ADMIN: 'admin'
+  STUDENT: 'STUDENT',
+  TEACHER: 'TEACHER',
+  ADMIN: 'ADMIN'
 } as const;
 
 // Routes de l'application

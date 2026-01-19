@@ -63,6 +63,7 @@ export default function RegisterPage() {
         firstName: data.firstName,
         lastName: data.lastName,
         role: data.role as keyof typeof USER_ROLES,
+        createdAt: new Date().toISOString(),
       };
       
       login(newUser, 'mock-jwt-token');
