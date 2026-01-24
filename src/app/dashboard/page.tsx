@@ -1,1 +1,521 @@
-'use client';\n\nimport { useState, useEffect } from 'react';\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';\nimport { Button } from '@/components/ui/button';\nimport { Badge } from '@/components/ui/badge';\nimport { Progress } from '@/components/ui/progress';\nimport { \n  BarChart, \n  Bar, \n  XAxis, \n  YAxis, \n  CartesianGrid, \n  Tooltip, \n  ResponsiveContainer,\n  LineChart,\n  Line,\n  PieChart,\n  Pie,\n  Cell,\n  Area,\n  AreaChart\n} from 'recharts';\nimport { \n  Users, \n  BookOpen, \n  FileText, \n  TrendingUp, \n  Calendar, \n  Clock, \n  Award, \n  Activity,\n  Download,\n  MessageSquare,\n  CheckCircle,\n  AlertCircle,\n  Star\n} from 'lucide-react';\nimport { useAuthStore } from '@/store/auth';\nimport { useDashboardStore } from '@/store/dashboard';\nimport { format } from 'date-fns';\nimport { fr } from 'date-fns/locale';\n\nconst COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];\n\nexport default function DashboardPage() {\n  const { user } = useAuthStore();\n  const { \n    stats, \n    gradeDistribution, \n    activityData, \n    coursePerformance, \n    isLoading, \n    fetchDashboardData, \n    fetchActivityData, \n    fetchCoursePerformance \n  } = useDashboardStore();\n  \n  const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('7d');\n\n  useEffect(() => {\n    fetchDashboardData();\n    fetchActivityData(selectedPeriod);\n    fetchCoursePerformance();\n  }, [fetchDashboardData, fetchActivityData, fetchCoursePerformance, selectedPeriod]);\n\n  const handlePeriodChange = (period: '7d' | '30d' | '90d') => {\n    setSelectedPeriod(period);\n    fetchActivityData(period);\n  };\n\n  // Student Dashboard\n  const renderStudentDashboard = () => (\n    <div className=\"space-y-6\">\n      {/* Quick Stats */}\n      <div className=\"grid gap-4 md:grid-cols-2 lg:grid-cols-4\">\n        <Card>\n          <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">\n            <CardTitle className=\"text-sm font-medium\">Cours suivis</CardTitle>\n            <BookOpen className=\"h-4 w-4 text-muted-foreground\" />\n          </CardHeader>\n          <CardContent>\n            <div className=\"text-2xl font-bold\">4</div>\n            <p className=\"text-xs text-muted-foreground\">Ce semestre</p>\n          </CardContent>\n        </Card>\n        \n        <Card>\n          <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">\n            <CardTitle className=\"text-sm font-medium\">Devoirs à rendre</CardTitle>\n            <FileText className=\"h-4 w-4 text-muted-foreground\" />\n          </CardHeader>\n          <CardContent>\n            <div className=\"text-2xl font-bold\">3</div>\n            <p className=\"text-xs text-muted-foreground\">Cette semaine</p>\n          </CardContent>\n        </Card>\n        \n        <Card>\n          <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">\n            <CardTitle className=\"text-sm font-medium\">Moyenne générale</CardTitle>\n            <Award className=\"h-4 w-4 text-muted-foreground\" />\n          </CardHeader>\n          <CardContent>\n            <div className=\"text-2xl font-bold\">15.2/20</div>\n            <p className=\"text-xs text-muted-foreground\">+0.5 ce mois</p>\n          </CardContent>\n        </Card>\n        \n        <Card>\n          <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">\n            <CardTitle className=\"text-sm font-medium\">Taux de réussite</CardTitle>\n            <TrendingUp className=\"h-4 w-4 text-muted-foreground\" />\n          </CardHeader>\n          <CardContent>\n            <div className=\"text-2xl font-bold\">92%</div>\n            <p className=\"text-xs text-muted-foreground\">Devoirs rendus</p>\n          </CardContent>\n        </Card>\n      </div>\n\n      {/* Charts */}\n      <div className=\"grid gap-6 md:grid-cols-2\">\n        <Card>\n          <CardHeader>\n            <CardTitle>Évolution des notes</CardTitle>\n            <CardDescription>Vos performances au fil du temps</CardDescription>\n          </CardHeader>\n          <CardContent>\n            <ResponsiveContainer width=\"100%\" height={300}>\n              <LineChart data={[\n                { name: 'Jan', note: 14.5 },\n                { name: 'Fév', note: 15.2 },\n                { name: 'Mar', note: 14.8 },\n                { name: 'Avr', note: 16.1 },\n                { name: 'Mai', note: 15.7 }\n              ]}>\n                <CartesianGrid strokeDasharray=\"3 3\" />\n                <XAxis dataKey=\"name\" />\n                <YAxis domain={[0, 20]} />\n                <Tooltip />\n                <Line type=\"monotone\" dataKey=\"note\" stroke=\"#3B82F6\" strokeWidth={2} />\n              </LineChart>\n            </ResponsiveContainer>\n          </CardContent>\n        </Card>\n        \n        <Card>\n          <CardHeader>\n            <CardTitle>Répartition par matière</CardTitle>\n            <CardDescription>Vos notes par cours</CardDescription>\n          </CardHeader>\n          <CardContent>\n            <ResponsiveContainer width=\"100%\" height={300}>\n              <BarChart data={[\n                { name: 'React', note: 16.5 },\n                { name: 'Node.js', note: 14.2 },\n                { name: 'BDD', note: 15.8 },\n                { name: 'Architecture', note: 13.9 }\n              ]}>\n                <CartesianGrid strokeDasharray=\"3 3\" />\n                <XAxis dataKey=\"name\" />\n                <YAxis domain={[0, 20]} />\n                <Tooltip />\n                <Bar dataKey=\"note\" fill=\"#10B981\" />\n              </BarChart>\n            </ResponsiveContainer>\n          </CardContent>\n        </Card>\n      </div>\n\n      {/* Recent Activity */}\n      <Card>\n        <CardHeader>\n          <CardTitle>Activité récente</CardTitle>\n        </CardHeader>\n        <CardContent>\n          <div className=\"space-y-4\">\n            <div className=\"flex items-center space-x-4\">\n              <div className=\"w-2 h-2 bg-green-500 rounded-full\"></div>\n              <div className=\"flex-1\">\n                <p className=\"text-sm font-medium\">Devoir \"API REST\" noté</p>\n                <p className=\"text-xs text-gray-500\">Il y a 2 heures • Note: 18/20</p>\n              </div>\n              <Badge variant=\"secondary\">Nouveau</Badge>\n            </div>\n            <div className=\"flex items-center space-x-4\">\n              <div className=\"w-2 h-2 bg-blue-500 rounded-full\"></div>\n              <div className=\"flex-1\">\n                <p className=\"text-sm font-medium\">Nouveau cours \"Architecture Microservices\"</p>\n                <p className=\"text-xs text-gray-500\">Hier • Prof. Martin</p>\n              </div>\n            </div>\n            <div className=\"flex items-center space-x-4\">\n              <div className=\"w-2 h-2 bg-orange-500 rounded-full\"></div>\n              <div className=\"flex-1\">\n                <p className=\"text-sm font-medium\">Rappel: Devoir \"Base de données\" à rendre</p>\n                <p className=\"text-xs text-gray-500\">Dans 2 jours</p>\n              </div>\n              <Badge variant=\"outline\">Urgent</Badge>\n            </div>\n          </div>\n        </CardContent>\n      </Card>\n    </div>\n  );\n\n  // Teacher Dashboard\n  const renderTeacherDashboard = () => (\n    <div className=\"space-y-6\">\n      {/* Quick Stats */}\n      <div className=\"grid gap-4 md:grid-cols-2 lg:grid-cols-4\">\n        <Card>\n          <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">\n            <CardTitle className=\"text-sm font-medium\">Mes cours</CardTitle>\n            <BookOpen className=\"h-4 w-4 text-muted-foreground\" />\n          </CardHeader>\n          <CardContent>\n            <div className=\"text-2xl font-bold\">3</div>\n            <p className=\"text-xs text-muted-foreground\">Ce semestre</p>\n          </CardContent>\n        </Card>\n        \n        <Card>\n          <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">\n            <CardTitle className=\"text-sm font-medium\">Étudiants</CardTitle>\n            <Users className=\"h-4 w-4 text-muted-foreground\" />\n          </CardHeader>\n          <CardContent>\n            <div className=\"text-2xl font-bold\">75</div>\n            <p className=\"text-xs text-muted-foreground\">Total inscrit</p>\n          </CardContent>\n        </Card>\n        \n        <Card>\n          <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">\n            <CardTitle className=\"text-sm font-medium\">À corriger</CardTitle>\n            <FileText className=\"h-4 w-4 text-muted-foreground\" />\n          </CardHeader>\n          <CardContent>\n            <div className=\"text-2xl font-bold\">12</div>\n            <p className=\"text-xs text-muted-foreground\">Devoirs en attente</p>\n          </CardContent>\n        </Card>\n        \n        <Card>\n          <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">\n            <CardTitle className=\"text-sm font-medium\">Moyenne classe</CardTitle>\n            <TrendingUp className=\"h-4 w-4 text-muted-foreground\" />\n          </CardHeader>\n          <CardContent>\n            <div className=\"text-2xl font-bold\">14.2/20</div>\n            <p className=\"text-xs text-muted-foreground\">Tous cours</p>\n          </CardContent>\n        </Card>\n      </div>\n\n      {/* Performance Charts */}\n      <div className=\"grid gap-6 md:grid-cols-2\">\n        <Card>\n          <CardHeader>\n            <CardTitle>Performance par cours</CardTitle>\n            <CardDescription>Moyenne des étudiants</CardDescription>\n          </CardHeader>\n          <CardContent>\n            <ResponsiveContainer width=\"100%\" height={300}>\n              <BarChart data={coursePerformance}>\n                <CartesianGrid strokeDasharray=\"3 3\" />\n                <XAxis dataKey=\"courseName\" />\n                <YAxis domain={[0, 20]} />\n                <Tooltip />\n                <Bar dataKey=\"averageGrade\" fill=\"#3B82F6\" />\n              </BarChart>\n            </ResponsiveContainer>\n          </CardContent>\n        </Card>\n        \n        <Card>\n          <CardHeader>\n            <CardTitle>Taux de soumission</CardTitle>\n            <CardDescription>Pourcentage de devoirs rendus</CardDescription>\n          </CardHeader>\n          <CardContent>\n            <ResponsiveContainer width=\"100%\" height={300}>\n              <BarChart data={coursePerformance}>\n                <CartesianGrid strokeDasharray=\"3 3\" />\n                <XAxis dataKey=\"courseName\" />\n                <YAxis domain={[0, 100]} />\n                <Tooltip />\n                <Bar dataKey=\"submissionRate\" fill=\"#10B981\" />\n              </BarChart>\n            </ResponsiveContainer>\n          </CardContent>\n        </Card>\n      </div>\n    </div>\n  );\n\n  // Admin Dashboard\n  const renderAdminDashboard = () => (\n    <div className=\"space-y-6\">\n      {/* Global Stats */}\n      <div className=\"grid gap-4 md:grid-cols-2 lg:grid-cols-4\">\n        <Card>\n          <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">\n            <CardTitle className=\"text-sm font-medium\">Étudiants actifs</CardTitle>\n            <Users className=\"h-4 w-4 text-muted-foreground\" />\n          </CardHeader>\n          <CardContent>\n            <div className=\"text-2xl font-bold\">{stats.totalStudents}</div>\n            <p className=\"text-xs text-muted-foreground\">+12 ce mois</p>\n          </CardContent>\n        </Card>\n        \n        <Card>\n          <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">\n            <CardTitle className=\"text-sm font-medium\">Cours total</CardTitle>\n            <BookOpen className=\"h-4 w-4 text-muted-foreground\" />\n          </CardHeader>\n          <CardContent>\n            <div className=\"text-2xl font-bold\">{stats.totalCourses}</div>\n            <p className=\"text-xs text-muted-foreground\">Ce semestre</p>\n          </CardContent>\n        </Card>\n        \n        <Card>\n          <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">\n            <CardTitle className=\"text-sm font-medium\">Devoirs créés</CardTitle>\n            <FileText className=\"h-4 w-4 text-muted-foreground\" />\n          </CardHeader>\n          <CardContent>\n            <div className=\"text-2xl font-bold\">{stats.totalAssignments}</div>\n            <p className=\"text-xs text-muted-foreground\">Total plateforme</p>\n          </CardContent>\n        </Card>\n        \n        <Card>\n          <CardHeader className=\"flex flex-row items-center justify-between space-y-0 pb-2\">\n            <CardTitle className=\"text-sm font-medium\">Taux de réussite</CardTitle>\n            <TrendingUp className=\"h-4 w-4 text-muted-foreground\" />\n          </CardHeader>\n          <CardContent>\n            <div className=\"text-2xl font-bold\">{stats.submissionRate}%</div>\n            <p className=\"text-xs text-muted-foreground\">Soumissions</p>\n          </CardContent>\n        </Card>\n      </div>\n\n      {/* Analytics */}\n      <Tabs defaultValue=\"activity\" className=\"space-y-4\">\n        <div className=\"flex justify-between items-center\">\n          <TabsList>\n            <TabsTrigger value=\"activity\">Activité</TabsTrigger>\n            <TabsTrigger value=\"grades\">Notes</TabsTrigger>\n            <TabsTrigger value=\"performance\">Performance</TabsTrigger>\n          </TabsList>\n          \n          <div className=\"flex space-x-2\">\n            <Button \n              variant={selectedPeriod === '7d' ? 'default' : 'outline'} \n              size=\"sm\"\n              onClick={() => handlePeriodChange('7d')}\n            >\n              7j\n            </Button>\n            <Button \n              variant={selectedPeriod === '30d' ? 'default' : 'outline'} \n              size=\"sm\"\n              onClick={() => handlePeriodChange('30d')}\n            >\n              30j\n            </Button>\n            <Button \n              variant={selectedPeriod === '90d' ? 'default' : 'outline'} \n              size=\"sm\"\n              onClick={() => handlePeriodChange('90d')}\n            >\n              90j\n            </Button>\n          </div>\n        </div>\n        \n        <TabsContent value=\"activity\" className=\"space-y-4\">\n          <Card>\n            <CardHeader>\n              <CardTitle>Activité de la plateforme</CardTitle>\n              <CardDescription>Connexions, soumissions et téléchargements</CardDescription>\n            </CardHeader>\n            <CardContent>\n              <ResponsiveContainer width=\"100%\" height={400}>\n                <AreaChart data={activityData}>\n                  <CartesianGrid strokeDasharray=\"3 3\" />\n                  <XAxis dataKey=\"date\" />\n                  <YAxis />\n                  <Tooltip />\n                  <Area type=\"monotone\" dataKey=\"logins\" stackId=\"1\" stroke=\"#3B82F6\" fill=\"#3B82F6\" />\n                  <Area type=\"monotone\" dataKey=\"submissions\" stackId=\"1\" stroke=\"#10B981\" fill=\"#10B981\" />\n                  <Area type=\"monotone\" dataKey=\"downloads\" stackId=\"1\" stroke=\"#F59E0B\" fill=\"#F59E0B\" />\n                </AreaChart>\n              </ResponsiveContainer>\n            </CardContent>\n          </Card>\n        </TabsContent>\n        \n        <TabsContent value=\"grades\" className=\"space-y-4\">\n          <div className=\"grid gap-6 md:grid-cols-2\">\n            <Card>\n              <CardHeader>\n                <CardTitle>Distribution des notes</CardTitle>\n                <CardDescription>Répartition des notes sur la plateforme</CardDescription>\n              </CardHeader>\n              <CardContent>\n                <ResponsiveContainer width=\"100%\" height={300}>\n                  <BarChart data={gradeDistribution}>\n                    <CartesianGrid strokeDasharray=\"3 3\" />\n                    <XAxis dataKey=\"range\" />\n                    <YAxis />\n                    <Tooltip />\n                    <Bar dataKey=\"count\" fill=\"#3B82F6\" />\n                  </BarChart>\n                </ResponsiveContainer>\n              </CardContent>\n            </Card>\n            \n            <Card>\n              <CardHeader>\n                <CardTitle>Répartition en pourcentage</CardTitle>\n                <CardDescription>Pourcentage par tranche de notes</CardDescription>\n              </CardHeader>\n              <CardContent>\n                <ResponsiveContainer width=\"100%\" height={300}>\n                  <PieChart>\n                    <Pie\n                      data={gradeDistribution}\n                      cx=\"50%\"\n                      cy=\"50%\"\n                      labelLine={false}\n                      label={({ range, percentage }) => `${range}: ${percentage}%`}\n                      outerRadius={80}\n                      fill=\"#8884d8\"\n                      dataKey=\"percentage\"\n                    >\n                      {gradeDistribution.map((entry, index) => (\n                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />\n                      ))}\n                    </Pie>\n                    <Tooltip />\n                  </PieChart>\n                </ResponsiveContainer>\n              </CardContent>\n            </Card>\n          </div>\n        </TabsContent>\n        \n        <TabsContent value=\"performance\" className=\"space-y-4\">\n          <Card>\n            <CardHeader>\n              <CardTitle>Performance par cours</CardTitle>\n              <CardDescription>Analyse détaillée des cours</CardDescription>\n            </CardHeader>\n            <CardContent>\n              <div className=\"space-y-4\">\n                {coursePerformance.map((course, index) => (\n                  <div key={course.courseId} className=\"flex items-center justify-between p-4 border rounded-lg\">\n                    <div>\n                      <h4 className=\"font-medium\">{course.courseName}</h4>\n                      <p className=\"text-sm text-gray-500\">{course.studentCount} étudiants</p>\n                    </div>\n                    <div className=\"text-right space-y-1\">\n                      <div className=\"flex items-center space-x-2\">\n                        <span className=\"text-sm\">Moyenne:</span>\n                        <Badge variant=\"secondary\">{course.averageGrade}/20</Badge>\n                      </div>\n                      <div className=\"flex items-center space-x-2\">\n                        <span className=\"text-sm\">Soumissions:</span>\n                        <Badge variant=\"outline\">{course.submissionRate}%</Badge>\n                      </div>\n                    </div>\n                  </div>\n                ))}\n              </div>\n            </CardContent>\n          </Card>\n        </TabsContent>\n      </Tabs>\n    </div>\n  );\n\n  if (isLoading) {\n    return (\n      <div className=\"flex items-center justify-center min-h-screen\">\n        <div className=\"text-center\">\n          <div className=\"animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4\"></div>\n          <p>Chargement du tableau de bord...</p>\n        </div>\n      </div>\n    );\n  }\n\n  return (\n    <div className=\"container mx-auto p-6\">\n      {/* Header */}\n      <div className=\"mb-6\">\n        <h1 className=\"text-3xl font-bold text-gray-900\">\n          Bonjour, {user?.firstName} {user?.lastName} 👋\n        </h1>\n        <p className=\"text-gray-600 mt-1\">\n          {user?.role === 'STUDENT' && 'Voici un aperçu de votre progression académique'}\n          {user?.role === 'TEACHER' && 'Gérez vos cours et suivez vos étudiants'}\n          {user?.role === 'ADMIN' && 'Tableau de bord administrateur de la plateforme'}\n        </p>\n      </div>\n\n      {/* Role-based Dashboard */}\n      {user?.role === 'STUDENT' && renderStudentDashboard()}\n      {user?.role === 'TEACHER' && renderTeacherDashboard()}\n      {user?.role === 'ADMIN' && renderAdminDashboard()}\n    </div>\n  );\n}"
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  Area,
+  AreaChart
+} from 'recharts';
+import { 
+  Users, 
+  BookOpen, 
+  FileText, 
+  TrendingUp, 
+  Calendar, 
+  Clock, 
+  Award, 
+  Activity,
+  Download,
+  MessageSquare,
+  CheckCircle,
+  AlertCircle,
+  Star
+} from 'lucide-react';
+import { useAuthStore } from '@/store/auth';
+import { useDashboardStore } from '@/store/dashboard';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
+
+export default function DashboardPage() {
+  const { user } = useAuthStore();
+  const { 
+    stats, 
+    gradeDistribution, 
+    activityData, 
+    coursePerformance, 
+    isLoading, 
+    fetchDashboardData, 
+    fetchActivityData, 
+    fetchCoursePerformance 
+  } = useDashboardStore();
+  
+  const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('7d');
+
+  useEffect(() => {
+    fetchDashboardData();
+    fetchActivityData(selectedPeriod);
+    fetchCoursePerformance();
+  }, [fetchDashboardData, fetchActivityData, fetchCoursePerformance, selectedPeriod]);
+
+  const handlePeriodChange = (period: '7d' | '30d' | '90d') => {
+    setSelectedPeriod(period);
+    fetchActivityData(period);
+  };
+
+  // Student Dashboard
+  const renderStudentDashboard = () => (
+    <div className="space-y-6">
+      {/* Quick Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cours suivis</CardTitle>
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">4</div>
+            <p className="text-xs text-muted-foreground">Ce semestre</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Devoirs à rendre</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">3</div>
+            <p className="text-xs text-muted-foreground">Cette semaine</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Moyenne générale</CardTitle>
+            <Award className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">15.2/20</div>
+            <p className="text-xs text-muted-foreground">+0.5 ce mois</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taux de réussite</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">92%</div>
+            <p className="text-xs text-muted-foreground">Devoirs rendus</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Évolution des notes</CardTitle>
+            <CardDescription>Vos performances au fil du temps</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={[
+                { name: 'Jan', note: 14.5 },
+                { name: 'Fév', note: 15.2 },
+                { name: 'Mar', note: 14.8 },
+                { name: 'Avr', note: 16.1 },
+                { name: 'Mai', note: 15.7 }
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis domain={[0, 20]} />
+                <Tooltip />
+                <Line type="monotone" dataKey="note" stroke="#3B82F6" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Répartition par matière</CardTitle>
+            <CardDescription>Vos notes par cours</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={[
+                { name: 'React', note: 16.5 },
+                { name: 'Node.js', note: 14.2 },
+                { name: 'BDD', note: 15.8 },
+                { name: 'Architecture', note: 13.9 }
+              ]}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis domain={[0, 20]} />
+                <Tooltip />
+                <Bar dataKey="note" fill="#10B981" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Activité récente</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Devoir "API REST" noté</p>
+                <p className="text-xs text-gray-500">Il y a 2 heures • Note: 18/20</p>
+              </div>
+              <Badge variant="secondary">Nouveau</Badge>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Nouveau cours "Architecture Microservices"</p>
+                <p className="text-xs text-gray-500">Hier • Prof. Martin</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Rappel: Devoir "Base de données" à rendre</p>
+                <p className="text-xs text-gray-500">Dans 2 jours</p>
+              </div>
+              <Badge variant="outline">Urgent</Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
+  // Teacher Dashboard
+  const renderTeacherDashboard = () => (
+    <div className="space-y-6">
+      {/* Quick Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Mes cours</CardTitle>
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">3</div>
+            <p className="text-xs text-muted-foreground">Ce semestre</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Étudiants</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">75</div>
+            <p className="text-xs text-muted-foreground">Total inscrit</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">À corriger</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">12</div>
+            <p className="text-xs text-muted-foreground">Devoirs en attente</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Moyenne classe</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">14.2/20</div>
+            <p className="text-xs text-muted-foreground">Tous cours</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Performance Charts */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Performance par cours</CardTitle>
+            <CardDescription>Moyenne des étudiants</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={coursePerformance}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="courseName" />
+                <YAxis domain={[0, 20]} />
+                <Tooltip />
+                <Bar dataKey="averageGrade" fill="#3B82F6" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Taux de soumission</CardTitle>
+            <CardDescription>Pourcentage de devoirs rendus</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={coursePerformance}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="courseName" />
+                <YAxis domain={[0, 100]} />
+                <Tooltip />
+                <Bar dataKey="submissionRate" fill="#10B981" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+
+  // Admin Dashboard
+  const renderAdminDashboard = () => (
+    <div className="space-y-6">
+      {/* Global Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Étudiants actifs</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalStudents}</div>
+            <p className="text-xs text-muted-foreground">+12 ce mois</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Cours total</CardTitle>
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalCourses}</div>
+            <p className="text-xs text-muted-foreground">Ce semestre</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Devoirs créés</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalAssignments}</div>
+            <p className="text-xs text-muted-foreground">Total plateforme</p>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taux de réussite</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.submissionRate}%</div>
+            <p className="text-xs text-muted-foreground">Soumissions</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Analytics */}
+      <Tabs defaultValue="activity" className="space-y-4">
+        <div className="flex justify-between items-center">
+          <TabsList>
+            <TabsTrigger value="activity">Activité</TabsTrigger>
+            <TabsTrigger value="grades">Notes</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+          </TabsList>
+          
+          <div className="flex space-x-2">
+            <Button 
+              variant={selectedPeriod === '7d' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => handlePeriodChange('7d')}
+            >
+              7j
+            </Button>
+            <Button 
+              variant={selectedPeriod === '30d' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => handlePeriodChange('30d')}
+            >
+              30j
+            </Button>
+            <Button 
+              variant={selectedPeriod === '90d' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => handlePeriodChange('90d')}
+            >
+              90j
+            </Button>
+          </div>
+        </div>
+        
+        <TabsContent value="activity" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Activité de la plateforme</CardTitle>
+              <CardDescription>Connexions, soumissions et téléchargements</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={400}>
+                <AreaChart data={activityData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="logins" stackId="1" stroke="#3B82F6" fill="#3B82F6" />
+                  <Area type="monotone" dataKey="submissions" stackId="1" stroke="#10B981" fill="#10B981" />
+                  <Area type="monotone" dataKey="downloads" stackId="1" stroke="#F59E0B" fill="#F59E0B" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="grades" className="space-y-4">
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Distribution des notes</CardTitle>
+                <CardDescription>Répartition des notes sur la plateforme</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={gradeDistribution}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="range" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#3B82F6" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Répartition en pourcentage</CardTitle>
+                <CardDescription>Pourcentage par tranche de notes</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={gradeDistribution}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ range, percentage }) => `${range}: ${percentage}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="percentage"
+                    >
+                      {gradeDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+        
+        <TabsContent value="performance" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Performance par cours</CardTitle>
+              <CardDescription>Analyse détaillée des cours</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {coursePerformance.map((course, index) => (
+                  <div key={course.courseId} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h4 className="font-medium">{course.courseName}</h4>
+                      <p className="text-sm text-gray-500">{course.studentCount} étudiants</p>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm">Moyenne:</span>
+                        <Badge variant="secondary">{course.averageGrade}/20</Badge>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm">Soumissions:</span>
+                        <Badge variant="outline">{course.submissionRate}%</Badge>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>Chargement du tableau de bord...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">
+          Bonjour, {user?.firstName} {user?.lastName} 👋
+        </h1>
+        <p className="text-gray-600 mt-1">
+          {user?.role === 'STUDENT' && 'Voici un aperçu de votre progression académique'}
+          {user?.role === 'TEACHER' && 'Gérez vos cours et suivez vos étudiants'}
+          {user?.role === 'ADMIN' && 'Tableau de bord administrateur de la plateforme'}
+        </p>
+      </div>
+
+      {/* Role-based Dashboard */}
+      {user?.role === 'STUDENT' && renderStudentDashboard()}
+      {user?.role === 'TEACHER' && renderTeacherDashboard()}
+      {user?.role === 'ADMIN' && renderAdminDashboard()}
+    </div>
+  );
+}
