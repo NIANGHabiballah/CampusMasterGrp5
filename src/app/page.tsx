@@ -217,9 +217,9 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row items-center gap-6 text-gray-400">
               <span className="text-center">© 2024 CampusMaster. Plateforme pédagogique pour Master 2.</span>
               <div className="flex gap-6">
-                <Link href="#" className="hover:text-white transition-colors duration-300">Confidentialité</Link>
-                <Link href="#" className="hover:text-white transition-colors duration-300">Conditions</Link>
-                <Link href="#" className="hover:text-white transition-colors duration-300">Support</Link>
+                <Link href="/legal/privacy" className="hover:text-white transition-colors duration-300">Confidentialité</Link>
+                <Link href="/legal/terms" className="hover:text-white transition-colors duration-300">Conditions</Link>
+                <Link href="/support" className="hover:text-white transition-colors duration-300">Support</Link>
               </div>
             </div>
           </div>

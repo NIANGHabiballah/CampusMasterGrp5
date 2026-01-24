@@ -3,6 +3,10 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\Api\AssignmentController;
+use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,9 +41,18 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
     
-    // Placeholder routes for future implementation
-    Route::apiResource('courses', 'CourseController');
-    Route::apiResource('assignments', 'AssignmentController');
-    Route::apiResource('submissions', 'SubmissionController');
-    Route::apiResource('messages', 'MessageController');
+    // Courses
+    Route::apiResource('courses', CourseController::class);
+    
+    // Assignments
+    Route::apiResource('assignments', AssignmentController::class);
+    Route::post('assignments/{assignment}/submit', [AssignmentController::class, 'submit']);
+    
+    // Messages
+    Route::apiResource('messages', MessageController::class);
+    
+    // Users (Admin only)
+    Route::middleware('role:ADMIN')->group(function () {
+        Route::apiResource('users', UserController::class);
+    });
 });

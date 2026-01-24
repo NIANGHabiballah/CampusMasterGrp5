@@ -6,17 +6,17 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import { Bell, BookOpen, GraduationCap, Menu, MessageSquare, Settings, User, LogOut, FileText, BarChart3 } from 'lucide-react';
+import { Bell, BookOpen, GraduationCap, Menu, MessageSquare, Settings, User, LogOut, FileText, BarChart3, Users, Shield } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
-import { useNotifications } from '@/contexts/NotificationContext';
+import { useNotificationStore } from '@/store/notifications';
 import { ROUTES, USER_ROLES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuthStore();
-  const { unreadCount } = useNotifications();
+  const { unreadCount } = useNotificationStore();
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -26,12 +26,40 @@ export function Header() {
     router.push(ROUTES.LOGIN);
   };
 
-  const navigation = [
-    { name: 'Tableau de bord', href: ROUTES.DASHBOARD, icon: BarChart3 },
-    { name: 'Cours', href: ROUTES.COURSES, icon: BookOpen },
-    { name: 'Devoirs', href: ROUTES.ASSIGNMENTS, icon: FileText },
-    { name: 'Messages', href: ROUTES.MESSAGES, icon: MessageSquare },
-  ];
+  const getNavigationByRole = () => {
+    const baseNav = [
+      { name: 'Tableau de bord', href: ROUTES.DASHBOARD, icon: BarChart3 },
+      { name: 'Forums', href: '/forums', icon: MessageSquare },
+      { name: 'Messages', href: ROUTES.MESSAGES, icon: MessageSquare },
+    ];
+
+    switch (user?.role) {
+      case USER_ROLES.STUDENT:
+        return [
+          ...baseNav,
+          { name: 'Mes Cours', href: ROUTES.COURSES, icon: BookOpen },
+          { name: 'Mes Devoirs', href: ROUTES.ASSIGNMENTS, icon: FileText },
+        ];
+      case USER_ROLES.TEACHER:
+        return [
+          ...baseNav,
+          { name: 'Mes Cours', href: '/teacher/courses', icon: BookOpen },
+          { name: 'Devoirs', href: '/teacher/assignments', icon: FileText },
+          { name: 'Étudiants', href: '/teacher/students', icon: Users },
+        ];
+      case USER_ROLES.ADMIN:
+        return [
+          ...baseNav,
+          { name: 'Utilisateurs', href: '/admin/users', icon: Users },
+          { name: 'Cours', href: '/admin/courses', icon: BookOpen },
+          { name: 'Administration', href: ROUTES.ADMIN, icon: Shield },
+        ];
+      default:
+        return baseNav;
+    }
+  };
+
+  const navigation = getNavigationByRole();
 
   const isActiveRoute = (href: string) => {
     if (href === ROUTES.DASHBOARD) {
@@ -102,13 +130,15 @@ export function Header() {
           {/* Right Section */}
           <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-500">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </Badge>
-              )}
+            <Button variant="ghost" size="icon" className="relative" asChild>
+              <Link href={ROUTES.NOTIFICATIONS}>
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-500">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Badge>
+                )}
+              </Link>
             </Button>
 
             {/* User Menu */}
@@ -140,9 +170,11 @@ export function Header() {
                     Profil
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Paramètres
+                <DropdownMenuItem asChild>
+                  <Link href={ROUTES.SETTINGS} className="flex items-center">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Paramètres
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
@@ -160,6 +192,9 @@ export function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-80 p-0 bg-white">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Menu de navigation</SheetTitle>
+                </SheetHeader>
                 <div className="flex flex-col h-full bg-white">
                   {/* Mobile Header */}
                   <div className="flex items-center justify-between p-6 border-b bg-white">

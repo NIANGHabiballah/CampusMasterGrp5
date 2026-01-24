@@ -2,242 +2,147 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Upload, File, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, File, X, CheckCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface FileUploadProps {
-  onFilesSelected: (files: File[]) => void;
-  maxFiles?: number;
-  maxSize?: number; // in bytes
+  onUpload: (files: File[]) => Promise<void>;
   acceptedTypes?: string[];
+  maxSize?: number;
+  multiple?: boolean;
   className?: string;
 }
 
-interface UploadedFile {
-  file: File;
-  id: string;
-  progress: number;
-  status: 'uploading' | 'success' | 'error';
-  error?: string;
-}
-
-export function FileUpload({ 
-  onFilesSelected, 
-  maxFiles = 5, 
+export function FileUpload({
+  onUpload,
+  acceptedTypes = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.zip'],
   maxSize = 10 * 1024 * 1024, // 10MB
-  acceptedTypes = ['image/*', 'application/pdf', '.doc', '.docx', '.zip'],
+  multiple = false,
   className = ''
 }: FileUploadProps) {
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
-  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
-    // Handle rejected files
-    if (rejectedFiles.length > 0) {
-      console.error('Fichiers rejetés:', rejectedFiles);
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+
+    // Validate file size
+    const oversizedFiles = acceptedFiles.filter(file => file.size > maxSize);
+    if (oversizedFiles.length > 0) {
+      toast.error(`Fichier(s) trop volumineux. Taille max: ${maxSize / 1024 / 1024}MB`);
+      return;
     }
 
-    // Process accepted files
-    const newFiles = acceptedFiles.map(file => ({
-      file,
-      id: Math.random().toString(36).substr(2, 9),
-      progress: 0,
-      status: 'uploading' as const
-    }));
+    setUploading(true);
+    setUploadProgress(0);
 
-    setUploadedFiles(prev => [...prev, ...newFiles]);
+    try {
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 200);
 
-    // Simulate upload progress
-    newFiles.forEach(uploadFile => {
-      simulateUpload(uploadFile.id);
-    });
-
-    onFilesSelected(acceptedFiles);
-  }, [onFilesSelected]);
+      await onUpload(acceptedFiles);
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      setUploadedFiles(prev => [...prev, ...acceptedFiles]);
+      
+      toast.success(`${acceptedFiles.length} fichier(s) uploadé(s) avec succès`);
+      
+      setTimeout(() => {
+        setUploadProgress(0);
+        setUploading(false);
+      }, 1000);
+      
+    } catch (error) {
+      toast.error('Erreur lors de l\'upload');
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  }, [onUpload, maxSize]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    maxFiles,
-    maxSize,
-    accept: acceptedTypes.reduce((acc, type) => {
-      acc[type] = [];
-      return acc;
-    }, {} as Record<string, string[]>)
+    accept: acceptedTypes.reduce((acc, type) => ({ ...acc, [type]: [] }), {}),
+    multiple,
+    maxSize
   });
 
-  const simulateUpload = (fileId: string) => {
-    const interval = setInterval(() => {
-      setUploadedFiles(prev => 
-        prev.map(file => {
-          if (file.id === fileId) {
-            const newProgress = Math.min(file.progress + Math.random() * 30, 100);
-            const isComplete = newProgress >= 100;
-            
-            return {
-              ...file,
-              progress: newProgress,
-              status: isComplete ? 'success' : 'uploading'
-            };
-          }
-          return file;
-        })
-      );
-    }, 500);
-
-    // Stop simulation after 3 seconds
-    setTimeout(() => {
-      clearInterval(interval);
-      setUploadedFiles(prev => 
-        prev.map(file => 
-          file.id === fileId 
-            ? { ...file, progress: 100, status: 'success' }
-            : file
-        )
-      );
-    }, 3000);
-  };
-
-  const removeFile = (fileId: string) => {
-    setUploadedFiles(prev => prev.filter(file => file.id !== fileId));
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  const getFileIcon = (fileName: string) => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    switch (extension) {
-      case 'pdf':
-        return <File className="h-5 w-5 text-red-500" />;
-      case 'doc':
-      case 'docx':
-        return <File className="h-5 w-5 text-blue-500" />;
-      case 'zip':
-      case 'rar':
-        return <File className="h-5 w-5 text-green-500" />;
-      default:
-        return <File className="h-5 w-5 text-gray-500" />;
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'error':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return null;
-    }
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Drop Zone */}
-      <Card className="border-2 border-dashed border-gray-300 hover:border-academic-400 transition-colors">
-        <CardContent className="p-8">
-          <div
-            {...getRootProps()}
-            className={`text-center cursor-pointer ${
-              isDragActive ? 'text-academic-600' : 'text-gray-600'
-            }`}
-          >
-            <input {...getInputProps()} />
-            <Upload className={`h-12 w-12 mx-auto mb-4 ${
-              isDragActive ? 'text-academic-600' : 'text-gray-400'
-            }`} />
-            
-            {isDragActive ? (
-              <p className="text-lg font-medium">Déposez les fichiers ici...</p>
-            ) : (
-              <div>
-                <p className="text-lg font-medium mb-2">
-                  Glissez-déposez vos fichiers ici
-                </p>
-                <p className="text-sm text-gray-500 mb-4">
-                  ou cliquez pour sélectionner
-                </p>
-                <Button variant="outline" type="button">
-                  Choisir des fichiers
-                </Button>
-              </div>
-            )}
-            
-            <div className="mt-4 text-xs text-gray-500">
-              <p>Maximum {maxFiles} fichiers • Taille max: {formatFileSize(maxSize)}</p>
-              <p>Formats acceptés: PDF, DOC, DOCX, ZIP, Images</p>
-            </div>
+      <div
+        {...getRootProps()}
+        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+          isDragActive
+            ? 'border-academic-500 bg-academic-50'
+            : 'border-gray-300 hover:border-academic-400 hover:bg-gray-50'
+        }`}
+      >
+        <input {...getInputProps()} />
+        <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+        {isDragActive ? (
+          <p className="text-academic-600">Déposez les fichiers ici...</p>
+        ) : (
+          <div>
+            <p className="text-gray-600 mb-2">
+              Glissez-déposez vos fichiers ici, ou{' '}
+              <span className="text-academic-600 font-medium">cliquez pour parcourir</span>
+            </p>
+            <p className="text-xs text-gray-500">
+              Formats acceptés: {acceptedTypes.join(', ')} • Max {maxSize / 1024 / 1024}MB
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
-      {/* Uploaded Files List */}
+      {uploading && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span>Upload en cours...</span>
+            <span>{uploadProgress}%</span>
+          </div>
+          <Progress value={uploadProgress} />
+        </div>
+      )}
+
       {uploadedFiles.length > 0 && (
-        <Card>
-          <CardContent className="p-4">
-            <h4 className="font-medium text-gray-900 mb-4">
-              Fichiers ({uploadedFiles.length})
-            </h4>
-            <div className="space-y-3">
-              {uploadedFiles.map((uploadedFile) => (
-                <div
-                  key={uploadedFile.id}
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-                >
-                  {getFileIcon(uploadedFile.file.name)}
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {uploadedFile.file.name}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(uploadedFile.status)}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => removeFile(uploadedFile.id)}
-                          className="h-6 w-6 p-0 text-gray-400 hover:text-red-500"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>{formatFileSize(uploadedFile.file.size)}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {uploadedFile.status === 'uploading' && 'Envoi...'}
-                        {uploadedFile.status === 'success' && 'Terminé'}
-                        {uploadedFile.status === 'error' && 'Erreur'}
-                      </Badge>
-                    </div>
-                    
-                    {uploadedFile.status === 'uploading' && (
-                      <Progress 
-                        value={uploadedFile.progress} 
-                        className="h-1 mt-2"
-                      />
-                    )}
-                    
-                    {uploadedFile.error && (
-                      <p className="text-xs text-red-500 mt-1">
-                        {uploadedFile.error}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">Fichiers uploadés:</h4>
+          {uploadedFiles.map((file, index) => (
+            <div key={index} className="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+                <File className="h-4 w-4 text-gray-500" />
+                <span className="text-sm">{file.name}</span>
+                <span className="text-xs text-gray-500">
+                  ({(file.size / 1024).toFixed(1)} KB)
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => removeFile(index)}
+                className="h-6 w-6 p-0"
+              >
+                <X className="h-3 w-3" />
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          ))}
+        </div>
       )}
     </div>
   );

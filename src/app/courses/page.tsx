@@ -11,7 +11,9 @@ import { Header } from '@/components/layout/Header';
 import { BookOpen, Search, Filter, Users, Clock, Download, Play } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { ROUTES } from '@/lib/constants';
+import { CourseFilters } from '@/components/courses/CourseFilters';
 import { Course } from '@/types';
+import apiService from '@/services/api-service';
 
 export default function CoursesPage() {
   const { isAuthenticated, user } = useAuthStore();
@@ -26,7 +28,13 @@ export default function CoursesPage() {
       return;
     }
 
-    // Mock courses data
+    // Use API service with fallback to mock data
+    const loadCourses = async () => {
+      try {
+        const data = await apiService.courses.getAll();
+        setCourses(data);
+      } catch (error) {
+        // Fallback to mock data
     const mockCourses: Course[] = [
       {
         id: '1',
@@ -102,15 +110,37 @@ export default function CoursesPage() {
       }
     ];
 
-    setCourses(mockCourses);
+        setCourses(mockCourses);
+      }
+    };
+
+    loadCourses();
   }, [isAuthenticated, router]);
 
   const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.teacherName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSemester = selectedSemester === 'all' || course.semester === selectedSemester;
-    return matchesSearch && matchesSemester;
+    let matches = true;
+    
+    if (filters.search) {
+      matches = matches && (
+        course.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+        course.description.toLowerCase().includes(filters.search.toLowerCase()) ||
+        course.teacherName.toLowerCase().includes(filters.search.toLowerCase())
+      );
+    }
+    
+    if (filters.semester && filters.semester !== 'all') {
+      matches = matches && course.semester === filters.semester;
+    }
+    
+    if (filters.teacher) {
+      matches = matches && course.teacherName.includes(filters.teacher);
+    }
+    
+    if (filters.credits) {
+      matches = matches && course.credits.toString() === filters.credits;
+    }
+    
+    return matches;
   });
 
   const handleCourseClick = (courseId: string) => {
@@ -137,32 +167,7 @@ export default function CoursesPage() {
         </div>
 
         {/* Filters Section */}
-        <Card className="mb-8 border-0 shadow-sm">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Rechercher un cours, enseignant..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={selectedSemester} onValueChange={setSelectedSemester}>
-                <SelectTrigger className="w-full md:w-48">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Semestre" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les semestres</SelectItem>
-                  <SelectItem value="S1">Semestre 1</SelectItem>
-                  <SelectItem value="S2">Semestre 2</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
+        <CourseFilters onFiltersChange={setFilters} />
 
         {/* Courses Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">

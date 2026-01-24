@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, FileText, Clock, CheckCircle, AlertCircle, Download, Eye, MessageSquare } from 'lucide-react';
-import { toast } from 'sonner';
+import { SubmissionViewer } from '@/components/assignments/SubmissionViewer';
 
 const mockAssignments = [
   {
@@ -324,50 +324,20 @@ export default function TeacherAssignmentsPage() {
               <CardContent>
                 <div className="space-y-4">
                   {mockSubmissions.map((submission) => (
-                    <div key={submission.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <div>
-                            <h4 className="font-medium text-gray-900">{submission.studentName}</h4>
-                            <p className="text-sm text-gray-600">ID: {submission.studentId}</p>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            {getSubmissionStatusBadge(submission.status)}
-                            {submission.grade && (
-                              <Badge variant="outline">{submission.grade}/100</Badge>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
-                          <span className="flex items-center">
-                            <Clock className="h-4 w-4 mr-1" />
-                            {new Date(submission.submittedAt).toLocaleString('fr-FR')}
-                          </span>
-                          <span>{submission.files.length} fichier(s)</span>
-                        </div>
-                        
-                        {submission.feedback && (
-                          <p className="text-sm text-gray-600 mt-2 italic">"{submission.feedback}"</p>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center space-x-2 ml-4">
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4 mr-1" />
-                          Télécharger
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          <MessageSquare className="h-4 w-4 mr-1" />
-                          Commenter
-                        </Button>
-                        {submission.status === 'submitted' && (
-                          <Button size="sm">
-                            Noter
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                      <SubmissionViewer
+                        key={submission.id}
+                        submission={{
+                          ...submission,
+                          files: submission.files.map(fileName => ({
+                            id: `${submission.id}-${fileName}`,
+                            name: fileName,
+                            url: `/api/files/${fileName}`,
+                            size: Math.random() * 1000000,
+                            type: fileName.endsWith('.pdf') ? 'application/pdf' : 
+                                  fileName.endsWith('.zip') ? 'application/zip' : 'text/plain'
+                          }))
+                        }}
+                      />
                   ))}
                 </div>
               </CardContent>

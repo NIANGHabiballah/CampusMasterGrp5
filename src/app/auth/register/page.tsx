@@ -3,258 +3,276 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GraduationCap, Eye, EyeOff } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2, GraduationCap, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
-import { ROUTES, USER_ROLES } from '@/lib/constants';
-
-const registerSchema = z.object({
-  firstName: z.string().min(2, 'Le prénom doit contenir au moins 2 caractères'),
-  lastName: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
-  email: z.string().email('Email invalide'),
-  password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères'),
-  confirmPassword: z.string(),
-  role: z.enum(['STUDENT', 'TEACHER']),
-  studentId: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Les mots de passe ne correspondent pas",
-  path: ["confirmPassword"],
-});
-
-type RegisterForm = z.infer<typeof registerSchema>;
+import { toast } from 'sonner';
 
 export default function RegisterPage() {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'STUDENT' as const,
+    studentId: '',
+    department: ''
+  });
+  
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuthStore();
+  
+  const { register } = useAuthStore();
   const router = useRouter();
 
-  const form = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      role: 'STUDENT',
-      studentId: '',
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
 
-  const watchRole = form.watch('role');
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+      setError('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
 
-  const onSubmit = async (data: RegisterForm) => {
+    if (formData.password !== formData.confirmPassword) {
+      setError('Les mots de passe ne correspondent pas');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+
+    if (formData.role === 'STUDENT' && !formData.studentId) {
+      setError('Le numéro étudiant est obligatoire pour les étudiants');
+      return;
+    }
+
     setIsLoading(true);
+
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const newUser = {
-        id: Math.random().toString(36).substr(2, 9),
-        email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        role: data.role as keyof typeof USER_ROLES,
-        createdAt: new Date().toISOString(),
-      };
-      
-      login(newUser, 'mock-jwt-token');
-      router.push(ROUTES.DASHBOARD);
-    } catch (error) {
-      console.error('Erreur d\'inscription:', error);
+      const success = await register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        studentId: formData.studentId,
+        department: formData.department
+      });
+
+      if (success) {
+        toast.success('Inscription réussie ! Votre compte est en attente d\'approbation.');
+        router.push('/auth/login');
+      }
+    } catch (error: any) {
+      setError(error.message || 'Erreur lors de l\'inscription');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-academic-50 to-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <Link href={ROUTES.HOME} className="inline-flex items-center space-x-2">
-            <GraduationCap className="h-10 w-10 text-academic-600" />
-            <span className="text-2xl font-bold text-academic-900">CampusMaster</span>
-          </Link>
+          <div className="inline-flex items-center space-x-2">
+            <GraduationCap className="h-10 w-10 text-blue-600" />
+            <span className="text-2xl font-bold text-gray-900">CampusMaster</span>
+          </div>
         </div>
 
         <Card className="border-0 shadow-xl">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-academic-900">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold text-center">
               Créer un compte
             </CardTitle>
-            <CardDescription>
-              Rejoignez la plateforme pédagogique
+            <CardDescription className="text-center">
+              Rejoignez la plateforme pédagogique CampusMaster
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Prénom</FormLabel>
-                        <FormControl>
-                          <Input placeholder="John" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nom</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Doe" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">Prénom *</Label>
+                  <Input
+                    id="firstName"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                    placeholder="Votre prénom"
+                    disabled={isLoading}
+                    required
                   />
                 </div>
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="john.doe@exemple.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Rôle</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez votre rôle" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="STUDENT">Étudiant</SelectItem>
-                          <SelectItem value="TEACHER">Enseignant</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {watchRole === 'STUDENT' && (
-                  <FormField
-                    control={form.control}
-                    name="studentId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Numéro étudiant</FormLabel>
-                        <FormControl>
-                          <Input placeholder="20240001" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Nom *</Label>
+                  <Input
+                    id="lastName"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                    placeholder="Votre nom"
+                    disabled={isLoading}
+                    required
                   />
-                )}
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mot de passe</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="••••••••"
-                            {...field}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                            onClick={() => setShowPassword(!showPassword)}
-                          >
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirmer le mot de passe</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Input
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            placeholder="••••••••"
-                            {...field}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          >
-                            {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                          </Button>
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button
-                  type="submit"
-                  className="w-full bg-academic-600 hover:bg-academic-700"
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  placeholder="votre.email@campus.fr"
                   disabled={isLoading}
-                >
-                  {isLoading ? 'Création du compte...' : 'Créer mon compte'}
-                </Button>
-              </form>
-            </Form>
-
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="role">Rôle *</Label>
+                  <Select value={formData.role} onValueChange={(value: any) => setFormData({...formData, role: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="STUDENT">Étudiant</SelectItem>
+                      <SelectItem value="TEACHER">Enseignant</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="department">Département</Label>
+                  <Select value={formData.department} onValueChange={(value) => setFormData({...formData, department: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Informatique">Informatique</SelectItem>
+                      <SelectItem value="Mathématiques">Mathématiques</SelectItem>
+                      <SelectItem value="Physique">Physique</SelectItem>
+                      <SelectItem value="Économie">Économie</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {formData.role === 'STUDENT' && (
+                <div className="space-y-2">
+                  <Label htmlFor="studentId">Numéro étudiant *</Label>
+                  <Input
+                    id="studentId"
+                    value={formData.studentId}
+                    onChange={(e) => setFormData({...formData, studentId: e.target.value})}
+                    placeholder="M2-2024-XXX"
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password">Mot de passe *</Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={formData.password}
+                      onChange={(e) => setFormData({...formData, password: e.target.value})}
+                      placeholder="Minimum 6 caractères"
+                      disabled={isLoading}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirmer le mot de passe *</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                      placeholder="Répétez le mot de passe"
+                      disabled={isLoading}
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      disabled={isLoading}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Inscription...
+                  </>
+                ) : (
+                  'Créer mon compte'
+                )}
+              </Button>
+            </form>
+            
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Déjà un compte ?{' '}
-                <Link
-                  href={ROUTES.LOGIN}
-                  className="text-academic-600 hover:text-academic-700 font-medium hover:underline"
+                <Link 
+                  href="/auth/login" 
+                  className="text-blue-600 hover:underline font-medium"
                 >
                   Se connecter
                 </Link>
+              </p>
+            </div>
+            
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2">Information importante</h4>
+              <p className="text-sm text-blue-700">
+                Les comptes étudiants nécessitent une approbation par l'administration. 
+                Vous recevrez un email de confirmation une fois votre compte validé.
               </p>
             </div>
           </CardContent>

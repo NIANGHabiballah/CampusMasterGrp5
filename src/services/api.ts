@@ -22,7 +22,8 @@ class ApiService {
     const response = await fetch(url, config);
     
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
+      const error = await response.json().catch(() => ({ message: 'Network error' }));
+      throw new Error(error.message || `API Error: ${response.status}`);
     }
 
     return response.json();
@@ -39,8 +40,25 @@ class ApiService {
   async register(userData: any) {
     return this.request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify(userData)
+      body: JSON.stringify({
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        password: userData.password,
+        password_confirmation: userData.password,
+        role: userData.role || 'STUDENT'
+      })
     });
+  }
+
+  async logout() {
+    return this.request('/auth/logout', {
+      method: 'POST'
+    });
+  }
+
+  async getProfile() {
+    return this.request('/auth/profile');
   }
 
   // Courses endpoints
@@ -52,10 +70,24 @@ class ApiService {
     return this.request(`/courses/${id}`);
   }
 
+  async createCourse(courseData: any) {
+    return this.request('/courses', {
+      method: 'POST',
+      body: JSON.stringify(courseData)
+    });
+  }
+
   // Assignments endpoints
   async getAssignments(courseId?: string) {
     const endpoint = courseId ? `/assignments?course=${courseId}` : '/assignments';
     return this.request(endpoint);
+  }
+
+  async createAssignment(assignmentData: any) {
+    return this.request('/assignments', {
+      method: 'POST',
+      body: JSON.stringify(assignmentData)
+    });
   }
 
   async submitAssignment(assignmentId: string, formData: FormData) {
@@ -78,6 +110,31 @@ class ApiService {
     return this.request('/messages', {
       method: 'POST',
       body: JSON.stringify(messageData)
+    });
+  }
+
+  // Users endpoints (admin)
+  async getUsers() {
+    return this.request('/users');
+  }
+
+  async createUser(userData: any) {
+    return this.request('/users', {
+      method: 'POST',
+      body: JSON.stringify(userData)
+    });
+  }
+
+  async updateUser(userId: string, userData: any) {
+    return this.request(`/users/${userId}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData)
+    });
+  }
+
+  async deleteUser(userId: string) {
+    return this.request(`/users/${userId}`, {
+      method: 'DELETE'
     });
   }
 }
