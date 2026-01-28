@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, Mail, Phone, MapPin, Calendar, Edit, Save, Camera, Award, BookOpen, TrendingUp } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuthStore } from '@/store/auth';
 import { ROUTES, USER_ROLES } from '@/lib/constants';
 
@@ -63,9 +64,11 @@ export default function ProfilePage() {
         lastName: data.lastName,
         email: data.email,
       });
+      toast.success('Profil mis à jour avec succès !');
       setIsEditing(false);
     } catch (error) {
       console.error('Erreur de mise à jour:', error);
+      toast.error('Erreur lors de la mise à jour du profil');
     } finally {
       setIsLoading(false);
     }

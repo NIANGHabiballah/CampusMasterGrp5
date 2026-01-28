@@ -38,7 +38,7 @@ export function FilePreview({ file, isOpen, onClose }: FilePreviewProps) {
   };
 
   const canPreview = (type: string) => {
-    return type.startsWith('image/') || type.includes('pdf') || type.startsWith('text/');
+    return type.startsWith('image/') || type.startsWith('text/');
   };
 
   const renderPreview = () => {
@@ -49,18 +49,6 @@ export function FilePreview({ file, isOpen, onClose }: FilePreviewProps) {
             src={file.url} 
             alt={file.name}
             className="max-w-full max-h-96 object-contain rounded-lg"
-          />
-        </div>
-      );
-    }
-
-    if (file.type.includes('pdf')) {
-      return (
-        <div className="h-96 w-full">
-          <iframe 
-            src={file.url}
-            className="w-full h-full border rounded-lg"
-            title={file.name}
           />
         </div>
       );
@@ -97,8 +85,8 @@ export function FilePreview({ file, isOpen, onClose }: FilePreviewProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden p-0" showCloseButton={false}>
+        <DialogHeader className="p-6 pb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               {getFileIcon(file.type)}
@@ -131,7 +119,7 @@ export function FilePreview({ file, isOpen, onClose }: FilePreviewProps) {
           </div>
         </DialogHeader>
 
-        <div className="overflow-auto max-h-[calc(90vh-120px)]">
+        <div className="overflow-auto max-h-[calc(85vh-120px)] p-6">
           {canPreview(file.type) ? (
             renderPreview()
           ) : (

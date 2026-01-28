@@ -27,6 +27,23 @@ interface SubmissionViewerProps {
 export function SubmissionViewer({ submission }: SubmissionViewerProps) {
   const [previewFile, setPreviewFile] = useState<any>(null);
 
+  const handleDownload = async (file: any) => {
+    try {
+      const response = await fetch(file.url);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+    }
+  };
+
   const getFileIcon = (type: string) => {
     if (type.startsWith('image/')) return <Image className="h-4 w-4 text-blue-500" />;
     if (type.startsWith('video/')) return <Video className="h-4 w-4 text-purple-500" />;
@@ -64,7 +81,11 @@ export function SubmissionViewer({ submission }: SubmissionViewerProps) {
                     <Eye className="h-4 w-4 mr-1" />
                     Aperçu
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleDownload(file)}
+                  >
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>

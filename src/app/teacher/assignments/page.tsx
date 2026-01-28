@@ -87,6 +87,10 @@ export default function TeacherAssignmentsPage() {
   const [selectedTab, setSelectedTab] = useState('assignments');
   const [selectedAssignment, setSelectedAssignment] = useState(mockAssignments[0]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [viewingAssignment, setViewingAssignment] = useState<any>(null);
+  const [editingAssignment, setEditingAssignment] = useState<any>(null);
   const [newAssignment, setNewAssignment] = useState({
     title: '',
     course: '',
@@ -121,6 +125,25 @@ export default function TeacherAssignmentsPage() {
     }
   };
 
+  const handleViewAssignment = (assignment: any) => {
+    setViewingAssignment(assignment);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleEditAssignment = (assignment: any) => {
+    setEditingAssignment({
+      ...assignment,
+      dueDate: assignment.dueDate + 'T23:59'
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    toast.success('Devoir modifié avec succès');
+    setIsEditDialogOpen(false);
+    setEditingAssignment(null);
+  };
+
   const handleCreateAssignment = () => {
     toast.success('Devoir créé avec succès');
     setIsCreateDialogOpen(false);
@@ -147,19 +170,19 @@ export default function TeacherAssignmentsPage() {
           
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 <Plus className="h-4 w-4 mr-2" />
                 Nouveau Devoir
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl bg-white">
               <DialogHeader>
                 <DialogTitle>Créer un nouveau devoir</DialogTitle>
                 <DialogDescription>
                   Définissez les détails du devoir pour vos étudiants
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-4 p-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="title">Titre du devoir</Label>
@@ -168,15 +191,16 @@ export default function TeacherAssignmentsPage() {
                       value={newAssignment.title}
                       onChange={(e) => setNewAssignment(prev => ({ ...prev, title: e.target.value }))}
                       placeholder="Ex: Projet Final"
+                      className="bg-white border-gray-300"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="course">Cours</Label>
                     <Select value={newAssignment.course} onValueChange={(value) => setNewAssignment(prev => ({ ...prev, course: value }))}>
-                      <SelectTrigger>
+                      <SelectTrigger className="bg-white border-gray-300">
                         <SelectValue placeholder="Sélectionner un cours" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white z-[200]">
                         <SelectItem value="architecture">Architecture Logicielle</SelectItem>
                         <SelectItem value="security">Sécurité Informatique</SelectItem>
                         <SelectItem value="ai">Intelligence Artificielle</SelectItem>
@@ -194,6 +218,7 @@ export default function TeacherAssignmentsPage() {
                     onChange={(e) => setNewAssignment(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="Décrivez les objectifs et consignes du devoir..."
                     rows={4}
+                    className="bg-white border-gray-300"
                   />
                 </div>
                 
@@ -205,6 +230,7 @@ export default function TeacherAssignmentsPage() {
                       type="datetime-local"
                       value={newAssignment.dueDate}
                       onChange={(e) => setNewAssignment(prev => ({ ...prev, dueDate: e.target.value }))}
+                      className="bg-white border-gray-300"
                     />
                   </div>
                   <div className="space-y-2">
@@ -214,6 +240,7 @@ export default function TeacherAssignmentsPage() {
                       type="number"
                       value={newAssignment.maxPoints}
                       onChange={(e) => setNewAssignment(prev => ({ ...prev, maxPoints: parseInt(e.target.value) }))}
+                      className="bg-white border-gray-300"
                     />
                   </div>
                 </div>
@@ -222,7 +249,7 @@ export default function TeacherAssignmentsPage() {
                   <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Annuler
                   </Button>
-                  <Button onClick={handleCreateAssignment}>
+                  <Button onClick={handleCreateAssignment} className="bg-blue-600 hover:bg-blue-700 text-white">
                     Créer le devoir
                   </Button>
                 </div>
@@ -277,11 +304,21 @@ export default function TeacherAssignmentsPage() {
                     </div>
                     
                     <div className="flex space-x-2 mt-4">
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleViewAssignment(assignment)}
+                      >
                         <Eye className="h-4 w-4 mr-1" />
                         Voir
                       </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleEditAssignment(assignment)}
+                      >
                         <FileText className="h-4 w-4 mr-1" />
                         Modifier
                       </Button>
@@ -358,8 +395,115 @@ export default function TeacherAssignmentsPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </main>
-      </main>
+
+        {/* Dialog de visualisation */}
+        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Détails du devoir</DialogTitle>
+            </DialogHeader>
+            {viewingAssignment && (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold text-lg">{viewingAssignment.title}</h3>
+                  <p className="text-gray-600">{viewingAssignment.course}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">Description</h4>
+                  <p className="text-gray-700">{viewingAssignment.description}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium">Date limite</h4>
+                    <p>{new Date(viewingAssignment.dueDate).toLocaleDateString('fr-FR')}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Points maximum</h4>
+                    <p>{viewingAssignment.maxPoints}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium">Soumissions</h4>
+                    <p>{viewingAssignment.submissions}/{viewingAssignment.totalStudents}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Statut</h4>
+                    <p className="capitalize">{viewingAssignment.status}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog d'édition */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Modifier le devoir</DialogTitle>
+            </DialogHeader>
+            {editingAssignment && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-title">Titre du devoir</Label>
+                    <Input
+                      id="edit-title"
+                      value={editingAssignment.title}
+                      onChange={(e) => setEditingAssignment(prev => ({ ...prev, title: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-course">Cours</Label>
+                    <Input
+                      id="edit-course"
+                      value={editingAssignment.course}
+                      onChange={(e) => setEditingAssignment(prev => ({ ...prev, course: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea
+                    id="edit-description"
+                    value={editingAssignment.description}
+                    onChange={(e) => setEditingAssignment(prev => ({ ...prev, description: e.target.value }))}
+                    rows={4}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-dueDate">Date limite</Label>
+                    <Input
+                      id="edit-dueDate"
+                      type="datetime-local"
+                      value={editingAssignment.dueDate}
+                      onChange={(e) => setEditingAssignment(prev => ({ ...prev, dueDate: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-maxPoints">Points maximum</Label>
+                    <Input
+                      id="edit-maxPoints"
+                      type="number"
+                      value={editingAssignment.maxPoints}
+                      onChange={(e) => setEditingAssignment(prev => ({ ...prev, maxPoints: parseInt(e.target.value) }))}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button onClick={handleSaveEdit} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    Sauvegarder
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
     </div>
   );
 }

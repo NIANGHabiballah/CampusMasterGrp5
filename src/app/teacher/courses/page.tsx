@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,11 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Header } from '@/components/layout/Header';
 import { FileUpload } from '@/components/ui/file-upload';
-import { Plus, Edit, Users, FileText, Upload, Eye } from 'lucide-react';
+import { Plus, Edit, Users, FileText, Upload, Eye, Download } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
 import * as z from 'zod';
 
 const courseSchema = z.object({
@@ -26,6 +27,7 @@ const courseSchema = z.object({
 type CourseForm = z.infer<typeof courseSchema>;
 
 export default function TeacherCoursesPage() {
+  const router = useRouter();
   const [courses, setCourses] = useState([
     {
       id: '1',
@@ -50,6 +52,25 @@ export default function TeacherCoursesPage() {
   ]);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
+  const handleViewCourse = (course) => {
+    router.push(`/teacher/courses/${course.id}`);
+  };
+
+  const handleEditCourse = (course) => {
+    setSelectedCourse(course);
+    setIsEditOpen(true);
+  };
+
+  const handleExportCourse = (course) => {
+    toast.success(`Export du cours "${course.title}" en cours...`);
+    // Simuler l'export
+    setTimeout(() => {
+      toast.success('Cours exporté avec succès');
+    }, 1500);
+  };
 
   const form = useForm<CourseForm>({
     resolver: zodResolver(courseSchema),
@@ -75,10 +96,7 @@ export default function TeacherCoursesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="container mx-auto px-4 py-8">
+    <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -91,7 +109,7 @@ export default function TeacherCoursesPage() {
           
           <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-academic-600 hover:bg-academic-700">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                 <Plus className="h-4 w-4 mr-2" />
                 Nouveau cours
               </Button>
@@ -186,7 +204,7 @@ export default function TeacherCoursesPage() {
                     <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                       Annuler
                     </Button>
-                    <Button type="submit" className="bg-academic-600 hover:bg-academic-700">
+                    <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white">
                       Créer le cours
                     </Button>
                   </div>
@@ -231,22 +249,70 @@ export default function TeacherCoursesPage() {
                 </div>
                 
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => handleViewCourse(course)}
+                  >
                     <Eye className="h-4 w-4 mr-1" />
                     Voir
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleEditCourse(course)}
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="outline">
-                    <Upload className="h-4 w-4" />
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => handleExportCourse(course)}
+                  >
+                    <Download className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
-      </main>
+
+        {/* Edit Course Dialog */}
+        {selectedCourse && (
+          <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+            <DialogContent className="max-w-2xl bg-white">
+              <DialogHeader>
+                <DialogTitle>Modifier le cours</DialogTitle>
+                <DialogDescription>
+                  Modifiez les informations du cours {selectedCourse.title}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 p-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Titre du cours</label>
+                  <Input defaultValue={selectedCourse.title} className="bg-white border-gray-300" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Description</label>
+                  <Textarea defaultValue={selectedCourse.description} className="bg-white border-gray-300" />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button onClick={() => {
+                    setIsEditOpen(false);
+                    setSelectedCourse(null);
+                    toast.success('Cours modifié avec succès');
+                  }} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    Enregistrer
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
     </div>
   );
 }

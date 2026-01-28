@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,17 +34,25 @@ export default function TeacherStudentsPage() {
     }
   ];
 
+  const handleContactStudent = (student: any) => {
+    window.location.href = `mailto:${student.email}?subject=Contact depuis CampusMaster&body=Bonjour ${student.firstName},`;
+  };
+
+  const filteredStudents = students.filter(student => 
+    student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.studentId.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Mes Étudiants</h1>
-            <p className="text-gray-600 mt-2">Gérez vos étudiants et suivez leurs progrès</p>
-          </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Mes Étudiants</h1>
+          <p className="text-gray-600 mt-2">Gérez vos étudiants et suivez leurs progrès</p>
         </div>
+      </div>
 
         <div className="mb-6">
           <div className="relative">
@@ -95,7 +102,7 @@ export default function TeacherStudentsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {students.map((student) => (
+              {filteredStudents.map((student) => (
                 <div key={student.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center space-x-4">
                     <Avatar>
@@ -114,7 +121,11 @@ export default function TeacherStudentsPage() {
                       <p className="text-sm font-medium">Moyenne: {student.avgGrade}/20</p>
                       <p className="text-xs text-gray-600">{student.assignments} devoirs</p>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleContactStudent(student)}
+                    >
                       <Mail className="h-4 w-4 mr-2" />
                       Contacter
                     </Button>
@@ -124,7 +135,6 @@ export default function TeacherStudentsPage() {
             </div>
           </CardContent>
         </Card>
-      </main>
     </div>
   );
 }
