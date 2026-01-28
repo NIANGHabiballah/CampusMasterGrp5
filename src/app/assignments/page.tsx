@@ -1,1 +1,418 @@
-'use client';\n\nimport { useState, useEffect } from 'react';\nimport { useRouter } from 'next/navigation';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Badge } from '@/components/ui/badge';\nimport { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';\nimport { Input } from '@/components/ui/input';\nimport { Label } from '@/components/ui/label';\nimport { Textarea } from '@/components/ui/textarea';\nimport { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';\nimport { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';\nimport { Progress } from '@/components/ui/progress';\nimport { Alert, AlertDescription } from '@/components/ui/alert';\nimport { \n  BookOpen, \n  Calendar, \n  Clock, \n  FileText, \n  Upload, \n  Download, \n  CheckCircle, \n  AlertCircle,\n  Plus,\n  Edit,\n  Trash2,\n  Eye,\n  Star\n} from 'lucide-react';\nimport { useAuthStore } from '@/store/auth';\nimport { useAssignmentStore } from '@/store/assignments';\nimport { toast } from 'sonner';\nimport { format } from 'date-fns';\nimport { fr } from 'date-fns/locale';\n\nexport default function AssignmentsPage() {\n  const { user } = useAuthStore();\n  const { \n    assignments, \n    submissions, \n    isLoading, \n    fetchAssignments, \n    createAssignment, \n    submitAssignment, \n    gradeSubmission \n  } = useAssignmentStore();\n  \n  const [selectedCourse, setSelectedCourse] = useState<string>('all');\n  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);\n  const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);\n  const [selectedAssignment, setSelectedAssignment] = useState<string>('');\n  const [uploadFiles, setUploadFiles] = useState<File[]>([]);\n  const [submissionContent, setSubmissionContent] = useState('');\n  \n  // New assignment form\n  const [newAssignment, setNewAssignment] = useState({\n    title: '',\n    description: '',\n    courseId: '',\n    dueDate: '',\n    maxPoints: 20\n  });\n\n  useEffect(() => {\n    fetchAssignments();\n  }, [fetchAssignments]);\n\n  const handleCreateAssignment = async () => {\n    if (!newAssignment.title || !newAssignment.description || !newAssignment.courseId) {\n      toast.error('Veuillez remplir tous les champs obligatoires');\n      return;\n    }\n\n    try {\n      await createAssignment({\n        ...newAssignment,\n        attachments: []\n      });\n      toast.success('Devoir créé avec succès');\n      setIsCreateDialogOpen(false);\n      setNewAssignment({\n        title: '',\n        description: '',\n        courseId: '',\n        dueDate: '',\n        maxPoints: 20\n      });\n    } catch (error) {\n      toast.error('Erreur lors de la création du devoir');\n    }\n  };\n\n  const handleSubmitAssignment = async () => {\n    if (uploadFiles.length === 0) {\n      toast.error('Veuillez sélectionner au moins un fichier');\n      return;\n    }\n\n    try {\n      await submitAssignment(selectedAssignment, uploadFiles, submissionContent);\n      toast.success('Devoir soumis avec succès');\n      setIsSubmitDialogOpen(false);\n      setUploadFiles([]);\n      setSubmissionContent('');\n    } catch (error) {\n      toast.error('Erreur lors de la soumission');\n    }\n  };\n\n  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {\n    const files = Array.from(e.target.files || []);\n    setUploadFiles(files);\n  };\n\n  const getStatusBadge = (assignment: any) => {\n    const now = new Date();\n    const dueDate = new Date(assignment.dueDate);\n    const hasSubmission = assignment.submissions?.some((s: any) => s.studentId === user?.id);\n    \n    if (hasSubmission) {\n      const submission = assignment.submissions.find((s: any) => s.studentId === user?.id);\n      if (submission.status === 'graded') {\n        return <Badge variant=\"default\" className=\"bg-green-500\"><CheckCircle className=\"w-3 h-3 mr-1\" />Noté</Badge>;\n      }\n      return <Badge variant=\"secondary\"><Clock className=\"w-3 h-3 mr-1\" />Soumis</Badge>;\n    }\n    \n    if (now > dueDate) {\n      return <Badge variant=\"destructive\"><AlertCircle className=\"w-3 h-3 mr-1\" />En retard</Badge>;\n    }\n    \n    return <Badge variant=\"outline\"><Calendar className=\"w-3 h-3 mr-1\" />À faire</Badge>;\n  };\n\n  const filteredAssignments = selectedCourse === 'all' \n    ? assignments \n    : assignments.filter(a => a.courseId === selectedCourse);\n\n  if (isLoading) {\n    return (\n      <div className=\"flex items-center justify-center min-h-screen\">\n        <div className=\"text-center\">\n          <div className=\"animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4\"></div>\n          <p>Chargement des devoirs...</p>\n        </div>\n      </div>\n    );\n  }\n\n  return (\n    <div className=\"container mx-auto p-6 space-y-6\">\n      {/* Header */}\n      <div className=\"flex justify-between items-center\">\n        <div>\n          <h1 className=\"text-3xl font-bold text-gray-900\">Devoirs</h1>\n          <p className=\"text-gray-600 mt-1\">\n            {user?.role === 'STUDENT' ? 'Consultez et soumettez vos devoirs' : 'Gérez les devoirs de vos cours'}\n          </p>\n        </div>\n        \n        {user?.role === 'TEACHER' && (\n          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>\n            <DialogTrigger asChild>\n              <Button className=\"bg-blue-600 hover:bg-blue-700\">\n                <Plus className=\"w-4 h-4 mr-2\" />\n                Nouveau devoir\n              </Button>\n            </DialogTrigger>\n            <DialogContent className=\"max-w-2xl\">\n              <DialogHeader>\n                <DialogTitle>Créer un nouveau devoir</DialogTitle>\n                <DialogDescription>\n                  Définissez les détails du devoir pour vos étudiants\n                </DialogDescription>\n              </DialogHeader>\n              <div className=\"space-y-4\">\n                <div>\n                  <Label htmlFor=\"title\">Titre du devoir</Label>\n                  <Input\n                    id=\"title\"\n                    value={newAssignment.title}\n                    onChange={(e) => setNewAssignment({...newAssignment, title: e.target.value})}\n                    placeholder=\"Ex: Projet React - Application Todo\"\n                  />\n                </div>\n                \n                <div>\n                  <Label htmlFor=\"course\">Cours</Label>\n                  <Select value={newAssignment.courseId} onValueChange={(value) => setNewAssignment({...newAssignment, courseId: value})}>\n                    <SelectTrigger>\n                      <SelectValue placeholder=\"Sélectionner un cours\" />\n                    </SelectTrigger>\n                    <SelectContent>\n                      <SelectItem value=\"1\">React Avancé</SelectItem>\n                      <SelectItem value=\"2\">Node.js Backend</SelectItem>\n                      <SelectItem value=\"3\">Base de Données</SelectItem>\n                    </SelectContent>\n                  </Select>\n                </div>\n                \n                <div>\n                  <Label htmlFor=\"description\">Description</Label>\n                  <Textarea\n                    id=\"description\"\n                    value={newAssignment.description}\n                    onChange={(e) => setNewAssignment({...newAssignment, description: e.target.value})}\n                    placeholder=\"Décrivez les objectifs et consignes du devoir...\"\n                    rows={4}\n                  />\n                </div>\n                \n                <div className=\"grid grid-cols-2 gap-4\">\n                  <div>\n                    <Label htmlFor=\"dueDate\">Date limite</Label>\n                    <Input\n                      id=\"dueDate\"\n                      type=\"datetime-local\"\n                      value={newAssignment.dueDate}\n                      onChange={(e) => setNewAssignment({...newAssignment, dueDate: e.target.value})}\n                    />\n                  </div>\n                  <div>\n                    <Label htmlFor=\"maxPoints\">Points maximum</Label>\n                    <Input\n                      id=\"maxPoints\"\n                      type=\"number\"\n                      value={newAssignment.maxPoints}\n                      onChange={(e) => setNewAssignment({...newAssignment, maxPoints: parseInt(e.target.value)})}\n                      min=\"1\"\n                      max=\"100\"\n                    />\n                  </div>\n                </div>\n                \n                <div className=\"flex justify-end space-x-2\">\n                  <Button variant=\"outline\" onClick={() => setIsCreateDialogOpen(false)}>\n                    Annuler\n                  </Button>\n                  <Button onClick={handleCreateAssignment}>\n                    Créer le devoir\n                  </Button>\n                </div>\n              </div>\n            </DialogContent>\n          </Dialog>\n        )}\n      </div>\n\n      {/* Filters */}\n      <div className=\"flex space-x-4\">\n        <Select value={selectedCourse} onValueChange={setSelectedCourse}>\n          <SelectTrigger className=\"w-48\">\n            <SelectValue />\n          </SelectTrigger>\n          <SelectContent>\n            <SelectItem value=\"all\">Tous les cours</SelectItem>\n            <SelectItem value=\"1\">React Avancé</SelectItem>\n            <SelectItem value=\"2\">Node.js Backend</SelectItem>\n            <SelectItem value=\"3\">Base de Données</SelectItem>\n          </SelectContent>\n        </Select>\n      </div>\n\n      {/* Assignments Grid */}\n      <div className=\"grid gap-6 md:grid-cols-2 lg:grid-cols-3\">\n        {filteredAssignments.map((assignment) => {\n          const submission = assignment.submissions?.find((s: any) => s.studentId === user?.id);\n          const dueDate = new Date(assignment.dueDate);\n          const isOverdue = new Date() > dueDate;\n          \n          return (\n            <Card key={assignment.id} className={`hover:shadow-lg transition-shadow ${\n              isOverdue && !submission ? 'border-red-200 bg-red-50' : ''\n            }`}>\n              <CardHeader>\n                <div className=\"flex justify-between items-start\">\n                  <div className=\"flex-1\">\n                    <CardTitle className=\"text-lg\">{assignment.title}</CardTitle>\n                    <CardDescription className=\"mt-1\">\n                      Cours: React Avancé • {assignment.maxPoints} points\n                    </CardDescription>\n                  </div>\n                  {getStatusBadge(assignment)}\n                </div>\n              </CardHeader>\n              \n              <CardContent className=\"space-y-4\">\n                <p className=\"text-sm text-gray-600 line-clamp-3\">\n                  {assignment.description}\n                </p>\n                \n                <div className=\"flex items-center text-sm text-gray-500\">\n                  <Calendar className=\"w-4 h-4 mr-2\" />\n                  Échéance: {format(dueDate, 'dd MMM yyyy à HH:mm', { locale: fr })}\n                </div>\n                \n                {submission && (\n                  <div className=\"space-y-2\">\n                    <div className=\"flex items-center text-sm text-green-600\">\n                      <CheckCircle className=\"w-4 h-4 mr-2\" />\n                      Soumis le {format(new Date(submission.submittedAt), 'dd MMM yyyy', { locale: fr })}\n                    </div>\n                    \n                    {submission.grade !== undefined && (\n                      <div className=\"flex items-center justify-between\">\n                        <span className=\"text-sm font-medium\">Note:</span>\n                        <div className=\"flex items-center\">\n                          <Star className=\"w-4 h-4 text-yellow-500 mr-1\" />\n                          <span className=\"font-bold text-lg\">{submission.grade}/{assignment.maxPoints}</span>\n                        </div>\n                      </div>\n                    )}\n                    \n                    {submission.feedback && (\n                      <Alert>\n                        <AlertDescription className=\"text-sm\">\n                          <strong>Commentaire:</strong> {submission.feedback}\n                        </AlertDescription>\n                      </Alert>\n                    )}\n                  </div>\n                )}\n                \n                <div className=\"flex space-x-2\">\n                  <Button variant=\"outline\" size=\"sm\" className=\"flex-1\">\n                    <Eye className=\"w-4 h-4 mr-2\" />\n                    Détails\n                  </Button>\n                  \n                  {user?.role === 'STUDENT' && !submission && (\n                    <Dialog open={isSubmitDialogOpen && selectedAssignment === assignment.id} \n                           onOpenChange={(open) => {\n                             setIsSubmitDialogOpen(open);\n                             if (open) setSelectedAssignment(assignment.id);\n                           }}>\n                      <DialogTrigger asChild>\n                        <Button size=\"sm\" className=\"flex-1\">\n                          <Upload className=\"w-4 h-4 mr-2\" />\n                          Soumettre\n                        </Button>\n                      </DialogTrigger>\n                      <DialogContent>\n                        <DialogHeader>\n                          <DialogTitle>Soumettre le devoir</DialogTitle>\n                          <DialogDescription>\n                            {assignment.title}\n                          </DialogDescription>\n                        </DialogHeader>\n                        <div className=\"space-y-4\">\n                          <div>\n                            <Label htmlFor=\"files\">Fichiers à soumettre</Label>\n                            <Input\n                              id=\"files\"\n                              type=\"file\"\n                              multiple\n                              onChange={handleFileUpload}\n                              accept=\".pdf,.doc,.docx,.zip,.rar\"\n                            />\n                            <p className=\"text-xs text-gray-500 mt-1\">\n                              Formats acceptés: PDF, DOC, DOCX, ZIP, RAR\n                            </p>\n                          </div>\n                          \n                          {uploadFiles.length > 0 && (\n                            <div className=\"space-y-2\">\n                              <Label>Fichiers sélectionnés:</Label>\n                              {uploadFiles.map((file, index) => (\n                                <div key={index} className=\"flex items-center justify-between p-2 bg-gray-50 rounded\">\n                                  <span className=\"text-sm\">{file.name}</span>\n                                  <span className=\"text-xs text-gray-500\">\n                                    {(file.size / 1024 / 1024).toFixed(2)} MB\n                                  </span>\n                                </div>\n                              ))}\n                            </div>\n                          )}\n                          \n                          <div>\n                            <Label htmlFor=\"content\">Commentaire (optionnel)</Label>\n                            <Textarea\n                              id=\"content\"\n                              value={submissionContent}\n                              onChange={(e) => setSubmissionContent(e.target.value)}\n                              placeholder=\"Ajoutez un commentaire sur votre travail...\"\n                              rows={3}\n                            />\n                          </div>\n                          \n                          <div className=\"flex justify-end space-x-2\">\n                            <Button variant=\"outline\" onClick={() => setIsSubmitDialogOpen(false)}>\n                              Annuler\n                            </Button>\n                            <Button onClick={handleSubmitAssignment}>\n                              Soumettre le devoir\n                            </Button>\n                          </div>\n                        </div>\n                      </DialogContent>\n                    </Dialog>\n                  )}\n                </div>\n              </CardContent>\n            </Card>\n          );\n        })}\n      </div>\n      \n      {filteredAssignments.length === 0 && (\n        <Card className=\"text-center py-12\">\n          <CardContent>\n            <BookOpen className=\"w-12 h-12 text-gray-400 mx-auto mb-4\" />\n            <h3 className=\"text-lg font-medium text-gray-900 mb-2\">Aucun devoir</h3>\n            <p className=\"text-gray-600\">\n              {user?.role === 'STUDENT' \n                ? 'Aucun devoir disponible pour le moment.' \n                : 'Créez votre premier devoir pour vos étudiants.'}\n            </p>\n          </CardContent>\n        </Card>\n      )}\n    </div>\n  );\n}"
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { 
+  BookOpen, 
+  Calendar, 
+  Clock, 
+  FileText, 
+  Upload, 
+  Download, 
+  CheckCircle, 
+  AlertCircle,
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  Star
+} from 'lucide-react';
+import { useAuthStore } from '@/store/auth';
+import { toast } from 'sonner';
+
+export default function AssignmentsPage() {
+  const { user } = useAuthStore();
+  
+  const [selectedCourse, setSelectedCourse] = useState<string>('all');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [selectedAssignment, setSelectedAssignment] = useState<string>('');
+  const [viewingAssignment, setViewingAssignment] = useState<any>(null);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
+  const [submissionContent, setSubmissionContent] = useState('');
+  
+  // Mock data
+  const assignments = [
+    {
+      id: '1',
+      title: 'Projet React - Application Todo',
+      description: 'Créer une application de gestion de tâches avec React et TypeScript',
+      courseId: '1',
+      dueDate: '2024-02-15T23:59:00',
+      maxPoints: 100,
+      submissions: []
+    }
+  ];
+  
+  // New assignment form
+  const [newAssignment, setNewAssignment] = useState({
+    title: '',
+    description: '',
+    courseId: '',
+    dueDate: '',
+    maxPoints: 20
+  });
+
+  const handleCreateAssignment = async () => {
+    if (!newAssignment.title || !newAssignment.description || !newAssignment.courseId) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    toast.success('Devoir créé avec succès');
+    setIsCreateDialogOpen(false);
+    setNewAssignment({
+      title: '',
+      description: '',
+      courseId: '',
+      dueDate: '',
+      maxPoints: 20
+    });
+  };
+
+  const handleSubmitAssignment = async () => {
+    if (uploadFiles.length === 0) {
+      toast.error('Veuillez sélectionner au moins un fichier');
+      return;
+    }
+
+    toast.success('Devoir soumis avec succès');
+    setIsSubmitDialogOpen(false);
+    setUploadFiles([]);
+    setSubmissionContent('');
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setUploadFiles(files);
+  };
+
+  const handleViewDetails = (assignment: any) => {
+    setViewingAssignment(assignment);
+    setIsDetailDialogOpen(true);
+  };
+
+  const getStatusBadge = (assignment: any) => {
+    const now = new Date();
+    const dueDate = new Date(assignment.dueDate);
+    
+    if (now > dueDate) {
+      return <Badge variant="outline" className="border-black text-black"><AlertCircle className="w-3 h-3 mr-1 text-black" />En retard</Badge>;
+    }
+    
+    return <Badge variant="outline"><Calendar className="w-3 h-3 mr-1" />À faire</Badge>;
+  };
+
+  const filteredAssignments = selectedCourse === 'all' 
+    ? assignments 
+    : assignments.filter(a => a.courseId === selectedCourse);
+
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Devoirs</h1>
+          <p className="text-gray-600 mt-1">
+            {user?.role === 'STUDENT' ? 'Consultez et soumettez vos devoirs' : 'Gérez les devoirs de vos cours'}
+          </p>
+        </div>
+        
+        {user?.role === 'TEACHER' && (
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="w-4 h-4 mr-2" />
+                Nouveau devoir
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Créer un nouveau devoir</DialogTitle>
+                <DialogDescription>
+                  Définissez les détails du devoir pour vos étudiants
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Titre du devoir</Label>
+                  <Input
+                    id="title"
+                    value={newAssignment.title}
+                    onChange={(e) => setNewAssignment({...newAssignment, title: e.target.value})}
+                    placeholder="Ex: Projet React - Application Todo"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="course">Cours</Label>
+                  <Select value={newAssignment.courseId} onValueChange={(value) => setNewAssignment({...newAssignment, courseId: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un cours" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">React Avancé</SelectItem>
+                      <SelectItem value="2">Node.js Backend</SelectItem>
+                      <SelectItem value="3">Base de Données</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={newAssignment.description}
+                    onChange={(e) => setNewAssignment({...newAssignment, description: e.target.value})}
+                    placeholder="Décrivez les objectifs et consignes du devoir..."
+                    rows={4}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="dueDate">Date limite</Label>
+                    <Input
+                      id="dueDate"
+                      type="datetime-local"
+                      value={newAssignment.dueDate}
+                      onChange={(e) => setNewAssignment({...newAssignment, dueDate: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="maxPoints">Points maximum</Label>
+                    <Input
+                      id="maxPoints"
+                      type="number"
+                      value={newAssignment.maxPoints}
+                      onChange={(e) => setNewAssignment({...newAssignment, maxPoints: parseInt(e.target.value)})}
+                      min="1"
+                      max="100"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button onClick={handleCreateAssignment}>
+                    Créer le devoir
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+
+      {/* Filters */}
+      <div className="flex space-x-4 mb-16">
+        <Select value={selectedCourse} onValueChange={setSelectedCourse}>
+          <SelectTrigger className="w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="z-[200]">
+            <SelectItem value="all">Tous les cours</SelectItem>
+            <SelectItem value="1">React Avancé</SelectItem>
+            <SelectItem value="2">Node.js Backend</SelectItem>
+            <SelectItem value="3">Base de Données</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Assignments Grid */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {filteredAssignments.map((assignment) => {
+          const dueDate = new Date(assignment.dueDate);
+          const isOverdue = new Date() > dueDate;
+          
+          return (
+            <Card key={assignment.id} className={`hover:shadow-lg transition-shadow ${
+              isOverdue ? 'border-red-200 bg-red-50' : ''
+            }`}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{assignment.title}</CardTitle>
+                    <CardDescription className="mt-1">
+                      Cours: React Avancé • {assignment.maxPoints} points
+                    </CardDescription>
+                  </div>
+                  {getStatusBadge(assignment)}
+                </div>
+              </CardHeader>
+              
+              <CardContent className="space-y-4">
+                <p className="text-sm text-gray-600 line-clamp-3">
+                  {assignment.description}
+                </p>
+                
+                <div className="flex items-center text-sm text-gray-500">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Échéance: {dueDate.toLocaleDateString('fr-FR')}
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleViewDetails(assignment)}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Détails
+                  </Button>
+                  
+                  {user?.role === 'STUDENT' && (
+                    <Dialog open={isSubmitDialogOpen && selectedAssignment === assignment.id} 
+                           onOpenChange={(open) => {
+                             setIsSubmitDialogOpen(open);
+                             if (open) setSelectedAssignment(assignment.id);
+                           }}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" className="flex-1">
+                          <Upload className="w-4 h-4 mr-2" />
+                          Soumettre
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Soumettre le devoir</DialogTitle>
+                          <DialogDescription>
+                            {assignment.title}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div>
+                            <Label htmlFor="files">Fichiers à soumettre</Label>
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                              <Input
+                                id="files"
+                                type="file"
+                                multiple
+                                onChange={handleFileUpload}
+                                accept=".pdf,.doc,.docx,.zip,.rar"
+                                className="w-full h-20 cursor-pointer"
+                              />
+                              <p className="text-sm text-gray-500 mt-2">
+                                Glissez-déposez vos fichiers ici ou cliquez pour sélectionner
+                              </p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                Formats acceptés: PDF, DOC, DOCX, ZIP, RAR (Max 50MB par fichier)
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {uploadFiles.length > 0 && (
+                            <div className="space-y-2">
+                              <Label>Fichiers sélectionnés:</Label>
+                              {uploadFiles.map((file, index) => (
+                                <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                  <span className="text-sm">{file.name}</span>
+                                  <span className="text-xs text-gray-500">
+                                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          <div>
+                            <Label htmlFor="content">Commentaire (optionnel)</Label>
+                            <Textarea
+                              id="content"
+                              value={submissionContent}
+                              onChange={(e) => setSubmissionContent(e.target.value)}
+                              placeholder="Ajoutez un commentaire sur votre travail..."
+                              rows={3}
+                            />
+                          </div>
+                          
+                          <div className="flex justify-end space-x-2">
+                            <Button variant="outline" onClick={() => setIsSubmitDialogOpen(false)}>
+                              Annuler
+                            </Button>
+                            <Button onClick={handleSubmitAssignment}>
+                              Soumettre le devoir
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+      
+      {filteredAssignments.length === 0 && (
+        <Card className="text-center py-12">
+          <CardContent>
+            <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun devoir</h3>
+            <p className="text-gray-600">
+              {user?.role === 'STUDENT' 
+                ? 'Aucun devoir disponible pour le moment.' 
+                : 'Créez votre premier devoir pour vos étudiants.'}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Dialog de détails */}
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Détails du devoir</DialogTitle>
+          </DialogHeader>
+          {viewingAssignment && (
+            <div className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-lg">{viewingAssignment.title}</h3>
+                <p className="text-gray-600">Cours: React Avancé • {viewingAssignment.maxPoints} points</p>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Description</h4>
+                <p className="text-gray-700 bg-gray-50 p-3 rounded">{viewingAssignment.description}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium">Date limite</h4>
+                  <p>{new Date(viewingAssignment.dueDate).toLocaleDateString('fr-FR')}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium">Points maximum</h4>
+                  <p>{viewingAssignment.maxPoints}</p>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Instructions</h4>
+                <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                  <li>Respectez la date limite de soumission</li>
+                  <li>Formats acceptés: PDF, DOC, DOCX, ZIP, RAR</li>
+                  <li>Taille maximale par fichier: 50MB</li>
+                  <li>Nommez vos fichiers clairement</li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

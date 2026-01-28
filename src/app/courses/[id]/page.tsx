@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Header } from '@/components/layout/Header';
 import { 
   BookOpen, Download, FileText, Video, Users, Calendar, 
   Clock, ArrowLeft, Play, MessageSquare, Star, Upload 
@@ -21,6 +20,36 @@ export default function CourseDetailPage() {
   const courseId = params.id as string;
   const [course, setCourse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  const handleDownload = async (material: any) => {
+    try {
+      // Simuler le téléchargement
+      const response = await fetch(`/api/materials/${material.id}`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = material.title + (material.type === 'pdf' ? '.pdf' : material.type === 'zip' ? '.zip' : '');
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+      // Fallback: ouvrir dans un nouvel onglet
+      window.open(`/materials/${material.id}`, '_blank');
+    }
+  };
+
+  const handleRead = (material: any) => {
+    if (material.type === 'video') {
+      // Ouvrir la vidéo dans un nouvel onglet ou modal
+      window.open(`/video-player/${material.id}`, '_blank');
+    } else {
+      // Ouvrir le document dans un nouvel onglet
+      window.open(`/reader/${material.id}`, '_blank');
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -155,31 +184,25 @@ export default function CourseDetailPage() {
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900">Cours non trouvé</h1>
-          </div>
-        </main>
+      <div className="container mx-auto p-6">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900">Cours non trouvé</h1>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="container mx-auto px-4 py-8">
-        {/* Back Button */}
-        <Button 
-          variant="ghost" 
-          onClick={() => router.back()}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour aux cours
-        </Button>
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Back Button */}
+      <Button 
+        variant="ghost" 
+        onClick={() => router.back()}
+        className="mb-6"
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Retour aux cours
+      </Button>
 
         {/* Course Header */}
         <Card className="mb-8 border-0 shadow-sm">
@@ -272,12 +295,18 @@ export default function CourseDetailPage() {
                       </div>
                       <div className="flex gap-2">
                         {material.type === 'video' ? (
-                          <Button size="sm">
+                          <Button 
+                            size="sm"
+                            onClick={() => handleRead(material)}
+                          >
                             <Play className="h-4 w-4 mr-1" />
                             Lire
                           </Button>
                         ) : (
-                          <Button size="sm">
+                          <Button 
+                            size="sm"
+                            onClick={() => handleDownload(material)}
+                          >
                             <Download className="h-4 w-4 mr-1" />
                             Télécharger
                           </Button>
@@ -400,7 +429,6 @@ export default function CourseDetailPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </main>
     </div>
   );
 }

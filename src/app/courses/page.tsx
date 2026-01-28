@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CourseFilters } from '@/components/courses/CourseFilters';
 import { Course } from '@/types';
-import apiService from '@/services/api-service';
 import { BookOpen, Search, Filter, Users, Clock, Download, Play } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { ROUTES } from '@/lib/constants';
@@ -33,13 +32,7 @@ export default function CoursesPage() {
       return;
     }
 
-    // Use API service with fallback to mock data
-    const loadCourses = async () => {
-      try {
-        const data = await apiService.courses.getAll();
-        setCourses(data);
-      } catch (error) {
-        // Fallback to mock data
+    // Mock data - pas d'appel API
     const mockCourses: Course[] = [
       {
         id: '1',
@@ -115,11 +108,7 @@ export default function CoursesPage() {
       }
     ];
 
-        setCourses(mockCourses);
-      }
-    };
-
-    loadCourses();
+    setCourses(mockCourses);
   }, [isAuthenticated, router]);
 
   const filteredCourses = courses.filter(course => {
