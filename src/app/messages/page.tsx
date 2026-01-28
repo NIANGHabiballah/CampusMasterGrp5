@@ -1,1 +1,514 @@
-'use client';\n\nimport { useState, useEffect } from 'react';\nimport { Button } from '@/components/ui/button';\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Input } from '@/components/ui/input';\nimport { Label } from '@/components/ui/label';\nimport { Textarea } from '@/components/ui/textarea';\nimport { Badge } from '@/components/ui/badge';\nimport { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';\nimport { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';\nimport { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';\nimport { Checkbox } from '@/components/ui/checkbox';\nimport { \n  MessageSquare, \n  Send, \n  Search, \n  Filter, \n  Plus, \n  Users, \n  Tag, \n  Clock,\n  CheckCircle,\n  AlertCircle,\n  Star,\n  Archive,\n  Trash2\n} from 'lucide-react';\nimport { useAuthStore } from '@/store/auth';\nimport { toast } from 'sonner';\nimport { format } from 'date-fns';\nimport { fr } from 'date-fns/locale';\n\ninterface Message {\n  id: string;\n  senderId: string;\n  senderName: string;\n  senderRole: string;\n  receiverId?: string;\n  receiverName?: string;\n  courseId?: string;\n  courseName?: string;\n  subject: string;\n  content: string;\n  tags: string[];\n  isRead: boolean;\n  isStarred: boolean;\n  isArchived: boolean;\n  createdAt: string;\n  attachments?: any[];\n}\n\nconst mockMessages: Message[] = [\n  {\n    id: '1',\n    senderId: '2',\n    senderName: 'Prof. Jean Martin',\n    senderRole: 'TEACHER',\n    receiverId: '3',\n    receiverName: 'Marie Dupont',\n    subject: 'Feedback sur votre projet React',\n    content: 'Bonjour Marie, j\\'ai corrigé votre projet React. Excellent travail ! Quelques points d\\'amélioration : la gestion des erreurs pourrait être renforcée et l\\'interface utilisateur est très intuitive. Continuez ainsi !',\n    tags: ['feedback', 'projet'],\n    isRead: false,\n    isStarred: true,\n    isArchived: false,\n    createdAt: '2024-01-24T10:30:00Z'\n  },\n  {\n    id: '2',\n    senderId: '1',\n    senderName: 'Admin Système',\n    senderRole: 'ADMIN',\n    courseId: '1',\n    courseName: 'React Avancé',\n    subject: 'Nouvelle fonctionnalité disponible',\n    content: 'Une nouvelle fonctionnalité de collaboration en temps réel a été ajoutée à la plateforme. Vous pouvez maintenant travailler simultanément sur vos projets.',\n    tags: ['annonce', 'nouveau'],\n    isRead: true,\n    isStarred: false,\n    isArchived: false,\n    createdAt: '2024-01-23T14:15:00Z'\n  },\n  {\n    id: '3',\n    senderId: '3',\n    senderName: 'Marie Dupont',\n    senderRole: 'STUDENT',\n    receiverId: '2',\n    receiverName: 'Prof. Jean Martin',\n    subject: 'Question sur l\\'architecture des composants',\n    content: 'Bonjour Professeur, j\\'ai une question concernant l\\'architecture des composants React. Comment organiser efficacement les composants dans une application complexe ?',\n    tags: ['question', 'urgent'],\n    isRead: true,\n    isStarred: false,\n    isArchived: false,\n    createdAt: '2024-01-22T16:45:00Z'\n  }\n];\n\nconst availableTags = [\n  { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800' },\n  { value: 'annonce', label: 'Annonce', color: 'bg-blue-100 text-blue-800' },\n  { value: 'projet', label: 'Projet', color: 'bg-green-100 text-green-800' },\n  { value: 'question', label: 'Question', color: 'bg-yellow-100 text-yellow-800' },\n  { value: 'feedback', label: 'Feedback', color: 'bg-purple-100 text-purple-800' },\n  { value: 'nouveau', label: 'Nouveau', color: 'bg-indigo-100 text-indigo-800' }\n];\n\nexport default function MessagesPage() {\n  const { user } = useAuthStore();\n  const [messages, setMessages] = useState<Message[]>(mockMessages);\n  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);\n  const [isComposeOpen, setIsComposeOpen] = useState(false);\n  const [searchTerm, setSearchTerm] = useState('');\n  const [selectedTags, setSelectedTags] = useState<string[]>([]);\n  const [activeTab, setActiveTab] = useState('inbox');\n  \n  // Compose message form\n  const [newMessage, setNewMessage] = useState({\n    receiverId: '',\n    courseId: '',\n    subject: '',\n    content: '',\n    tags: [] as string[]\n  });\n\n  const handleSendMessage = () => {\n    if (!newMessage.subject || !newMessage.content) {\n      toast.error('Veuillez remplir tous les champs obligatoires');\n      return;\n    }\n\n    const message: Message = {\n      id: `msg-${Date.now()}`,\n      senderId: user?.id || '',\n      senderName: `${user?.firstName} ${user?.lastName}`,\n      senderRole: user?.role || 'STUDENT',\n      receiverId: newMessage.receiverId || undefined,\n      receiverName: newMessage.receiverId ? 'Destinataire' : undefined,\n      courseId: newMessage.courseId || undefined,\n      courseName: newMessage.courseId ? 'Cours sélectionné' : undefined,\n      subject: newMessage.subject,\n      content: newMessage.content,\n      tags: newMessage.tags,\n      isRead: false,\n      isStarred: false,\n      isArchived: false,\n      createdAt: new Date().toISOString()\n    };\n\n    setMessages([message, ...messages]);\n    setNewMessage({ receiverId: '', courseId: '', subject: '', content: '', tags: [] });\n    setIsComposeOpen(false);\n    toast.success('Message envoyé avec succès');\n  };\n\n  const handleTagToggle = (tag: string) => {\n    setNewMessage(prev => ({\n      ...prev,\n      tags: prev.tags.includes(tag) \n        ? prev.tags.filter(t => t !== tag)\n        : [...prev.tags, tag]\n    }));\n  };\n\n  const toggleMessageStar = (messageId: string) => {\n    setMessages(prev => prev.map(msg => \n      msg.id === messageId ? { ...msg, isStarred: !msg.isStarred } : msg\n    ));\n  };\n\n  const markAsRead = (messageId: string) => {\n    setMessages(prev => prev.map(msg => \n      msg.id === messageId ? { ...msg, isRead: true } : msg\n    ));\n  };\n\n  const archiveMessage = (messageId: string) => {\n    setMessages(prev => prev.map(msg => \n      msg.id === messageId ? { ...msg, isArchived: true } : msg\n    ));\n    toast.success('Message archivé');\n  };\n\n  const filteredMessages = messages.filter(msg => {\n    const matchesSearch = msg.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||\n                         msg.content.toLowerCase().includes(searchTerm.toLowerCase()) ||\n                         msg.senderName.toLowerCase().includes(searchTerm.toLowerCase());\n    \n    const matchesTags = selectedTags.length === 0 || \n                       selectedTags.some(tag => msg.tags.includes(tag));\n    \n    const matchesTab = (() => {\n      switch (activeTab) {\n        case 'inbox': return !msg.isArchived && (msg.receiverId === user?.id || msg.courseId);\n        case 'sent': return msg.senderId === user?.id;\n        case 'starred': return msg.isStarred;\n        case 'archived': return msg.isArchived;\n        default: return true;\n      }\n    })();\n    \n    return matchesSearch && matchesTags && matchesTab;\n  });\n\n  const getTagStyle = (tag: string) => {\n    const tagConfig = availableTags.find(t => t.value === tag);\n    return tagConfig?.color || 'bg-gray-100 text-gray-800';\n  };\n\n  return (\n    <div className=\"container mx-auto p-6\">\n      {/* Header */}\n      <div className=\"flex justify-between items-center mb-6\">\n        <div>\n          <h1 className=\"text-3xl font-bold text-gray-900\">Messages</h1>\n          <p className=\"text-gray-600 mt-1\">Communiquez avec vos enseignants et étudiants</p>\n        </div>\n        \n        <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>\n          <DialogTrigger asChild>\n            <Button className=\"bg-blue-600 hover:bg-blue-700\">\n              <Plus className=\"w-4 h-4 mr-2\" />\n              Nouveau message\n            </Button>\n          </DialogTrigger>\n          <DialogContent className=\"max-w-2xl\">\n            <DialogHeader>\n              <DialogTitle>Composer un message</DialogTitle>\n              <DialogDescription>\n                Envoyez un message à un utilisateur ou à un groupe de cours\n              </DialogDescription>\n            </DialogHeader>\n            <div className=\"space-y-4\">\n              <div className=\"grid grid-cols-2 gap-4\">\n                <div>\n                  <Label htmlFor=\"recipient\">Destinataire</Label>\n                  <Select value={newMessage.receiverId} onValueChange={(value) => setNewMessage({...newMessage, receiverId: value})}>\n                    <SelectTrigger>\n                      <SelectValue placeholder=\"Sélectionner un destinataire\" />\n                    </SelectTrigger>\n                    <SelectContent>\n                      <SelectItem value=\"1\">Admin Système</SelectItem>\n                      <SelectItem value=\"2\">Prof. Jean Martin</SelectItem>\n                      <SelectItem value=\"3\">Marie Dupont</SelectItem>\n                    </SelectContent>\n                  </Select>\n                </div>\n                \n                <div>\n                  <Label htmlFor=\"course\">Groupe de cours (optionnel)</Label>\n                  <Select value={newMessage.courseId} onValueChange={(value) => setNewMessage({...newMessage, courseId: value})}>\n                    <SelectTrigger>\n                      <SelectValue placeholder=\"Sélectionner un cours\" />\n                    </SelectTrigger>\n                    <SelectContent>\n                      <SelectItem value=\"1\">React Avancé</SelectItem>\n                      <SelectItem value=\"2\">Node.js Backend</SelectItem>\n                      <SelectItem value=\"3\">Base de Données</SelectItem>\n                    </SelectContent>\n                  </Select>\n                </div>\n              </div>\n              \n              <div>\n                <Label htmlFor=\"subject\">Sujet</Label>\n                <Input\n                  id=\"subject\"\n                  value={newMessage.subject}\n                  onChange={(e) => setNewMessage({...newMessage, subject: e.target.value})}\n                  placeholder=\"Sujet du message\"\n                />\n              </div>\n              \n              <div>\n                <Label htmlFor=\"content\">Message</Label>\n                <Textarea\n                  id=\"content\"\n                  value={newMessage.content}\n                  onChange={(e) => setNewMessage({...newMessage, content: e.target.value})}\n                  placeholder=\"Tapez votre message ici...\"\n                  rows={6}\n                />\n              </div>\n              \n              <div>\n                <Label>Tags</Label>\n                <div className=\"flex flex-wrap gap-2 mt-2\">\n                  {availableTags.map(tag => (\n                    <div key={tag.value} className=\"flex items-center space-x-2\">\n                      <Checkbox\n                        id={tag.value}\n                        checked={newMessage.tags.includes(tag.value)}\n                        onCheckedChange={() => handleTagToggle(tag.value)}\n                      />\n                      <Label htmlFor={tag.value} className={`px-2 py-1 rounded-full text-xs ${tag.color}`}>\n                        {tag.label}\n                      </Label>\n                    </div>\n                  ))}\n                </div>\n              </div>\n              \n              <div className=\"flex justify-end space-x-2\">\n                <Button variant=\"outline\" onClick={() => setIsComposeOpen(false)}>\n                  Annuler\n                </Button>\n                <Button onClick={handleSendMessage}>\n                  <Send className=\"w-4 h-4 mr-2\" />\n                  Envoyer\n                </Button>\n              </div>\n            </div>\n          </DialogContent>\n        </Dialog>\n      </div>\n\n      <div className=\"grid grid-cols-1 lg:grid-cols-3 gap-6\">\n        {/* Sidebar */}\n        <div className=\"lg:col-span-1\">\n          <Card>\n            <CardHeader>\n              <CardTitle className=\"text-lg\">Boîte de réception</CardTitle>\n            </CardHeader>\n            <CardContent>\n              {/* Search */}\n              <div className=\"relative mb-4\">\n                <Search className=\"absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4\" />\n                <Input\n                  placeholder=\"Rechercher des messages...\"\n                  value={searchTerm}\n                  onChange={(e) => setSearchTerm(e.target.value)}\n                  className=\"pl-10\"\n                />\n              </div>\n              \n              {/* Tabs */}\n              <Tabs value={activeTab} onValueChange={setActiveTab}>\n                <TabsList className=\"grid w-full grid-cols-2\">\n                  <TabsTrigger value=\"inbox\">Reçus</TabsTrigger>\n                  <TabsTrigger value=\"sent\">Envoyés</TabsTrigger>\n                </TabsList>\n                <TabsList className=\"grid w-full grid-cols-2 mt-2\">\n                  <TabsTrigger value=\"starred\">Favoris</TabsTrigger>\n                  <TabsTrigger value=\"archived\">Archivés</TabsTrigger>\n                </TabsList>\n              </Tabs>\n              \n              {/* Tag Filters */}\n              <div className=\"mt-4\">\n                <Label className=\"text-sm font-medium\">Filtrer par tags</Label>\n                <div className=\"flex flex-wrap gap-1 mt-2\">\n                  {availableTags.map(tag => (\n                    <Badge\n                      key={tag.value}\n                      variant={selectedTags.includes(tag.value) ? \"default\" : \"outline\"}\n                      className=\"cursor-pointer text-xs\"\n                      onClick={() => {\n                        setSelectedTags(prev => \n                          prev.includes(tag.value)\n                            ? prev.filter(t => t !== tag.value)\n                            : [...prev, tag.value]\n                        );\n                      }}\n                    >\n                      {tag.label}\n                    </Badge>\n                  ))}\n                </div>\n              </div>\n            </CardContent>\n          </Card>\n        </div>\n\n        {/* Messages List */}\n        <div className=\"lg:col-span-2\">\n          <div className=\"space-y-4\">\n            {filteredMessages.length === 0 ? (\n              <Card>\n                <CardContent className=\"text-center py-12\">\n                  <MessageSquare className=\"w-12 h-12 text-gray-400 mx-auto mb-4\" />\n                  <h3 className=\"text-lg font-medium text-gray-900 mb-2\">Aucun message</h3>\n                  <p className=\"text-gray-600\">Aucun message ne correspond à vos critères de recherche.</p>\n                </CardContent>\n              </Card>\n            ) : (\n              filteredMessages.map(message => (\n                <Card \n                  key={message.id} \n                  className={`cursor-pointer hover:shadow-md transition-shadow ${\n                    !message.isRead ? 'border-blue-200 bg-blue-50' : ''\n                  }`}\n                  onClick={() => {\n                    setSelectedMessage(message);\n                    if (!message.isRead) markAsRead(message.id);\n                  }}\n                >\n                  <CardContent className=\"p-4\">\n                    <div className=\"flex justify-between items-start mb-2\">\n                      <div className=\"flex-1\">\n                        <div className=\"flex items-center space-x-2 mb-1\">\n                          <h4 className={`font-medium ${!message.isRead ? 'font-bold' : ''}`}>\n                            {message.subject}\n                          </h4>\n                          {!message.isRead && (\n                            <div className=\"w-2 h-2 bg-blue-500 rounded-full\"></div>\n                          )}\n                        </div>\n                        <p className=\"text-sm text-gray-600\">\n                          {activeTab === 'sent' ? `À: ${message.receiverName || message.courseName}` : `De: ${message.senderName}`}\n                        </p>\n                      </div>\n                      \n                      <div className=\"flex items-center space-x-2\">\n                        <Button\n                          variant=\"ghost\"\n                          size=\"sm\"\n                          onClick={(e) => {\n                            e.stopPropagation();\n                            toggleMessageStar(message.id);\n                          }}\n                        >\n                          <Star className={`w-4 h-4 ${message.isStarred ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`} />\n                        </Button>\n                        \n                        <Button\n                          variant=\"ghost\"\n                          size=\"sm\"\n                          onClick={(e) => {\n                            e.stopPropagation();\n                            archiveMessage(message.id);\n                          }}\n                        >\n                          <Archive className=\"w-4 h-4 text-gray-400\" />\n                        </Button>\n                      </div>\n                    </div>\n                    \n                    <p className=\"text-sm text-gray-700 line-clamp-2 mb-2\">\n                      {message.content}\n                    </p>\n                    \n                    <div className=\"flex justify-between items-center\">\n                      <div className=\"flex flex-wrap gap-1\">\n                        {message.tags.map(tag => (\n                          <Badge key={tag} className={`text-xs ${getTagStyle(tag)}`}>\n                            {availableTags.find(t => t.value === tag)?.label || tag}\n                          </Badge>\n                        ))}\n                      </div>\n                      \n                      <span className=\"text-xs text-gray-500\">\n                        {format(new Date(message.createdAt), 'dd MMM yyyy à HH:mm', { locale: fr })}\n                      </span>\n                    </div>\n                  </CardContent>\n                </Card>\n              ))\n            )}\n          </div>\n        </div>\n      </div>\n\n      {/* Message Detail Modal */}\n      {selectedMessage && (\n        <Dialog open={!!selectedMessage} onOpenChange={() => setSelectedMessage(null)}>\n          <DialogContent className=\"max-w-3xl\">\n            <DialogHeader>\n              <DialogTitle>{selectedMessage.subject}</DialogTitle>\n              <DialogDescription>\n                De: {selectedMessage.senderName} • {format(new Date(selectedMessage.createdAt), 'dd MMM yyyy à HH:mm', { locale: fr })}\n              </DialogDescription>\n            </DialogHeader>\n            <div className=\"space-y-4\">\n              <div className=\"flex flex-wrap gap-1\">\n                {selectedMessage.tags.map(tag => (\n                  <Badge key={tag} className={`text-xs ${getTagStyle(tag)}`}>\n                    {availableTags.find(t => t.value === tag)?.label || tag}\n                  </Badge>\n                ))}\n              </div>\n              \n              <div className=\"bg-gray-50 p-4 rounded-lg\">\n                <p className=\"whitespace-pre-wrap\">{selectedMessage.content}</p>\n              </div>\n              \n              <div className=\"flex justify-end space-x-2\">\n                <Button variant=\"outline\" onClick={() => setSelectedMessage(null)}>\n                  Fermer\n                </Button>\n                <Button onClick={() => {\n                  setNewMessage({\n                    receiverId: selectedMessage.senderId,\n                    courseId: '',\n                    subject: `Re: ${selectedMessage.subject}`,\n                    content: '',\n                    tags: []\n                  });\n                  setSelectedMessage(null);\n                  setIsComposeOpen(true);\n                }}>\n                  Répondre\n                </Button>\n              </div>\n            </div>\n          </DialogContent>\n        </Dialog>\n      )}\n    </div>\n  );\n}"
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { 
+  MessageSquare, 
+  Send, 
+  Search, 
+  Filter, 
+  Plus, 
+  Users, 
+  Tag, 
+  Clock,
+  CheckCircle,
+  AlertCircle,
+  Star,
+  Archive,
+  Trash2
+} from 'lucide-react';
+import { useAuthStore } from '@/store/auth';
+import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+
+interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: string;
+  receiverId?: string;
+  receiverName?: string;
+  courseId?: string;
+  courseName?: string;
+  subject: string;
+  content: string;
+  tags: string[];
+  isRead: boolean;
+  isStarred: boolean;
+  isArchived: boolean;
+  createdAt: string;
+  attachments?: any[];
+}
+
+const mockMessages: Message[] = [
+  {
+    id: '1',
+    senderId: '2',
+    senderName: 'Prof. Jean Martin',
+    senderRole: 'TEACHER',
+    receiverId: '3',
+    receiverName: 'Marie Dupont',
+    subject: 'Feedback sur votre projet React',
+    content: 'Bonjour Marie, j\'ai corrigé votre projet React. Excellent travail ! Quelques points d\'amélioration : la gestion des erreurs pourrait être renforcée et l\'interface utilisateur est très intuitive. Continuez ainsi !',
+    tags: ['feedback', 'projet'],
+    isRead: false,
+    isStarred: true,
+    isArchived: false,
+    createdAt: '2024-01-24T10:30:00Z'
+  },
+  {
+    id: '2',
+    senderId: '1',
+    senderName: 'Admin Système',
+    senderRole: 'ADMIN',
+    courseId: '1',
+    courseName: 'React Avancé',
+    subject: 'Nouvelle fonctionnalité disponible',
+    content: 'Une nouvelle fonctionnalité de collaboration en temps réel a été ajoutée à la plateforme. Vous pouvez maintenant travailler simultanément sur vos projets.',
+    tags: ['annonce', 'nouveau'],
+    isRead: true,
+    isStarred: false,
+    isArchived: false,
+    createdAt: '2024-01-23T14:15:00Z'
+  },
+  {
+    id: '3',
+    senderId: '3',
+    senderName: 'Marie Dupont',
+    senderRole: 'STUDENT',
+    receiverId: '2',
+    receiverName: 'Prof. Jean Martin',
+    subject: 'Question sur l\'architecture des composants',
+    content: 'Bonjour Professeur, j\'ai une question concernant l\'architecture des composants React. Comment organiser efficacement les composants dans une application complexe ?',
+    tags: ['question', 'urgent'],
+    isRead: true,
+    isStarred: false,
+    isArchived: false,
+    createdAt: '2024-01-22T16:45:00Z'
+  }
+];
+
+const availableTags = [
+  { value: 'urgent', label: 'Urgent', color: 'bg-red-100 text-red-800' },
+  { value: 'annonce', label: 'Annonce', color: 'bg-blue-100 text-blue-800' },
+  { value: 'projet', label: 'Projet', color: 'bg-green-100 text-green-800' },
+  { value: 'question', label: 'Question', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 'feedback', label: 'Feedback', color: 'bg-purple-100 text-purple-800' },
+  { value: 'nouveau', label: 'Nouveau', color: 'bg-indigo-100 text-indigo-800' }
+];
+
+export default function MessagesPage() {
+  const { user } = useAuthStore();
+  const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [activeTab, setActiveTab] = useState('inbox');
+  
+  // Compose message form
+  const [newMessage, setNewMessage] = useState({
+    receiverId: '',
+    courseId: '',
+    subject: '',
+    content: '',
+    tags: [] as string[]
+  });
+
+  const handleSendMessage = () => {
+    if (!newMessage.subject || !newMessage.content) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    const message: Message = {
+      id: `msg-${Date.now()}`,
+      senderId: user?.id || '',
+      senderName: `${user?.firstName} ${user?.lastName}`,
+      senderRole: user?.role || 'STUDENT',
+      receiverId: newMessage.receiverId || undefined,
+      receiverName: newMessage.receiverId ? 'Destinataire' : undefined,
+      courseId: newMessage.courseId || undefined,
+      courseName: newMessage.courseId ? 'Cours sélectionné' : undefined,
+      subject: newMessage.subject,
+      content: newMessage.content,
+      tags: newMessage.tags,
+      isRead: false,
+      isStarred: false,
+      isArchived: false,
+      createdAt: new Date().toISOString()
+    };
+
+    setMessages([message, ...messages]);
+    setNewMessage({ receiverId: '', courseId: '', subject: '', content: '', tags: [] });
+    setIsComposeOpen(false);
+    toast.success('Message envoyé avec succès');
+  };
+
+  const handleTagToggle = (tag: string) => {
+    setNewMessage(prev => ({
+      ...prev,
+      tags: prev.tags.includes(tag) 
+        ? prev.tags.filter(t => t !== tag)
+        : [...prev.tags, tag]
+    }));
+  };
+
+  const toggleMessageStar = (messageId: string) => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId ? { ...msg, isStarred: !msg.isStarred } : msg
+    ));
+  };
+
+  const markAsRead = (messageId: string) => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId ? { ...msg, isRead: true } : msg
+    ));
+  };
+
+  const archiveMessage = (messageId: string) => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId ? { ...msg, isArchived: true } : msg
+    ));
+    toast.success('Message archivé');
+  };
+
+  const filteredMessages = messages.filter(msg => {
+    const matchesSearch = msg.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         msg.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         msg.senderName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesTags = selectedTags.length === 0 || 
+                       selectedTags.some(tag => msg.tags.includes(tag));
+    
+    const matchesTab = (() => {
+      switch (activeTab) {
+        case 'inbox': return !msg.isArchived && (msg.receiverId === user?.id || msg.courseId);
+        case 'sent': return msg.senderId === user?.id;
+        case 'starred': return msg.isStarred;
+        case 'archived': return msg.isArchived;
+        default: return true;
+      }
+    })();
+    
+    return matchesSearch && matchesTags && matchesTab;
+  });
+
+  const getTagStyle = (tag: string) => {
+    const tagConfig = availableTags.find(t => t.value === tag);
+    return tagConfig?.color || 'bg-gray-100 text-gray-800';
+  };
+
+  return (
+    <div className="container mx-auto p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
+          <p className="text-gray-600 mt-1">Communiquez avec vos enseignants et étudiants</p>
+        </div>
+        
+        <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Plus className="w-4 h-4 mr-2" />
+              Nouveau message
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl bg-white">
+            <DialogHeader>
+              <DialogTitle>Composer un message</DialogTitle>
+              <DialogDescription>
+                Envoyez un message à un utilisateur ou à un groupe de cours
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 p-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="recipient">Destinataire</Label>
+                  <Select value={newMessage.receiverId} onValueChange={(value) => setNewMessage({...newMessage, receiverId: value})}>
+                    <SelectTrigger className="bg-white border-gray-300">
+                      <SelectValue placeholder="Sélectionner un destinataire" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="1">Admin Système</SelectItem>
+                      <SelectItem value="2">Prof. Jean Martin</SelectItem>
+                      <SelectItem value="3">Marie Dupont</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="course">Groupe de cours (optionnel)</Label>
+                  <Select value={newMessage.courseId} onValueChange={(value) => setNewMessage({...newMessage, courseId: value})}>
+                    <SelectTrigger className="bg-white border-gray-300">
+                      <SelectValue placeholder="Sélectionner un cours" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="1">React Avancé</SelectItem>
+                      <SelectItem value="2">Node.js Backend</SelectItem>
+                      <SelectItem value="3">Base de Données</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="subject">Sujet</Label>
+                <Input
+                  id="subject"
+                  value={newMessage.subject}
+                  onChange={(e) => setNewMessage({...newMessage, subject: e.target.value})}
+                  placeholder="Sujet du message"
+                  className="bg-white border-gray-300"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="content">Message</Label>
+                <Textarea
+                  id="content"
+                  value={newMessage.content}
+                  onChange={(e) => setNewMessage({...newMessage, content: e.target.value})}
+                  placeholder="Tapez votre message ici..."
+                  rows={6}
+                  className="bg-white border-gray-300"
+                />
+              </div>
+              
+              <div>
+                <Label>Tags</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {availableTags.map(tag => (
+                    <div key={tag.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={tag.value}
+                        checked={newMessage.tags.includes(tag.value)}
+                        onCheckedChange={() => handleTagToggle(tag.value)}
+                      />
+                      <Label htmlFor={tag.value} className={`px-2 py-1 rounded-full text-xs ${tag.color}`}>
+                        {tag.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setIsComposeOpen(false)}>
+                  Annuler
+                </Button>
+                <Button onClick={handleSendMessage} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Send className="w-4 h-4 mr-2" />
+                  Envoyer
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sidebar */}
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Boîte de réception</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {/* Search */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Rechercher des messages..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              {/* Tabs */}
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="inbox">Reçus</TabsTrigger>
+                  <TabsTrigger value="sent">Envoyés</TabsTrigger>
+                </TabsList>
+                <TabsList className="grid w-full grid-cols-2 mt-2">
+                  <TabsTrigger value="starred">Favoris</TabsTrigger>
+                  <TabsTrigger value="archived">Archivés</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              
+              {/* Tag Filters */}
+              <div className="mt-4">
+                <Label className="text-sm font-medium">Filtrer par tags</Label>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {availableTags.map(tag => (
+                    <Badge
+                      key={tag.value}
+                      variant={selectedTags.includes(tag.value) ? "default" : "outline"}
+                      className="cursor-pointer text-xs"
+                      onClick={() => {
+                        setSelectedTags(prev => 
+                          prev.includes(tag.value)
+                            ? prev.filter(t => t !== tag.value)
+                            : [...prev, tag.value]
+                        );
+                      }}
+                    >
+                      {tag.label}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Messages List */}
+        <div className="lg:col-span-2">
+          <div className="space-y-4">
+            {filteredMessages.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun message</h3>
+                  <p className="text-gray-600">Aucun message ne correspond à vos critères de recherche.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              filteredMessages.map(message => (
+                <Card 
+                  key={message.id} 
+                  className={`cursor-pointer hover:shadow-md transition-shadow ${
+                    !message.isRead ? 'border-blue-200 bg-blue-50' : ''
+                  }`}
+                  onClick={() => {
+                    setSelectedMessage(message);
+                    if (!message.isRead) markAsRead(message.id);
+                  }}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h4 className={`font-medium ${!message.isRead ? 'font-bold' : ''}`}>
+                            {message.subject}
+                          </h4>
+                          {!message.isRead && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          {activeTab === 'sent' ? `À: ${message.receiverName || message.courseName}` : `De: ${message.senderName}`}
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMessageStar(message.id);
+                          }}
+                        >
+                          <Star className={`w-4 h-4 ${message.isStarred ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`} />
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            archiveMessage(message.id);
+                          }}
+                        >
+                          <Archive className="w-4 h-4 text-gray-400" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-700 line-clamp-2 mb-2">
+                      {message.content}
+                    </p>
+                    
+                    <div className="flex justify-between items-center">
+                      <div className="flex flex-wrap gap-1">
+                        {message.tags.map(tag => (
+                          <Badge key={tag} className={`text-xs ${getTagStyle(tag)}`}>
+                            {availableTags.find(t => t.value === tag)?.label || tag}
+                          </Badge>
+                        ))}
+                      </div>
+                      
+                      <span className="text-xs text-gray-500">
+                        {format(new Date(message.createdAt), 'dd MMM yyyy à HH:mm', { locale: fr })}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Message Detail Modal */}
+      {selectedMessage && (
+        <Dialog open={!!selectedMessage} onOpenChange={() => setSelectedMessage(null)}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>{selectedMessage.subject}</DialogTitle>
+              <DialogDescription>
+                De: {selectedMessage.senderName} • {format(new Date(selectedMessage.createdAt), 'dd MMM yyyy à HH:mm', { locale: fr })}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-1">
+                {selectedMessage.tags.map(tag => (
+                  <Badge key={tag} className={`text-xs ${getTagStyle(tag)}`}>
+                    {availableTags.find(t => t.value === tag)?.label || tag}
+                  </Badge>
+                ))}
+              </div>
+              
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <p className="whitespace-pre-wrap">{selectedMessage.content}</p>
+              </div>
+              
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setSelectedMessage(null)}>
+                  Fermer
+                </Button>
+                <Button onClick={() => {
+                  setNewMessage({
+                    receiverId: selectedMessage.senderId,
+                    courseId: '',
+                    subject: `Re: ${selectedMessage.subject}`,
+                    content: '',
+                    tags: []
+                  });
+                  setSelectedMessage(null);
+                  setIsComposeOpen(true);
+                }}>
+                  Répondre
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </div>
+  );
+}

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -89,10 +88,7 @@ export default function GradesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="container mx-auto px-4 py-8">
+    <div className="container mx-auto p-6 space-y-6">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Mes Notes</h1>
           <p className="text-gray-600">Consultez vos résultats et suivez votre progression académique</p>
@@ -261,6 +257,7 @@ export default function GradesPage() {
             </div>
           </TabsContent>
         </Tabs>
+      </main>
       </main>
     </div>
   );

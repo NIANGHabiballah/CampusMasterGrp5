@@ -7,13 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Header } from '@/components/layout/Header';
-import { BookOpen, Search, Filter, Users, Clock, Download, Play } from 'lucide-react';
-import { useAuthStore } from '@/store/auth';
-import { ROUTES } from '@/lib/constants';
 import { CourseFilters } from '@/components/courses/CourseFilters';
 import { Course } from '@/types';
 import apiService from '@/services/api-service';
+import { BookOpen, Search, Filter, Users, Clock, Download, Play } from 'lucide-react';
+import { useAuthStore } from '@/store/auth';
+import { ROUTES } from '@/lib/constants';
 
 export default function CoursesPage() {
   const { isAuthenticated, user } = useAuthStore();
@@ -21,6 +20,12 @@ export default function CoursesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSemester, setSelectedSemester] = useState('all');
   const [courses, setCourses] = useState<Course[]>([]);
+  const [filters, setFilters] = useState({
+    search: '',
+    semester: 'all',
+    teacher: '',
+    credits: ''
+  });
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -153,8 +158,6 @@ export default function CoursesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <main className="container mx-auto px-4 py-8">
         {/* Header Section */}
         <div className="mb-8">

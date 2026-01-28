@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, FileText, Clock, CheckCircle, AlertCircle, Download, Eye, MessageSquare } from 'lucide-react';
 import { SubmissionViewer } from '@/components/assignments/SubmissionViewer';
+import { toast } from 'sonner';
 
 const mockAssignments = [
   {
@@ -138,10 +138,7 @@ export default function TeacherAssignmentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="container mx-auto px-4 py-8">
+    <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestion des Devoirs</h1>
@@ -361,6 +358,7 @@ export default function TeacherAssignmentsPage() {
             </Card>
           </TabsContent>
         </Tabs>
+      </main>
       </main>
     </div>
   );

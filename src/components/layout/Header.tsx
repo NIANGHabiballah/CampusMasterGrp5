@@ -134,7 +134,7 @@ export function Header() {
               <Link href={ROUTES.NOTIFICATIONS}>
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-500">
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-500 text-white">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </Badge>
                 )}
@@ -247,7 +247,7 @@ export function Header() {
                             <item.icon className="h-5 w-5" />
                             <span>{item.name}</span>
                             {item.href === ROUTES.MESSAGES && unreadCount > 0 && (
-                              <Badge className="ml-auto bg-red-500 hover:bg-red-500">
+                              <Badge className="ml-auto bg-red-500 hover:bg-red-500 text-white">
                                 {unreadCount > 9 ? '9+' : unreadCount}
                               </Badge>
                             )}

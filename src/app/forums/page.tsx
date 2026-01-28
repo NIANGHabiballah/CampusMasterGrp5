@@ -1,17 +1,27 @@
 'use client';
 
 import { useState } from 'react';
-import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageSquare, Users, Search, Plus, Pin, Clock, Eye } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function ForumsPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isNewTopicOpen, setIsNewTopicOpen] = useState(false);
+  const [newTopic, setNewTopic] = useState({
+    title: '',
+    content: '',
+    forumId: ''
+  });
 
   const forums = [
     {
@@ -114,6 +124,19 @@ export default function ForumsPage() {
     }
   ];
 
+  const handleCreateTopic = () => {
+    if (!newTopic.title || !newTopic.content || !newTopic.forumId) {
+      toast.error('Veuillez remplir tous les champs');
+      return;
+    }
+    
+    // Simuler la création du sujet
+    console.log('Nouveau sujet créé:', newTopic);
+    setNewTopic({ title: '', content: '', forumId: '' });
+    setIsNewTopicOpen(false);
+    toast.success('Sujet créé avec succès !');
+  };
+
   const filteredForums = forums.filter(forum =>
     forum.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     forum.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -121,8 +144,6 @@ export default function ForumsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <main className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -130,10 +151,68 @@ export default function ForumsPage() {
             <p className="text-gray-600">Échangez avec vos camarades sur les sujets de cours</p>
           </div>
           
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau sujet
-          </Button>
+          <Dialog open={isNewTopicOpen} onOpenChange={setIsNewTopicOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Nouveau sujet
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl bg-white">
+              <DialogHeader>
+                <DialogTitle>Créer un nouveau sujet</DialogTitle>
+                <DialogDescription>
+                  Partagez vos questions ou idées avec la communauté
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 p-4">
+                <div className="space-y-2">
+                  <Label htmlFor="forum">Forum</Label>
+                  <Select value={newTopic.forumId} onValueChange={(value) => setNewTopic({...newTopic, forumId: value})}>
+                    <SelectTrigger className="bg-white border-gray-300">
+                      <SelectValue placeholder="Sélectionner un forum" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      {forums.map(forum => (
+                        <SelectItem key={forum.id} value={forum.id.toString()}>
+                          {forum.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="title">Titre du sujet</Label>
+                  <Input 
+                    id="title"
+                    value={newTopic.title}
+                    onChange={(e) => setNewTopic({...newTopic, title: e.target.value})}
+                    placeholder="Ex: Question sur React Hooks" 
+                    className="bg-white border-gray-300"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="content">Contenu</Label>
+                  <Textarea 
+                    id="content"
+                    value={newTopic.content}
+                    onChange={(e) => setNewTopic({...newTopic, content: e.target.value})}
+                    placeholder="Décrivez votre question ou sujet de discussion..." 
+                    className="bg-white border-gray-300 min-h-32"
+                    rows={6}
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setIsNewTopicOpen(false)}>
+                    Annuler
+                  </Button>
+                  <Button onClick={handleCreateTopic} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    Créer le sujet
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="mb-6">

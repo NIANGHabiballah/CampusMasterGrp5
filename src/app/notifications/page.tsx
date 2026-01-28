@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNotificationStore } from '@/store/notifications';
-import { Bell, CheckCircle, FileText, MessageSquare, Clock, MarkAsRead } from 'lucide-react';
+import { Bell, CheckCircle, FileText, MessageSquare, Clock, Check } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NotificationsPage() {
@@ -63,7 +63,7 @@ export default function NotificationsPage() {
           
           {unreadCount > 0 && (
             <Button onClick={markAllAsRead} variant="outline">
-              <MarkAsRead className="h-4 w-4 mr-2" />
+              <Check className="h-4 w-4 mr-2" />
               Tout marquer comme lu
             </Button>
           )}

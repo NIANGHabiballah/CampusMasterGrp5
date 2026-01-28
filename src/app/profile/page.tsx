@@ -13,7 +13,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Header } from '@/components/layout/Header';
 import { User, Mail, Phone, MapPin, Calendar, Edit, Save, Camera, Award, BookOpen, TrendingUp } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { ROUTES, USER_ROLES } from '@/lib/constants';
@@ -93,8 +92,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-      
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Profile Header */}

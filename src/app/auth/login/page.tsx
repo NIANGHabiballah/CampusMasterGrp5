@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff, GraduationCap } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { toast } from 'sonner';
@@ -16,17 +15,15 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
   
   const { login, isLoading } = useAuthStore();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (!email || !password) {
-      setError('Veuillez remplir tous les champs');
+      toast.error('Veuillez remplir tous les champs');
       return;
     }
 
@@ -36,10 +33,10 @@ export default function LoginPage() {
         toast.success('Connexion réussie !');
         router.push('/dashboard');
       } else {
-        setError('Email ou mot de passe incorrect');
+        toast.error('Email ou mot de passe incorrect');
       }
     } catch (error: any) {
-      setError(error.message || 'Erreur de connexion');
+      toast.error(error.message || 'Erreur de connexion');
     }
   };
 
@@ -65,11 +62,6 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
@@ -115,7 +107,7 @@ export default function LoginPage() {
               
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
                 disabled={isLoading}
               >
                 {isLoading ? (

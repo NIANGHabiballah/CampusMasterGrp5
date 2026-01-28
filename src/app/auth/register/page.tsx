@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, GraduationCap, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { toast } from 'sonner';
@@ -22,12 +21,11 @@ export default function RegisterPage() {
     confirmPassword: '',
     role: 'STUDENT' as const,
     studentId: '',
-    department: ''
+    filiere: ''
   });
   
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
   const { register } = useAuthStore();
@@ -35,25 +33,24 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-      setError('Veuillez remplir tous les champs obligatoires');
+      toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Les mots de passe ne correspondent pas');
+      toast.error('Les mots de passe ne correspondent pas');
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères');
+      toast.error('Le mot de passe doit contenir au moins 6 caractères');
       return;
     }
 
     if (formData.role === 'STUDENT' && !formData.studentId) {
-      setError('Le numéro étudiant est obligatoire pour les étudiants');
+      toast.error('Le numéro étudiant est obligatoire pour les étudiants');
       return;
     }
 
@@ -67,7 +64,7 @@ export default function RegisterPage() {
         password: formData.password,
         role: formData.role,
         studentId: formData.studentId,
-        department: formData.department
+        filiere: formData.filiere
       });
 
       if (success) {
@@ -75,14 +72,14 @@ export default function RegisterPage() {
         router.push('/auth/login');
       }
     } catch (error: any) {
-      setError(error.message || 'Erreur lors de l\'inscription');
+      toast.error(error.message || 'Erreur lors de l\'inscription');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 py-8">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-2">
@@ -91,7 +88,7 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <Card className="border-0 shadow-xl">
+        <Card className="border-0 shadow-xl bg-white">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
               Créer un compte
@@ -102,11 +99,6 @@ export default function RegisterPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -146,7 +138,7 @@ export default function RegisterPage() {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="role">Rôle *</Label>
                   <Select value={formData.role} onValueChange={(value: any) => setFormData({...formData, role: value})}>
@@ -159,19 +151,39 @@ export default function RegisterPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="department">Département</Label>
-                  <Select value={formData.department} onValueChange={(value) => setFormData({...formData, department: value})}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Informatique">Informatique</SelectItem>
-                      <SelectItem value="Mathématiques">Mathématiques</SelectItem>
-                      <SelectItem value="Physique">Physique</SelectItem>
-                      <SelectItem value="Économie">Économie</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="space-y-2 relative">
+                  <Label htmlFor="filiere">Filière</Label>
+                  <div className="relative z-10">
+                    <Select value={formData.filiere} onValueChange={(value) => setFormData({...formData, filiere: value})}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Sélectionner" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-20 overflow-y-auto" position="popper">
+                        <SelectItem value="ANG">🔵 Anglais</SelectItem>
+                        <SelectItem value="SCE">🔵 Sciences Éducation</SelectItem>
+                        <SelectItem value="SOC">🔵 Sociologie</SelectItem>
+                        <SelectItem value="ACG">🟢 Audit & Contrôle</SelectItem>
+                        <SelectItem value="DPAP">🟢 Droit Public Admin</SelectItem>
+                        <SelectItem value="DPIP">🟢 Droit International</SelectItem>
+                        <SelectItem value="DPR">🟢 Droit Privé</SelectItem>
+                        <SelectItem value="FC">🟢 Finance-Compta</SelectItem>
+                        <SelectItem value="EEDD">🟢 Éco. Environnement</SelectItem>
+                        <SelectItem value="MGRH">🟢 Management RH</SelectItem>
+                        <SelectItem value="MCTDL">🟢 Management Collectivités</SelectItem>
+                        <SelectItem value="PSD">🟢 Paix & Sécurité</SelectItem>
+                        <SelectItem value="BDA">🟣 Big Data</SelectItem>
+                        <SelectItem value="CS">🟣 Cybersécurité</SelectItem>
+                        <SelectItem value="MMASN">🟣 Modélisation Math</SelectItem>
+                        <SelectItem value="IA">🟣 Intelligence Artificielle</SelectItem>
+                        <SelectItem value="IL">🟣 Ingénierie Logicielle</SelectItem>
+                        <SelectItem value="MCS">🟣 Calcul Scientifique</SelectItem>
+                        <SelectItem value="SRIV">🟣 Systèmes & Réseaux</SelectItem>
+                        <SelectItem value="ROB">🟣 Robotique</SelectItem>
+                        <SelectItem value="RCC">🟣 Cinématographie</SelectItem>
+                        <SelectItem value="MISAAN">🟣 Agro-Alimentaire</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
               
@@ -242,7 +254,7 @@ export default function RegisterPage() {
               
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white" 
                 disabled={isLoading}
               >
                 {isLoading ? (
