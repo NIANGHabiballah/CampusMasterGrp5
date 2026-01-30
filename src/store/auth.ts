@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, UserRole } from '@/types';
+import { apiService } from '@/services/api';
 
 interface AuthState {
   user: User | null;
@@ -25,48 +26,6 @@ interface RegisterData {
   studentId?: string;
   department?: string;
 }
-
-// Mock users database
-const mockUsers: (User & { password: string })[] = [
-  {
-    id: '1',
-    firstName: 'Admin',
-    lastName: 'Système',
-    email: 'admin@campus.fr',
-    password: 'password',
-    role: 'ADMIN',
-    avatar: '/avatars/admin.jpg',
-    department: 'Administration',
-    isActive: true,
-    createdAt: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '2',
-    firstName: 'Prof. Jean',
-    lastName: 'Martin',
-    email: 'prof@campus.fr',
-    password: 'password',
-    role: 'TEACHER',
-    avatar: '/avatars/teacher.jpg',
-    department: 'Informatique',
-    isActive: true,
-    createdAt: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '3',
-    firstName: 'Marie',
-    lastName: 'Dupont',
-    email: 'etudiant@campus.fr',
-    password: 'password',
-    role: 'STUDENT',
-    avatar: '/avatars/student.jpg',
-    studentId: 'M2-2024-001',
-    department: 'Informatique',
-    semester: 'S1 2024',
-    isActive: true,
-    createdAt: '2024-01-01T00:00:00Z'
-  }
-];
 
 // Role permissions mapping
 const rolePermissions: Record<UserRole, string[]> = {
@@ -107,30 +66,22 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          const response = await apiService.login(email, password);
           
-          const user = mockUsers.find(u => u.email === email && u.password === password);
-          
-          if (!user) {
-            set({ isLoading: false });
-            return false;
-          }
-
-          if (!user.isActive) {
-            set({ isLoading: false });
-            throw new Error('Compte désactivé');
-          }
-
-          const { password: _, ...userWithoutPassword } = user;
-          const token = `mock-token-${user.id}-${Date.now()}`;
+          const user: User = {
+            id: response.user.id.toString(),
+            firstName: response.user.firstName,
+            lastName: response.user.lastName,
+            email: response.user.email,
+            role: response.user.role as UserRole,
+            isActive: response.user.status === 'ACTIVE',
+            createdAt: new Date().toISOString(),
+            lastLogin: new Date().toISOString()
+          };
           
           set({
-            user: {
-              ...userWithoutPassword,
-              lastLogin: new Date().toISOString()
-            },
-            token,
+            user,
+            token: response.token,
             isAuthenticated: true,
             isLoading: false
           });
@@ -138,7 +89,7 @@ export const useAuthStore = create<AuthState>()(
           return true;
         } catch (error) {
           set({ isLoading: false });
-          throw error;
+          return false;
         }
       },
 
@@ -146,30 +97,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          // Check if email already exists
-          const existingUser = mockUsers.find(u => u.email === userData.email);
-          if (existingUser) {
-            throw new Error('Email déjà utilisé');
-          }
-
-          const newUser: User = {
-            id: `user-${Date.now()}`,
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            email: userData.email,
-            role: userData.role,
-            studentId: userData.studentId,
-            department: userData.department,
-            isActive: userData.role === 'STUDENT', // Students need approval
-            createdAt: new Date().toISOString()
-          };
-
-          // Add to mock database
-          mockUsers.push({ ...newUser, password: userData.password });
-          
+          await apiService.register(userData);
           set({ isLoading: false });
           return true;
         } catch (error) {
@@ -191,12 +119,8 @@ export const useAuthStore = create<AuthState>()(
         if (!user) return false;
 
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
           const updatedUser = { ...user, ...data };
           set({ user: updatedUser });
-          
           return true;
         } catch (error) {
           return false;
@@ -204,19 +128,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       changePassword: async (currentPassword: string, newPassword: string) => {
-        const { user } = get();
-        if (!user) return false;
-
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          const mockUser = mockUsers.find(u => u.id === user.id);
-          if (!mockUser || mockUser.password !== currentPassword) {
-            throw new Error('Mot de passe actuel incorrect');
-          }
-
-          mockUser.password = newPassword;
+          // TODO: Implement with backend API
           return true;
         } catch (error) {
           throw error;

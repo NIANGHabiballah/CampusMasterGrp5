@@ -1,0 +1,387 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------< com.campusmaster:campusmaster-backend >----------------
+[INFO] Building campusmaster-backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.10:run (default-cli) > test-compile @ campusmaster-backend >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ campusmaster-backend ---
+[INFO] Copying 2 resources from src/main/resources to target/classes
+[INFO] Copying 0 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ campusmaster-backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ campusmaster-backend ---
+[INFO] skip non existing resourceDirectory /Users/7maksacodpc/Documents/Données professionnelles/Master 2/campusmaster/campusmaster-backend/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ campusmaster-backend ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] 
+[INFO] <<< spring-boot:3.5.10:run (default-cli) < test-compile @ campusmaster-backend <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.10:run (default-cli) @ campusmaster-backend ---
+[INFO] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.10)
+
+2026-01-30T18:39:37.046Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] c.c.CampusmasterBackendApplication       : Starting CampusmasterBackendApplication using Java 17.0.17 with PID 41576 (/Users/7maksacodpc/Documents/Données professionnelles/Master 2/campusmaster/campusmaster-backend/target/classes started by 7maksacodpc in /Users/7maksacodpc/Documents/Données professionnelles/Master 2/campusmaster/campusmaster-backend)
+2026-01-30T18:39:37.047Z DEBUG 41576 --- [campusmaster-backend] [  restartedMain] c.c.CampusmasterBackendApplication       : Running with Spring Boot v3.5.10, Spring v6.2.15
+2026-01-30T18:39:37.048Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] c.c.CampusmasterBackendApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-01-30T18:39:37.098Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-01-30T18:39:37.098Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-01-30T18:39:37.824Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-01-30T18:39:37.886Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 54 ms. Found 4 JPA repository interfaces.
+2026-01-30T18:39:38.410Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-01-30T18:39:38.422Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-01-30T18:39:38.422Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-01-30T18:39:38.464Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-01-30T18:39:38.465Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1365 ms
+2026-01-30T18:39:38.646Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-01-30T18:39:38.686Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.41.Final
+2026-01-30T18:39:38.714Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-01-30T18:39:38.948Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-01-30T18:39:38.973Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-01-30T18:39:39.147Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:campusmaster user=SA
+2026-01-30T18:39:39.149Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-01-30T18:39:39.167Z  WARN 41576 --- [campusmaster-backend] [  restartedMain] org.hibernate.dialect.Dialect            : HHH000511: The 2.3.232 version for [org.hibernate.dialect.PostgreSQLDialect] is no longer supported, hence certain features may not work properly. The minimum supported version is 12.0.0. Check the community dialects project for available legacy versions.
+2026-01-30T18:39:39.172Z  WARN 41576 --- [campusmaster-backend] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-01-30T18:39:39.190Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 2.3.232
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-01-30T18:39:40.034Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+Hibernate: 
+    set client_min_messages = WARNING
+2026-01-30T18:39:40.052Z  WARN 41576 --- [campusmaster-backend] [  restartedMain] o.h.t.s.i.ExceptionHandlerLoggedImpl     : GenerationTarget encountered exception accepting command : Error executing DDL "
+    set client_min_messages = WARNING" via JDBC [Erreur de syntaxe dans l'instruction SQL "\000a    set [*]client_min_messages = WARNING"; attendu "@, AUTOCOMMIT, EXCLUSIVE, IGNORECASE, PASSWORD, SALT, MODE, DATABASE, COLLATION, CLUSTER, DATABASE_EVENT_LISTENER, ALLOW_LITERALS, DEFAULT_TABLE_TYPE, SCHEMA, CATALOG, SCHEMA_SEARCH_PATH, JAVA_OBJECT_SERIALIZER, IGNORE_CATALOGS, SESSION, TRANSACTION, TIME, NON_KEYWORDS, DEFAULT_NULL_ORDERING"
+Syntax error in SQL statement "\000a    set [*]client_min_messages = WARNING"; expected "@, AUTOCOMMIT, EXCLUSIVE, IGNORECASE, PASSWORD, SALT, MODE, DATABASE, COLLATION, CLUSTER, DATABASE_EVENT_LISTENER, ALLOW_LITERALS, DEFAULT_TABLE_TYPE, SCHEMA, CATALOG, SCHEMA_SEARCH_PATH, JAVA_OBJECT_SERIALIZER, IGNORE_CATALOGS, SESSION, TRANSACTION, TIME, NON_KEYWORDS, DEFAULT_NULL_ORDERING";]
+
+org.hibernate.tool.schema.spi.CommandAcceptanceException: Error executing DDL "
+    set client_min_messages = WARNING" via JDBC [Erreur de syntaxe dans l'instruction SQL "\000a    set [*]client_min_messages = WARNING"; attendu "@, AUTOCOMMIT, EXCLUSIVE, IGNORECASE, PASSWORD, SALT, MODE, DATABASE, COLLATION, CLUSTER, DATABASE_EVENT_LISTENER, ALLOW_LITERALS, DEFAULT_TABLE_TYPE, SCHEMA, CATALOG, SCHEMA_SEARCH_PATH, JAVA_OBJECT_SERIALIZER, IGNORE_CATALOGS, SESSION, TRANSACTION, TIME, NON_KEYWORDS, DEFAULT_NULL_ORDERING"
+Syntax error in SQL statement "\000a    set [*]client_min_messages = WARNING"; expected "@, AUTOCOMMIT, EXCLUSIVE, IGNORECASE, PASSWORD, SALT, MODE, DATABASE, COLLATION, CLUSTER, DATABASE_EVENT_LISTENER, ALLOW_LITERALS, DEFAULT_TABLE_TYPE, SCHEMA, CATALOG, SCHEMA_SEARCH_PATH, JAVA_OBJECT_SERIALIZER, IGNORE_CATALOGS, SESSION, TRANSACTION, TIME, NON_KEYWORDS, DEFAULT_NULL_ORDERING";]
+	at org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase.accept(GenerationTargetToDatabase.java:94) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.hibernate.tool.schema.internal.Helper.applySqlString(Helper.java:233) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.hibernate.tool.schema.internal.SchemaDropperImpl.dropFromMetadata(SchemaDropperImpl.java:213) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.hibernate.tool.schema.internal.SchemaDropperImpl.performDrop(SchemaDropperImpl.java:186) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.hibernate.tool.schema.internal.SchemaDropperImpl.doDrop(SchemaDropperImpl.java:156) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.hibernate.tool.schema.internal.SchemaDropperImpl.doDrop(SchemaDropperImpl.java:116) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.performDatabaseAction(SchemaManagementToolCoordinator.java:238) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.lambda$process$5(SchemaManagementToolCoordinator.java:144) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at java.base/java.util.HashMap.forEach(HashMap.java:1421) ~[na:na]
+	at org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.process(SchemaManagementToolCoordinator.java:141) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.hibernate.boot.internal.SessionFactoryObserverForSchemaExport.sessionFactoryCreated(SessionFactoryObserverForSchemaExport.java:37) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.hibernate.internal.SessionFactoryObserverChain.sessionFactoryCreated(SessionFactoryObserverChain.java:35) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.hibernate.internal.SessionFactoryImpl.<init>(SessionFactoryImpl.java:324) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.hibernate.boot.internal.SessionFactoryBuilderImpl.build(SessionFactoryBuilderImpl.java:463) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl.build(EntityManagerFactoryBuilderImpl.java:1517) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	at org.springframework.orm.jpa.vendor.SpringHibernateJpaPersistenceProvider.createContainerEntityManagerFactory(SpringHibernateJpaPersistenceProvider.java:66) ~[spring-orm-6.2.15.jar:6.2.15]
+	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.createNativeEntityManagerFactory(LocalContainerEntityManagerFactoryBean.java:390) ~[spring-orm-6.2.15.jar:6.2.15]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.buildNativeEntityManagerFactory(AbstractEntityManagerFactoryBean.java:419) ~[spring-orm-6.2.15.jar:6.2.15]
+	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.afterPropertiesSet(AbstractEntityManagerFactoryBean.java:400) ~[spring-orm-6.2.15.jar:6.2.15]
+	at org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean.afterPropertiesSet(LocalContainerEntityManagerFactoryBean.java:366) ~[spring-orm-6.2.15.jar:6.2.15]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1873) ~[spring-beans-6.2.15.jar:6.2.15]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1822) ~[spring-beans-6.2.15.jar:6.2.15]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:607) ~[spring-beans-6.2.15.jar:6.2.15]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.15.jar:6.2.15]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.15.jar:6.2.15]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373) ~[spring-beans-6.2.15.jar:6.2.15]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.15.jar:6.2.15]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:207) ~[spring-beans-6.2.15.jar:6.2.15]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:973) ~[spring-context-6.2.15.jar:6.2.15]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627) ~[spring-context-6.2.15.jar:6.2.15]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.5.10.jar:3.5.10]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752) ~[spring-boot-3.5.10.jar:3.5.10]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439) ~[spring-boot-3.5.10.jar:3.5.10]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318) ~[spring-boot-3.5.10.jar:3.5.10]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1361) ~[spring-boot-3.5.10.jar:3.5.10]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1350) ~[spring-boot-3.5.10.jar:3.5.10]
+	at com.campusmaster.CampusmasterBackendApplication.main(CampusmasterBackendApplication.java:10) ~[classes/:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569) ~[na:na]
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:50) ~[spring-boot-devtools-3.5.10.jar:3.5.10]
+Caused by: org.h2.jdbc.JdbcSQLSyntaxErrorException: Erreur de syntaxe dans l'instruction SQL "\000a    set [*]client_min_messages = WARNING"; attendu "@, AUTOCOMMIT, EXCLUSIVE, IGNORECASE, PASSWORD, SALT, MODE, DATABASE, COLLATION, CLUSTER, DATABASE_EVENT_LISTENER, ALLOW_LITERALS, DEFAULT_TABLE_TYPE, SCHEMA, CATALOG, SCHEMA_SEARCH_PATH, JAVA_OBJECT_SERIALIZER, IGNORE_CATALOGS, SESSION, TRANSACTION, TIME, NON_KEYWORDS, DEFAULT_NULL_ORDERING"
+Syntax error in SQL statement "\000a    set [*]client_min_messages = WARNING"; expected "@, AUTOCOMMIT, EXCLUSIVE, IGNORECASE, PASSWORD, SALT, MODE, DATABASE, COLLATION, CLUSTER, DATABASE_EVENT_LISTENER, ALLOW_LITERALS, DEFAULT_TABLE_TYPE, SCHEMA, CATALOG, SCHEMA_SEARCH_PATH, JAVA_OBJECT_SERIALIZER, IGNORE_CATALOGS, SESSION, TRANSACTION, TIME, NON_KEYWORDS, DEFAULT_NULL_ORDERING"; SQL statement:
+
+    set client_min_messages = WARNING [42001-232]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:514) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.message.DbException.getJdbcSQLException(DbException.java:489) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.message.DbException.getSyntaxError(DbException.java:261) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.command.ParserBase.getSyntaxError(ParserBase.java:762) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.command.Parser.parseSet(Parser.java:7592) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.command.Parser.parsePrepared(Parser.java:614) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.command.Parser.parse(Parser.java:581) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.command.Parser.parse(Parser.java:561) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.command.Parser.prepareCommand(Parser.java:484) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.engine.SessionLocal.prepareLocal(SessionLocal.java:645) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.engine.SessionLocal.prepareCommand(SessionLocal.java:561) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.jdbc.JdbcConnection.prepareCommand(JdbcConnection.java:1164) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:245) ~[h2-2.3.232.jar:2.3.232]
+	at org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:231) ~[h2-2.3.232.jar:2.3.232]
+	at com.zaxxer.hikari.pool.ProxyStatement.execute(ProxyStatement.java:95) ~[HikariCP-6.3.3.jar:na]
+	at com.zaxxer.hikari.pool.HikariProxyStatement.execute(HikariProxyStatement.java) ~[HikariCP-6.3.3.jar:na]
+	at org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase.accept(GenerationTargetToDatabase.java:80) ~[hibernate-core-6.6.41.Final.jar:6.6.41.Final]
+	... 41 common frames omitted
+
+Hibernate: 
+    alter table if exists assignments 
+       drop constraint if exists FK6p1m72jobsvmrrn4bpj4168mg
+Hibernate: 
+    alter table if exists courses 
+       drop constraint if exists FKt4ba5fab1x56tmt4nsypv5lm5
+Hibernate: 
+    alter table if exists submissions 
+       drop constraint if exists FKrirbb44savy2g7nws0hoxs949
+Hibernate: 
+    alter table if exists submissions 
+       drop constraint if exists FK3p6y8mnhpwusdgqrdl4hcl72m
+Hibernate: 
+    drop table if exists assignments cascade
+Hibernate: 
+    drop table if exists courses cascade
+Hibernate: 
+    drop table if exists submissions cascade
+Hibernate: 
+    drop table if exists users cascade
+Hibernate: 
+    create table assignments (
+        max_points integer,
+        course_id bigint,
+        created_at timestamp(6),
+        due_date timestamp(6),
+        id bigint generated by default as identity,
+        updated_at timestamp(6),
+        description TEXT,
+        title varchar(255) not null,
+        primary key (id)
+    )
+Hibernate: 
+    create table courses (
+        credits integer not null,
+        created_at timestamp(6),
+        id bigint generated by default as identity,
+        teacher_id bigint,
+        updated_at timestamp(6),
+        code varchar(255) not null,
+        description TEXT,
+        title varchar(255) not null,
+        primary key (id)
+    )
+Hibernate: 
+    create table submissions (
+        grade integer,
+        assignment_id bigint,
+        graded_at timestamp(6),
+        id bigint generated by default as identity,
+        student_id bigint,
+        submitted_at timestamp(6),
+        content TEXT,
+        feedback TEXT,
+        file_path varchar(255),
+        primary key (id)
+    )
+Hibernate: 
+    create table users (
+        created_at timestamp(6),
+        id bigint generated by default as identity,
+        updated_at timestamp(6),
+        email varchar(255) not null unique,
+        first_name varchar(255) not null,
+        last_name varchar(255) not null,
+        password varchar(255) not null,
+        role varchar(255) check (role in ('STUDENT','TEACHER','ADMIN')),
+        status varchar(255) check (status in ('ACTIVE','INACTIVE','PENDING')),
+        primary key (id)
+    )
+Hibernate: 
+    alter table if exists assignments 
+       add constraint FK6p1m72jobsvmrrn4bpj4168mg 
+       foreign key (course_id) 
+       references courses
+Hibernate: 
+    alter table if exists courses 
+       add constraint FKt4ba5fab1x56tmt4nsypv5lm5 
+       foreign key (teacher_id) 
+       references users
+Hibernate: 
+    alter table if exists submissions 
+       add constraint FKrirbb44savy2g7nws0hoxs949 
+       foreign key (assignment_id) 
+       references assignments
+Hibernate: 
+    alter table if exists submissions 
+       add constraint FK3p6y8mnhpwusdgqrdl4hcl72m 
+       foreign key (student_id) 
+       references users
+2026-01-30T18:39:40.098Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-01-30T18:39:40.449Z  WARN 41576 --- [campusmaster-backend] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-01-30T18:39:40.641Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-01-30T18:39:40.715Z DEBUG 41576 --- [campusmaster-backend] [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, LogoutFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, ExceptionTranslationFilter, AuthorizationFilter
+2026-01-30T18:39:40.846Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:h2:mem:campusmaster'
+2026-01-30T18:39:40.917Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-01-30T18:39:40.944Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
+2026-01-30T18:39:40.952Z  INFO 41576 --- [campusmaster-backend] [  restartedMain] c.c.CampusmasterBackendApplication       : Started CampusmasterBackendApplication in 4.367 seconds (process running for 4.759)
+Hibernate: 
+    insert 
+    into
+        users
+        (created_at, email, first_name, last_name, password, role, status, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        users
+        (created_at, email, first_name, last_name, password, role, status, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        users
+        (created_at, email, first_name, last_name, password, role, status, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        courses
+        (code, created_at, credits, description, teacher_id, title, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        courses
+        (code, created_at, credits, description, teacher_id, title, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        assignments
+        (course_id, created_at, description, due_date, max_points, title, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+Hibernate: 
+    insert 
+    into
+        assignments
+        (course_id, created_at, description, due_date, max_points, title, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+2026-01-30T18:52:34.910Z  INFO 41576 --- [campusmaster-backend] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-30T18:52:34.914Z  INFO 41576 --- [campusmaster-backend] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-01-30T18:52:34.923Z  INFO 41576 --- [campusmaster-backend] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 9 ms
+2026-01-30T18:52:34.959Z DEBUG 41576 --- [campusmaster-backend] [nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Securing GET /api/courses
+2026-01-30T18:52:34.969Z DEBUG 41576 --- [campusmaster-backend] [nio-8080-exec-1] o.s.security.web.FilterChainProxy        : Secured GET /api/courses
+Hibernate: 
+    select
+        c1_0.id,
+        c1_0.code,
+        c1_0.created_at,
+        c1_0.credits,
+        c1_0.description,
+        c1_0.teacher_id,
+        c1_0.title,
+        c1_0.updated_at 
+    from
+        courses c1_0
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.created_at,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password,
+        u1_0.role,
+        u1_0.status,
+        u1_0.updated_at 
+    from
+        users u1_0 
+    where
+        u1_0.id=?
+Hibernate: 
+    select
+        a1_0.course_id,
+        a1_0.id,
+        a1_0.created_at,
+        a1_0.description,
+        a1_0.due_date,
+        a1_0.max_points,
+        a1_0.title,
+        a1_0.updated_at 
+    from
+        assignments a1_0 
+    where
+        a1_0.course_id=?
+2026-01-30T18:52:35.424Z  WARN 41576 --- [campusmaster-backend] [nio-8080-exec-1] .w.s.m.s.DefaultHandlerExceptionResolver : Ignoring exception, response committed already: org.springframework.http.converter.HttpMessageNotWritableException: Could not write JSON: Document nesting depth (1001) exceeds the maximum allowed (1000, from `StreamWriteConstraints.getMaxNestingDepth()`)
+2026-01-30T18:52:35.425Z  WARN 41576 --- [campusmaster-backend] [nio-8080-exec-1] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.http.converter.HttpMessageNotWritableException: Could not write JSON: Document nesting depth (1001) exceeds the maximum allowed (1000, from `StreamWriteConstraints.getMaxNestingDepth()`)]
+2026-01-30T18:52:35.427Z DEBUG 41576 --- [campusmaster-backend] [nio-8080-exec-1] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-30T18:54:14.334Z DEBUG 41576 --- [campusmaster-backend] [nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Securing POST /api/auth/register
+2026-01-30T18:54:14.334Z DEBUG 41576 --- [campusmaster-backend] [nio-8080-exec-2] o.s.security.web.FilterChainProxy        : Secured POST /api/auth/register
+Hibernate: 
+    select
+        u1_0.id 
+    from
+        users u1_0 
+    where
+        u1_0.email=? 
+    fetch
+        first ? rows only
+Hibernate: 
+    insert 
+    into
+        users
+        (created_at, email, first_name, last_name, password, role, status, updated_at) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?)
+2026-01-30T18:54:14.729Z DEBUG 41576 --- [campusmaster-backend] [nio-8080-exec-2] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-01-30T19:04:00.784Z  INFO 41576 --- [campusmaster-backend] [ionShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2026-01-30T19:04:00.794Z  INFO 41576 --- [campusmaster-backend] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2026-01-30T19:04:00.800Z  INFO 41576 --- [campusmaster-backend] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+Hibernate: 
+    set client_min_messages = WARNING
+2026-01-30T19:04:00.802Z ERROR 41576 --- [campusmaster-backend] [ionShutdownHook] .SchemaDropperImpl$DelayedDropActionImpl : HHH000478: Unsuccessful: 
+    set client_min_messages = WARNING
+Hibernate: 
+    alter table if exists assignments 
+       drop constraint if exists FK6p1m72jobsvmrrn4bpj4168mg
+Hibernate: 
+    alter table if exists courses 
+       drop constraint if exists FKt4ba5fab1x56tmt4nsypv5lm5
+Hibernate: 
+    alter table if exists submissions 
+       drop constraint if exists FKrirbb44savy2g7nws0hoxs949
+Hibernate: 
+    alter table if exists submissions 
+       drop constraint if exists FK3p6y8mnhpwusdgqrdl4hcl72m
+Hibernate: 
+    drop table if exists assignments cascade
+Hibernate: 
+    drop table if exists courses cascade
+Hibernate: 
+    drop table if exists submissions cascade
+Hibernate: 
+    drop table if exists users cascade
+2026-01-30T19:04:00.814Z  WARN 41576 --- [campusmaster-backend] [ionShutdownHook] o.s.b.f.support.DisposableBeanAdapter    : Invocation of destroy method failed on bean with name 'inMemoryDatabaseShutdownExecutor': org.h2.jdbc.JdbcSQLNonTransientConnectionException: La base de données est déjà fermée (pour désactiver la fermeture automatique à l'arrêt de la VM, ajoutez "; DB_CLOSE_ON_EXIT = FALSE" à l'URL db)
+Database is already closed (to disable automatic closing at VM shutdown, add ";DB_CLOSE_ON_EXIT=FALSE" to the db URL) [90121-232]
+2026-01-30T19:04:00.814Z  INFO 41576 --- [campusmaster-backend] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-01-30T19:04:00.817Z  INFO 41576 --- [campusmaster-backend] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
