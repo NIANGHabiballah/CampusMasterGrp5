@@ -44,30 +44,78 @@ import { fr } from 'date-fns/locale';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
 
+import { apiService } from '@/services/api';
+
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const { 
-    stats, 
-    gradeDistribution, 
-    activityData, 
-    coursePerformance, 
-    isLoading, 
-    fetchDashboardData, 
-    fetchActivityData, 
-    fetchCoursePerformance 
-  } = useDashboardStore();
+  const [stats, setStats] = useState({ totalStudents: 0, totalCourses: 0, totalAssignments: 0, submissionRate: 0 });
+  const [gradeDistribution, setGradeDistribution] = useState([]);
+  const [activityData, setActivityData] = useState([]);
+  const [coursePerformance, setCoursePerformance] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('7d');
 
   useEffect(() => {
-    fetchDashboardData();
-    fetchActivityData(selectedPeriod);
-    fetchCoursePerformance();
-  }, [fetchDashboardData, fetchActivityData, fetchCoursePerformance, selectedPeriod]);
+    const loadDashboardData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Charger les données selon le rôle
+        if (user?.role === 'ADMIN') {
+          const [users, courses, assignments] = await Promise.all([
+            apiService.getUsers(),
+            apiService.getCourses(),
+            apiService.getAssignments()
+          ]);
+          
+          setStats({
+            totalStudents: users.filter(u => u.role === 'STUDENT').length,
+            totalCourses: courses.length,
+            totalAssignments: assignments.length,
+            submissionRate: 85 // Mock pour l'instant
+          });
+          
+          // Mock data pour les graphiques
+          setGradeDistribution([
+            { range: '0-5', count: 5, percentage: 8 },
+            { range: '6-10', count: 15, percentage: 25 },
+            { range: '11-15', count: 25, percentage: 42 },
+            { range: '16-20', count: 15, percentage: 25 }
+          ]);
+          
+          setCoursePerformance(courses.map(course => ({
+            courseId: course.id,
+            courseName: course.title,
+            studentCount: Math.floor(Math.random() * 50) + 10,
+            averageGrade: (Math.random() * 5 + 12).toFixed(1),
+            submissionRate: Math.floor(Math.random() * 30) + 70
+          })));
+        }
+        
+        setActivityData([
+          { date: '2024-01-20', logins: 45, submissions: 12, downloads: 23 },
+          { date: '2024-01-21', logins: 52, submissions: 18, downloads: 31 },
+          { date: '2024-01-22', logins: 38, submissions: 8, downloads: 19 },
+          { date: '2024-01-23', logins: 61, submissions: 22, downloads: 28 },
+          { date: '2024-01-24', logins: 49, submissions: 15, downloads: 25 }
+        ]);
+        
+      } catch (error) {
+        console.error('Erreur lors du chargement:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (user) {
+      loadDashboardData();
+    }
+  }, [user, selectedPeriod]);
 
   const handlePeriodChange = (period: '7d' | '30d' | '90d') => {
     setSelectedPeriod(period);
-    fetchActivityData(period);
+    // Recharger les données d'activité pour la nouvelle période
   };
 
   // Student Dashboard

@@ -1,0 +1,2 @@
+INSERT INTO courses (title, description, semester, credits, code, teacher_id, created_at, updated_at) 
+VALUES ('Nouveau Cours Frontend', 'Cours ajouté depuis le frontend', 'S1', 3, 'NOUVEAU-M2', 5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);

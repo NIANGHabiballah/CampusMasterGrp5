@@ -83,7 +83,28 @@ const mockSubmissions = [
   }
 ];
 
+import { apiService } from '@/services/api';
+import { useEffect } from 'react';
+
 export default function TeacherAssignmentsPage() {
+  const [assignments, setAssignments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadAssignments = async () => {
+      try {
+        setIsLoading(true);
+        const data = await apiService.getAssignments();
+        setAssignments(data);
+      } catch (error) {
+        console.error('Erreur:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadAssignments();
+  }, []);
+  
   const [selectedTab, setSelectedTab] = useState('assignments');
   const [selectedAssignment, setSelectedAssignment] = useState(mockAssignments[0]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -144,16 +165,23 @@ export default function TeacherAssignmentsPage() {
     setEditingAssignment(null);
   };
 
-  const handleCreateAssignment = () => {
-    toast.success('Devoir créé avec succès');
-    setIsCreateDialogOpen(false);
-    setNewAssignment({
-      title: '',
-      course: '',
-      description: '',
-      dueDate: '',
-      maxPoints: 100
-    });
+  const handleCreateAssignment = async () => {
+    try {
+      await apiService.createAssignment(newAssignment);
+      const updatedAssignments = await apiService.getAssignments();
+      setAssignments(updatedAssignments);
+      toast.success('Devoir créé avec succès');
+      setIsCreateDialogOpen(false);
+      setNewAssignment({
+        title: '',
+        course: '',
+        description: '',
+        dueDate: '',
+        maxPoints: 100
+      });
+    } catch (error) {
+      toast.error('Erreur lors de la création');
+    }
   };
 
   const handleGradeSubmission = (submissionId: string, grade: number, feedback: string) => {
@@ -268,7 +296,12 @@ export default function TeacherAssignmentsPage() {
           {/* Assignments Tab */}
           <TabsContent value="assignments">
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {mockAssignments.map((assignment) => (
+              {isLoading ? (
+                <div className="col-span-full text-center py-12">
+                  <div className="text-gray-500">Chargement des devoirs...</div>
+                </div>
+              ) : (
+                assignments.map((assignment) => (
                 <Card key={assignment.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
                   <CardHeader>
                     <div className="flex items-start justify-between">
@@ -325,7 +358,8 @@ export default function TeacherAssignmentsPage() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              ))
+              )}
             </div>
           </TabsContent>
 

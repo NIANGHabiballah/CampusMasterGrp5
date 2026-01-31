@@ -107,9 +107,51 @@ const availableTags = [
   { value: 'nouveau', label: 'Nouveau', color: 'bg-indigo-100 text-indigo-800' }
 ];
 
+import { apiService } from '@/services/api';
+
 export default function MessagesPage() {
   const { user } = useAuthStore();
   const [messages, setMessages] = useState<Message[]>(mockMessages);
+  const [users, setUsers] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        console.log('Chargement des données...');
+        
+        const [usersData, coursesData] = await Promise.all([
+          apiService.getUsers(),
+          apiService.getCourses()
+        ]);
+        
+        console.log('Utilisateurs chargés:', usersData);
+        console.log('Cours chargés:', coursesData);
+        
+        setUsers(usersData || []);
+        setCourses(coursesData || []);
+      } catch (error) {
+        console.error('Erreur lors du chargement:', error);
+        // En cas d'erreur, utiliser des données de fallback
+        setUsers([
+          { id: 4, firstName: 'Admin', lastName: 'Campus', role: 'ADMIN' },
+          { id: 5, firstName: 'Jean', lastName: 'Dupont', role: 'TEACHER' },
+          { id: 6, firstName: 'Marie', lastName: 'Martin', role: 'STUDENT' }
+        ]);
+        setCourses([
+          { id: 1, title: 'React Avancé' },
+          { id: 2, title: 'Node.js Backend' },
+          { id: 3, title: 'Base de Données' }
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
+  }, []);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -238,12 +280,20 @@ export default function MessagesPage() {
                   <Label htmlFor="recipient">Destinataire</Label>
                   <Select value={newMessage.receiverId} onValueChange={(value) => setNewMessage({...newMessage, receiverId: value})}>
                     <SelectTrigger className="bg-white border-gray-300">
-                      <SelectValue placeholder="Sélectionner un destinataire" />
+                      <SelectValue placeholder={isLoading ? "Chargement..." : "Sélectionner un destinataire"} />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
-                      <SelectItem value="1">Admin Système</SelectItem>
-                      <SelectItem value="2">Prof. Jean Martin</SelectItem>
-                      <SelectItem value="3">Marie Dupont</SelectItem>
+                      {isLoading ? (
+                        <SelectItem value="loading" disabled>Chargement des utilisateurs...</SelectItem>
+                      ) : users.length === 0 ? (
+                        <SelectItem value="empty" disabled>Aucun utilisateur trouvé</SelectItem>
+                      ) : (
+                        users.filter(u => u.id !== user?.id).map(u => (
+                          <SelectItem key={u.id} value={u.id.toString()}>
+                            {u.firstName} {u.lastName} ({u.role})
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -252,12 +302,20 @@ export default function MessagesPage() {
                   <Label htmlFor="course">Groupe de cours (optionnel)</Label>
                   <Select value={newMessage.courseId} onValueChange={(value) => setNewMessage({...newMessage, courseId: value})}>
                     <SelectTrigger className="bg-white border-gray-300">
-                      <SelectValue placeholder="Sélectionner un cours" />
+                      <SelectValue placeholder={isLoading ? "Chargement..." : "Sélectionner un cours"} />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
-                      <SelectItem value="1">React Avancé</SelectItem>
-                      <SelectItem value="2">Node.js Backend</SelectItem>
-                      <SelectItem value="3">Base de Données</SelectItem>
+                      {isLoading ? (
+                        <SelectItem value="loading" disabled>Chargement des cours...</SelectItem>
+                      ) : courses.length === 0 ? (
+                        <SelectItem value="empty" disabled>Aucun cours trouvé</SelectItem>
+                      ) : (
+                        courses.map(course => (
+                          <SelectItem key={course.id} value={course.id.toString()}>
+                            {course.title}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

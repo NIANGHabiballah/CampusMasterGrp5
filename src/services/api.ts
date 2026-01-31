@@ -35,9 +35,47 @@ class ApiService {
     });
   }
 
+  // Users
+  async getUsers() {
+    return this.request('/users');
+  }
+
+  async updateUser(id: string, userData: any) {
+    return this.request(`/users/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  }
+
+  async deleteUser(id: string) {
+    return this.request(`/users/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Courses
   async getCourses() {
     return this.request('/courses');
+  }
+
+  async createCourse(courseData: any) {
+    return this.request('/courses', {
+      method: 'POST',
+      body: JSON.stringify(courseData),
+    });
+  }
+
+  async updateCourse(id: string, courseData: any) {
+    return this.request(`/courses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(courseData),
+    });
+  }
+
+  async deleteCourse(id: string) {
+    return this.request(`/courses/${id}`, {
+      method: 'DELETE',
+    });
   }
 
   // Assignments
@@ -45,9 +83,45 @@ class ApiService {
     return this.request('/assignments');
   }
 
+  async createAssignment(assignmentData: any) {
+    return this.request('/assignments', {
+      method: 'POST',
+      body: JSON.stringify(assignmentData),
+    });
+  }
+
+  async updateAssignment(id: string, assignmentData: any) {
+    return this.request(`/assignments/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(assignmentData),
+    });
+  }
+
+  async deleteAssignment(id: string) {
+    return this.request(`/assignments/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Submissions
-  async getSubmissions() {
-    return this.request('/submissions');
+  async createSubmission(submissionData: any) {
+    return this.request('/submissions', {
+      method: 'POST',
+      body: JSON.stringify(submissionData),
+    });
+  }
+
+  async updateSubmission(id: string, submissionData: any) {
+    return this.request(`/submissions/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(submissionData),
+    });
+  }
+
+  async deleteSubmission(id: string) {
+    return this.request(`/submissions/${id}`, {
+      method: 'DELETE',
+    });
   }
 }
 

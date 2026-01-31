@@ -39,6 +39,19 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    public User updateUser(Long id, User user) {
+        Optional<User> existingUser = userRepository.findById(id);
+        if (existingUser.isPresent()) {
+            User userToUpdate = existingUser.get();
+            userToUpdate.setFirstName(user.getFirstName());
+            userToUpdate.setLastName(user.getLastName());
+            userToUpdate.setEmail(user.getEmail());
+            userToUpdate.setStatus(user.getStatus());
+            return userRepository.save(userToUpdate);
+        }
+        return null;
+    }
+
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
     }

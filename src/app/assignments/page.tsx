@@ -31,8 +31,12 @@ import {
 import { useAuthStore } from '@/store/auth';
 import { toast } from 'sonner';
 
+import { apiService } from '@/services/api';
+
 export default function AssignmentsPage() {
   const { user } = useAuthStore();
+  const [assignments, setAssignments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [selectedCourse, setSelectedCourse] = useState<string>('all');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -43,8 +47,25 @@ export default function AssignmentsPage() {
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
   const [submissionContent, setSubmissionContent] = useState('');
   
-  // Mock data
-  const assignments = [
+  // Charger les devoirs
+  useEffect(() => {
+    const loadAssignments = async () => {
+      try {
+        setIsLoading(true);
+        const data = await apiService.getAssignments();
+        setAssignments(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des devoirs:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadAssignments();
+  }, []);
+  
+  // Mock data supprimé - remplacé par l'API
+  const mockAssignments = [
     {
       id: '1',
       title: 'Projet React - Application Todo',
@@ -71,15 +92,25 @@ export default function AssignmentsPage() {
       return;
     }
 
-    toast.success('Devoir créé avec succès');
-    setIsCreateDialogOpen(false);
-    setNewAssignment({
-      title: '',
-      description: '',
-      courseId: '',
-      dueDate: '',
-      maxPoints: 20
-    });
+    try {
+      await apiService.createAssignment(newAssignment);
+      
+      // Recharger les devoirs
+      const data = await apiService.getAssignments();
+      setAssignments(data);
+      
+      toast.success('Devoir créé avec succès');
+      setIsCreateDialogOpen(false);
+      setNewAssignment({
+        title: '',
+        description: '',
+        courseId: '',
+        dueDate: '',
+        maxPoints: 20
+      });
+    } catch (error) {
+      toast.error('Erreur lors de la création du devoir');
+    }
   };
 
   const handleSubmitAssignment = async () => {
@@ -118,6 +149,16 @@ export default function AssignmentsPage() {
   const filteredAssignments = selectedCourse === 'all' 
     ? assignments 
     : assignments.filter(a => a.courseId === selectedCourse);
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center py-12">
+          <div className="text-gray-500">Chargement des devoirs...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">

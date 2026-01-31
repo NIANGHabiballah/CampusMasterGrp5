@@ -33,6 +33,7 @@ import { useAuthStore } from '@/store/auth';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { apiService } from '@/services/api';
 
 interface User {
   id: string;
@@ -50,79 +51,55 @@ interface User {
   lastLogin?: string;
 }
 
-const mockUsers: User[] = [
-  {
-    id: '1',
-    firstName: 'Admin',
-    lastName: 'Système',
-    email: 'admin@campus.fr',
-    role: 'ADMIN',
-    status: 'ACTIVE',
-    department: 'Administration',
-    createdAt: '2024-01-01T00:00:00Z',
-    lastLogin: '2024-01-24T10:30:00Z'
-  },
-  {
-    id: '2',
-    firstName: 'Prof. Jean',
-    lastName: 'Martin',
-    email: 'prof@campus.fr',
-    role: 'TEACHER',
-    status: 'ACTIVE',
-    department: 'Informatique',
-    phone: '+33 1 23 45 67 89',
-    createdAt: '2024-01-01T00:00:00Z',
-    lastLogin: '2024-01-24T09:15:00Z'
-  },
-  {
-    id: '3',
-    firstName: 'Marie',
-    lastName: 'Dupont',
-    email: 'etudiant@campus.fr',
-    role: 'STUDENT',
-    status: 'ACTIVE',
-    studentId: 'M2-2024-001',
-    department: 'Informatique',
-    semester: 'S1 2024',
-    createdAt: '2024-01-15T00:00:00Z',
-    lastLogin: '2024-01-24T08:45:00Z'
-  },
-  {
-    id: '4',
-    firstName: 'Pierre',
-    lastName: 'Durand',
-    email: 'pierre.durand@campus.fr',
-    role: 'STUDENT',
-    status: 'PENDING',
-    studentId: 'M2-2024-002',
-    department: 'Informatique',
-    semester: 'S1 2024',
-    createdAt: '2024-01-23T00:00:00Z'
-  },
-  {
-    id: '5',
-    firstName: 'Sophie',
-    lastName: 'Bernard',
-    email: 'sophie.bernard@campus.fr',
-    role: 'STUDENT',
-    status: 'SUSPENDED',
-    studentId: 'M2-2024-003',
-    department: 'Informatique',
-    semester: 'S1 2024',
-    createdAt: '2024-01-10T00:00:00Z',
-    lastLogin: '2024-01-20T14:20:00Z'
-  }
-];
-
 export default function AdminUsersPage() {
   const { user } = useAuthStore();
-  const [users, setUsers] = useState<User[]>(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    role: 'STUDENT' as const,
+    status: 'ACTIVE' as const
+  });
+
+  const handleEditUser = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      await apiService.updateUser(selectedUser.id, editForm);
+      
+      // Mettre à jour l'utilisateur dans la liste
+      setUsers(prev => prev.map(u => 
+        u.id === selectedUser.id ? { ...u, ...editForm } : u
+      ));
+      
+      setIsEditDialogOpen(false);
+      setSelectedUser(null);
+      toast.success('Utilisateur modifié avec succès');
+    } catch (error) {
+      toast.error('Erreur lors de la modification');
+    }
+  };
+
+  // Initialiser le formulaire d'édition quand un utilisateur est sélectionné
+  useEffect(() => {
+    if (selectedUser) {
+      setEditForm({
+        firstName: selectedUser.firstName,
+        lastName: selectedUser.lastName,
+        email: selectedUser.email,
+        role: selectedUser.role,
+        status: selectedUser.status
+      });
+    }
+  }, [selectedUser]);
   
   // New user form
   const [newUser, setNewUser] = useState({
@@ -135,63 +112,125 @@ export default function AdminUsersPage() {
     phone: ''
   });
 
-  const handleApproveUser = (userId: string) => {
-    setUsers(prev => prev.map(u => 
-      u.id === userId ? { ...u, status: 'ACTIVE' as const } : u
-    ));
-    toast.success('Utilisateur approuvé');
+  // Charger les utilisateurs depuis l'API
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setLoading(true);
+        const data = await apiService.getUsers();
+        const formattedUsers = data.map((u: any) => ({
+          id: u.id.toString(),
+          firstName: u.firstName,
+          lastName: u.lastName,
+          email: u.email,
+          role: u.role,
+          status: u.status,
+          createdAt: u.createdAt || new Date().toISOString(),
+          lastLogin: u.updatedAt
+        }));
+        setUsers(formattedUsers);
+      } catch (error) {
+        console.error('Erreur lors du chargement des utilisateurs:', error);
+        toast.error('Erreur lors du chargement des utilisateurs');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadUsers();
+  }, []);
+
+  const handleApproveUser = async (userId: string) => {
+    try {
+      await apiService.updateUser(userId, { status: 'ACTIVE' });
+      setUsers(prev => prev.map(u => 
+        u.id === userId ? { ...u, status: 'ACTIVE' as const } : u
+      ));
+      toast.success('Utilisateur approuvé');
+    } catch (error) {
+      toast.error('Erreur lors de l\'approbation');
+    }
   };
 
-  const handleSuspendUser = (userId: string) => {
-    setUsers(prev => prev.map(u => 
-      u.id === userId ? { ...u, status: 'SUSPENDED' as const } : u
-    ));
-    toast.success('Utilisateur suspendu');
+  const handleSuspendUser = async (userId: string) => {
+    try {
+      await apiService.updateUser(userId, { status: 'SUSPENDED' });
+      setUsers(prev => prev.map(u => 
+        u.id === userId ? { ...u, status: 'SUSPENDED' as const } : u
+      ));
+      toast.success('Utilisateur suspendu');
+    } catch (error) {
+      toast.error('Erreur lors de la suspension');
+    }
   };
 
-  const handleReactivateUser = (userId: string) => {
-    setUsers(prev => prev.map(u => 
-      u.id === userId ? { ...u, status: 'ACTIVE' as const } : u
-    ));
-    toast.success('Utilisateur réactivé');
+  const handleReactivateUser = async (userId: string) => {
+    try {
+      await apiService.updateUser(userId, { status: 'ACTIVE' });
+      setUsers(prev => prev.map(u => 
+        u.id === userId ? { ...u, status: 'ACTIVE' as const } : u
+      ));
+      toast.success('Utilisateur réactivé');
+    } catch (error) {
+      toast.error('Erreur lors de la réactivation');
+    }
   };
 
-  const handleDeleteUser = (userId: string) => {
-    setUsers(prev => prev.filter(u => u.id !== userId));
-    toast.success('Utilisateur supprimé');
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      await apiService.deleteUser(userId);
+      setUsers(prev => prev.filter(u => u.id !== userId));
+      toast.success('Utilisateur supprimé');
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
+    }
   };
 
-  const handleCreateUser = () => {
+  const handleCreateUser = async () => {
     if (!newUser.firstName || !newUser.lastName || !newUser.email) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
-    const user: User = {
-      id: `user-${Date.now()}`,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName,
-      email: newUser.email,
-      role: newUser.role,
-      status: 'ACTIVE',
-      filiere: newUser.filiere,
-      studentId: newUser.role === 'STUDENT' ? newUser.studentId : undefined,
-      phone: newUser.phone,
-      createdAt: new Date().toISOString()
-    };
-
-    setUsers(prev => [user, ...prev]);
-    setNewUser({
-      firstName: '',
-      lastName: '',
-      email: '',
-      role: 'STUDENT',
-      filiere: '',
-      studentId: '',
-      phone: ''
-    });
-    setIsCreateDialogOpen(false);
-    toast.success('Utilisateur créé avec succès');
+    try {
+      const userData = {
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+        role: newUser.role,
+        password: 'password123' // Mot de passe par défaut
+      };
+      
+      await apiService.register(userData);
+      
+      // Recharger la liste des utilisateurs
+      const data = await apiService.getUsers();
+      const formattedUsers = data.map((u: any) => ({
+        id: u.id.toString(),
+        firstName: u.firstName,
+        lastName: u.lastName,
+        email: u.email,
+        role: u.role,
+        status: u.status,
+        createdAt: u.createdAt || new Date().toISOString(),
+        lastLogin: u.updatedAt
+      }));
+      setUsers(formattedUsers);
+      
+      setNewUser({
+        firstName: '',
+        lastName: '',
+        email: '',
+        role: 'STUDENT',
+        filiere: '',
+        studentId: '',
+        phone: ''
+      });
+      setIsCreateDialogOpen(false);
+      toast.success('Utilisateur créé avec succès');
+    } catch (error) {
+      toast.error('Erreur lors de la création de l\'utilisateur');
+    }
   };
 
   const filteredUsers = users.filter(user => {
@@ -480,6 +519,11 @@ export default function AdminUsersPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {loading ? (
+            <div className="flex justify-center items-center h-32">
+              <div className="text-gray-500">Chargement des utilisateurs...</div>
+            </div>
+          ) : (
           <Table>
             <TableHeader>
               <TableRow>
@@ -590,6 +634,7 @@ export default function AdminUsersPage() {
               ))}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
 
@@ -609,7 +654,8 @@ export default function AdminUsersPage() {
                   <Label htmlFor="editFirstName">Prénom</Label>
                   <Input
                     id="editFirstName"
-                    defaultValue={selectedUser.firstName}
+                    value={editForm.firstName}
+                    onChange={(e) => setEditForm({...editForm, firstName: e.target.value})}
                     className="bg-white border-gray-300"
                   />
                 </div>
@@ -617,7 +663,8 @@ export default function AdminUsersPage() {
                   <Label htmlFor="editLastName">Nom</Label>
                   <Input
                     id="editLastName"
-                    defaultValue={selectedUser.lastName}
+                    value={editForm.lastName}
+                    onChange={(e) => setEditForm({...editForm, lastName: e.target.value})}
                     className="bg-white border-gray-300"
                   />
                 </div>
@@ -628,7 +675,8 @@ export default function AdminUsersPage() {
                 <Input
                   id="editEmail"
                   type="email"
-                  defaultValue={selectedUser.email}
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({...editForm, email: e.target.value})}
                   className="bg-white border-gray-300"
                 />
               </div>
@@ -636,7 +684,7 @@ export default function AdminUsersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="editRole">Rôle</Label>
-                  <Select defaultValue={selectedUser.role}>
+                  <Select value={editForm.role} onValueChange={(value: any) => setEditForm({...editForm, role: value})}>
                     <SelectTrigger className="bg-white border-gray-300">
                       <SelectValue />
                     </SelectTrigger>
@@ -649,7 +697,7 @@ export default function AdminUsersPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="editStatus">Statut</Label>
-                  <Select defaultValue={selectedUser.status}>
+                  <Select value={editForm.status} onValueChange={(value: any) => setEditForm({...editForm, status: value})}>
                     <SelectTrigger className="bg-white border-gray-300">
                       <SelectValue />
                     </SelectTrigger>
@@ -731,11 +779,7 @@ export default function AdminUsersPage() {
                 <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                   Annuler
                 </Button>
-                <Button onClick={() => {
-                  setIsEditDialogOpen(false);
-                  setSelectedUser(null);
-                  toast.success('Utilisateur modifié avec succès');
-                }} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button onClick={handleEditUser} className="bg-blue-600 hover:bg-blue-700 text-white">
                   Enregistrer
                 </Button>
               </div>

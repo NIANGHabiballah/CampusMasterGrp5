@@ -22,34 +22,38 @@ const courseSchema = z.object({
   description: z.string().min(10, 'La description doit contenir au moins 10 caractères'),
   semester: z.string(),
   credits: z.number().min(1).max(10),
+  teacherId: z.number(),
 });
 
 type CourseForm = z.infer<typeof courseSchema>;
 
+import { apiService } from '@/services/api';
+import { useEffect } from 'react';
+
 export default function TeacherCoursesPage() {
   const router = useRouter();
-  const [courses, setCourses] = useState([
-    {
-      id: '1',
-      title: 'Architecture des Systèmes Distribués',
-      description: 'Conception et développement d\'applications distribuées modernes',
-      semester: 'S1',
-      credits: 6,
-      students: 45,
-      materials: 12,
-      assignments: 3
-    },
-    {
-      id: '2',
-      title: 'Sécurité Informatique',
-      description: 'Cryptographie, sécurité des réseaux et audit de sécurité',
-      semester: 'S1',
-      credits: 4,
-      students: 38,
-      materials: 8,
-      assignments: 2
-    }
-  ]);
+  const [courses, setCourses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        setIsLoading(true);
+        const data = await apiService.getCourses();
+        console.log('Cours chargés:', data);
+        setCourses(data);
+      } catch (error) {
+        console.error('Erreur:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadCourses();
+    
+    // Recharger toutes les 5 secondes
+    const interval = setInterval(loadCourses, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -79,20 +83,26 @@ export default function TeacherCoursesPage() {
       description: '',
       semester: 'S1',
       credits: 3,
+      teacherId: 5, // ID du professeur Jean Dupont
     },
   });
 
-  const onSubmit = (data: CourseForm) => {
-    const newCourse = {
-      id: Date.now().toString(),
-      ...data,
-      students: 0,
-      materials: 0,
-      assignments: 0
-    };
-    setCourses([...courses, newCourse]);
-    setIsCreateOpen(false);
-    form.reset();
+  const onSubmit = async (data: CourseForm) => {
+    try {
+      console.log('Création cours:', data);
+      const result = await apiService.createCourse(data);
+      console.log('Résultat création:', result);
+      // Recharger immédiatement
+      const updatedCourses = await apiService.getCourses();
+      console.log('Cours après création:', updatedCourses);
+      setCourses(updatedCourses);
+      setIsCreateOpen(false);
+      form.reset();
+      toast.success('Cours créé avec succès');
+    } catch (error) {
+      console.error('Erreur création:', error);
+      toast.error('Erreur lors de la création: ' + error.message);
+    }
   };
 
   return (
@@ -107,13 +117,23 @@ export default function TeacherCoursesPage() {
             </p>
           </div>
           
-          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                Nouveau cours
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsLoading(true);
+                apiService.getCourses().then(setCourses).finally(() => setIsLoading(false));
+              }}
+            >
+              Actualiser
+            </Button>
+            <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouveau cours
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Créer un nouveau cours</DialogTitle>
@@ -213,10 +233,20 @@ export default function TeacherCoursesPage() {
             </DialogContent>
           </Dialog>
         </div>
+      </div>
 
         {/* Courses Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course) => (
+        {isLoading ? (
+          <div className="text-center py-8">
+            <div className="text-gray-500">Chargement des cours...</div>
+          </div>
+        ) : courses.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-gray-500">Aucun cours trouvé</div>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.map((course) => (
             <Card key={course.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -235,15 +265,15 @@ export default function TeacherCoursesPage() {
               <CardContent>
                 <div className="grid grid-cols-3 gap-4 mb-4 text-center">
                   <div>
-                    <div className="text-lg font-bold text-blue-600">{course.students}</div>
+                    <div className="text-lg font-bold text-blue-600">0</div>
                     <div className="text-xs text-gray-600">Étudiants</div>
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-green-600">{course.materials}</div>
+                    <div className="text-lg font-bold text-green-600">0</div>
                     <div className="text-xs text-gray-600">Supports</div>
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-orange-600">{course.assignments}</div>
+                    <div className="text-lg font-bold text-orange-600">{course.assignments?.length || 0}</div>
                     <div className="text-xs text-gray-600">Devoirs</div>
                   </div>
                 </div>
@@ -272,11 +302,32 @@ export default function TeacherCoursesPage() {
                   >
                     <Download className="h-4 w-4" />
                   </Button>
+                  <Button 
+                    size="sm" 
+                    variant="destructive"
+                    onClick={async () => {
+                      try {
+                        console.log('Suppression cours ID:', course.id);
+                        await apiService.deleteCourse(course.id);
+                        console.log('Cours supprimé, rechargement...');
+                        const updatedCourses = await apiService.getCourses();
+                        console.log('Nouveaux cours:', updatedCourses);
+                        setCourses(updatedCourses);
+                        toast.success('Cours supprimé avec succès');
+                      } catch (error) {
+                        console.error('Erreur suppression:', error);
+                        toast.error('Erreur lors de la suppression: ' + error.message);
+                      }
+                    }}
+                  >
+                    ×
+                  </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
+        )}
 
         {/* Edit Course Dialog */}
         {selectedCourse && (
@@ -291,20 +342,28 @@ export default function TeacherCoursesPage() {
               <div className="space-y-4 p-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Titre du cours</label>
-                  <Input defaultValue={selectedCourse.title} className="bg-white border-gray-300" />
+                  <Input 
+                    id="editTitle"
+                    defaultValue={selectedCourse.title} 
+                    className="bg-white border-gray-300" 
+                  />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Description</label>
-                  <Textarea defaultValue={selectedCourse.description} className="bg-white border-gray-300" />
+                  <Textarea 
+                    id="editDescription"
+                    defaultValue={selectedCourse.description} 
+                    className="bg-white border-gray-300" 
+                  />
                 </div>
                 <div className="flex justify-end space-x-2">
                   <Button variant="outline" onClick={() => setIsEditOpen(false)}>
                     Annuler
                   </Button>
-                  <Button onClick={() => {
+                  <Button onClick={async () => {
+                    toast.info('Modification temporairement désactivée');
                     setIsEditOpen(false);
                     setSelectedCourse(null);
-                    toast.success('Cours modifié avec succès');
                   }} className="bg-blue-600 hover:bg-blue-700 text-white">
                     Enregistrer
                   </Button>

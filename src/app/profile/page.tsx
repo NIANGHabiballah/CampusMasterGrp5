@@ -31,7 +31,7 @@ const profileSchema = z.object({
 type ProfileForm = z.infer<typeof profileSchema>;
 
 export default function ProfilePage() {
-  const { isAuthenticated, user, updateUser } = useAuthStore();
+  const { isAuthenticated, user, updateProfile, isHydrated } = useAuthStore();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,22 +50,38 @@ export default function ProfilePage() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (user) {
+      form.reset({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: '',
+        address: '',
+        bio: '',
+        studentId: '',
+      });
+    }
+  }, [user, form]);
+
+  useEffect(() => {
+    if (isHydrated && !isAuthenticated) {
       router.push(ROUTES.LOGIN);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isHydrated, router]);
 
   const onSubmit = async (data: ProfileForm) => {
     setIsLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      updateUser({
+      const success = await updateProfile({
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
       });
-      toast.success('Profil mis à jour avec succès !');
-      setIsEditing(false);
+      if (success) {
+        toast.success('Profil mis à jour avec succès !');
+        setIsEditing(false);
+      }
     } catch (error) {
       console.error('Erreur de mise à jour:', error);
       toast.error('Erreur lors de la mise à jour du profil');
@@ -74,7 +90,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (!isAuthenticated || !user) {
+  if (!isHydrated || (!isAuthenticated || !user)) {
     return null;
   }
 

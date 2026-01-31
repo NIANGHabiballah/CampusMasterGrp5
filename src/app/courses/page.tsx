@@ -11,9 +11,12 @@ import { useAuthStore } from '@/store/auth';
 import { useCourseStore } from '@/store/courses';
 import { ROUTES } from '@/lib/constants';
 
+import { apiService } from '@/services/api';
+
 export default function CoursesPage() {
   const { isAuthenticated } = useAuthStore();
-  const { courses, isLoading, fetchCourses } = useCourseStore();
+  const [courses, setCourses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   const [filters, setFilters] = useState({
     search: '',
@@ -27,8 +30,21 @@ export default function CoursesPage() {
       router.push(ROUTES.LOGIN);
       return;
     }
-    fetchCourses();
-  }, [isAuthenticated, router, fetchCourses]);
+    
+    const loadCourses = async () => {
+      try {
+        setIsLoading(true);
+        const data = await apiService.getCourses();
+        setCourses(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des cours:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadCourses();
+  }, [isAuthenticated, router]);
 
   const filteredCourses = courses.filter(course => {
     let matches = true;
