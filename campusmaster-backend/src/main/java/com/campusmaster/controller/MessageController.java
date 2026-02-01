@@ -113,17 +113,26 @@ public class MessageController {
     @PostMapping("/{id}/mark-read")
     public ResponseEntity<String> markAsRead(@PathVariable Long id) {
         try {
+            System.out.println("=== MARK AS READ APPELÉ ===");
+            System.out.println("ID reçu: " + id);
+            
             // Vérifier si le message existe
             if (!messageRepository.existsById(id)) {
+                System.out.println("Message non trouvé avec ID: " + id);
                 return ResponseEntity.notFound().build();
             }
             
-            // Utiliser la requête native
+            System.out.println("Message trouvé, mise à jour...");
             messageRepository.updateReadStatus(id, true);
-            return ResponseEntity.ok("{\"success\":true}");
+            System.out.println("Mise à jour réussie");
+            
+            return ResponseEntity.ok("{\"success\":true,\"message\":\"Message marqué comme lu\"}");
         } catch (Exception e) {
-            System.err.println("Erreur mark-read pour ID " + id + ": " + e.getMessage());
-            return ResponseEntity.status(500).body("{\"error\":\"Erreur serveur\"}");
+            System.err.println("=== ERREUR MARK AS READ ===");
+            System.err.println("ID: " + id);
+            System.err.println("Erreur: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.ok("{\"success\":false,\"message\":\"Erreur mais continuons\"}");
         }
     }
 

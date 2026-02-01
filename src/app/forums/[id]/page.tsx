@@ -40,6 +40,10 @@ export default function ForumPage({ params }: { params: Promise<{ id: string }> 
 
   useEffect(() => {
     loadTopics();
+    
+    // Rechargement automatique toutes les 3 secondes
+    const interval = setInterval(loadTopics, 3000);
+    return () => clearInterval(interval);
   }, [id]);
 
   const loadTopics = async () => {
@@ -76,7 +80,11 @@ export default function ForumPage({ params }: { params: Promise<{ id: string }> 
       setContent('');
       setTags('');
       setShowNewTopic(false);
-      loadTopics();
+      
+      // Recharger immédiatement
+      setTimeout(() => {
+        loadTopics();
+      }, 500);
     } catch (error) {
       console.error('Erreur lors de la création du sujet:', error);
       toast.error('Erreur lors de la création du sujet');

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'http://localhost:8080';
 
 class ApiService {
   private async request(endpoint: string, options: RequestInit = {}) {
@@ -241,15 +241,31 @@ class ApiService {
   }
 
   async markNotificationAsRead(notificationId: number) {
-    return this.request(`/notifications/${notificationId}/mark-read`, {
-      method: 'PUT',
-    });
+    try {
+      return this.request(`/notifications/${notificationId}/mark-read`, {
+        method: 'PUT',
+      });
+    } catch (error) {
+      console.warn('Erreur markNotificationAsRead:', error);
+      return null;
+    }
   }
 
   async markMessageAsRead(messageId: string) {
-    return this.request(`/messages/${messageId}/mark-read`, {
+    const response = await fetch(`${API_BASE_URL}/messages/${messageId}/mark-read`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
+    
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('Erreur API mark-read:', response.status, text);
+      throw new Error(`API Error: ${response.status}`);
+    }
+    
+    return response.json();
   }
 }
 

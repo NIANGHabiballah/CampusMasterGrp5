@@ -30,24 +30,8 @@ public class CourseService {
         return courseRepository.save(course);
     }
 
-    public Course saveCourse(Course course) {
+    public Course updateCourse(Course course) {
         return courseRepository.save(course);
-    }
-
-    public Course updateCourse(Long id, Course course) {
-        Optional<Course> existingCourse = courseRepository.findById(id);
-        if (existingCourse.isPresent()) {
-            Course courseToUpdate = existingCourse.get();
-            if (course.getTitle() != null) courseToUpdate.setTitle(course.getTitle());
-            if (course.getDescription() != null) courseToUpdate.setDescription(course.getDescription());
-            if (course.getCode() != null) courseToUpdate.setCode(course.getCode());
-            if (course.getCredits() != null) courseToUpdate.setCredits(course.getCredits());
-            if (course.getSemester() != null) courseToUpdate.setSemester(course.getSemester());
-            if (course.getMaxStudents() != null) courseToUpdate.setMaxStudents(course.getMaxStudents());
-            if (course.getTeacher() != null) courseToUpdate.setTeacher(course.getTeacher());
-            return courseRepository.save(courseToUpdate);
-        }
-        return null;
     }
 
     public void deleteCourse(Long id) {

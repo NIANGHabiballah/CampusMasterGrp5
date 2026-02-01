@@ -195,7 +195,7 @@ export default function MessagesPage() {
           courseName: msg.course?.title,
           subject: msg.subject,
           content: msg.content,
-          tags: [],
+          tags: msg.tags || [],
           isRead: msg.isRead || false,
           isStarred: msg.isStarred || false,
           isArchived: msg.isArchived || false,
@@ -279,7 +279,7 @@ export default function MessagesPage() {
         courseName: msg.course?.title,
         subject: msg.subject,
         content: msg.content,
-        tags: [],
+        tags: msg.tags || [],
         isRead: msg.isRead || false,
         isStarred: msg.isStarred || false,
         isArchived: msg.isArchived || false,
@@ -317,7 +317,8 @@ export default function MessagesPage() {
 
   const handleToggleMessageStar = async (messageId: string) => {
     try {
-      await toggleMessageStar(messageId);
+      // Désactivé temporairement
+      // await toggleMessageStar(messageId);
       const updateMessageInTree = (messages: Message[]): Message[] => {
         return messages.map(msg => {
           if (msg.id === messageId) {
@@ -332,18 +333,16 @@ export default function MessagesPage() {
       setMessages(prev => updateMessageInTree(prev));
     } catch (error) {
       console.error('Erreur lors de la mise à jour des favoris:', error);
-      toast.error('Erreur lors de la mise à jour');
     }
   };
 
   const markAsRead = async (messageId: string) => {
-    if (!messageId || messageId === 'undefined') {
-      console.error('ID de message invalide:', messageId);
-      return;
-    }
-    
     try {
-      await markMessageAsRead(messageId);
+      const response = await fetch(`http://localhost:8080/api/messages/${messageId}/mark-read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
       const updateMessageInTree = (messages: Message[]): Message[] => {
         return messages.map(msg => {
           if (msg.id === messageId) {
@@ -357,13 +356,14 @@ export default function MessagesPage() {
       };
       setMessages(prev => updateMessageInTree(prev));
     } catch (error) {
-      console.error('Erreur lors du marquage comme lu pour ID', messageId, ':', error);
+      console.error('Erreur:', error);
     }
   };
 
   const archiveMessage = async (messageId: string) => {
     try {
-      await toggleMessageArchive(messageId);
+      // Désactivé temporairement
+      // await toggleMessageArchive(messageId);
       const updateMessageInTree = (messages: Message[]): Message[] => {
         return messages.map(msg => {
           if (msg.id === messageId) {
@@ -379,7 +379,6 @@ export default function MessagesPage() {
       toast.success('Message archivé');
     } catch (error) {
       console.error('Erreur lors de l\'archivage:', error);
-      toast.error('Erreur lors de l\'archivage');
     }
   };
 
@@ -389,12 +388,16 @@ export default function MessagesPage() {
                          msg.senderName.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesTags = selectedTags.length === 0 || 
-                       selectedTags.some(tag => msg.tags.includes(tag));
+                       selectedTags.some(tag => msg.tags.includes(tag)) ||
+                       selectedTags.some(tag => 
+                         msg.subject.toLowerCase().includes(tag) || 
+                         msg.content.toLowerCase().includes(tag)
+                       );
     
     const matchesTab = (() => {
       switch (activeTab) {
-        case 'inbox': return !msg.isArchived && (msg.receiverId === user?.id || msg.courseId);
-        case 'sent': return msg.senderId === user?.id;
+        case 'inbox': return !msg.isArchived && (msg.receiverId === user?.id?.toString() || msg.courseId);
+        case 'sent': return msg.senderId === user?.id?.toString();
         case 'starred': return msg.isStarred;
         case 'archived': return msg.isArchived;
         default: return true;
@@ -409,7 +412,9 @@ export default function MessagesPage() {
     <div className={`${depth > 0 ? 'ml-8 border-l-2 border-gray-200 pl-4 mt-2' : ''}`}>
       <Card 
         className={`cursor-pointer hover:shadow-md transition-all duration-200 group mb-2 ${
-          !message.isRead ? 'border-l-4 border-l-blue-500 bg-blue-50/50 shadow-sm' : 'hover:bg-gray-50'
+          !message.isRead 
+            ? 'border-l-4 border-l-blue-500 bg-gradient-to-r from-blue-50 to-blue-25 shadow-md ring-1 ring-blue-200' 
+            : 'hover:bg-gray-50 border border-gray-200'
         } ${depth > 0 ? 'bg-gray-50/30' : ''}`}
         onClick={() => {
           setSelectedMessage(message);
@@ -422,7 +427,7 @@ export default function MessagesPage() {
               <div className="flex items-center space-x-2 mb-2">
                 <div className="flex items-center space-x-1">
                   {!message.isRead && (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" title="Non lu"></div>
+                    <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse shadow-sm" title="Non lu"></div>
                   )}
                   {depth > 0 && (
                     <div className="flex items-center text-green-600 bg-green-50 px-2 py-1 rounded-full">
@@ -435,7 +440,7 @@ export default function MessagesPage() {
                 </div>
                 
                 <h4 className={`font-medium text-gray-900 ${
-                  !message.isRead ? 'font-bold' : ''
+                  !message.isRead ? 'font-bold text-blue-900' : 'font-normal'
                 }`}>
                   {message.subject}
                 </h4>

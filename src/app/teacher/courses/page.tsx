@@ -345,16 +345,25 @@ export default function TeacherCoursesPage() {
                     size="sm" 
                     className="bg-red-500 hover:bg-red-600 text-white"
                     onClick={async () => {
-                      if (confirm(`Supprimer "${course.title}" ?`)) {
-                        try {
-                          await apiService.deleteCourse(course.id);
-                          const updated = await apiService.getCourses();
-                          setCourses(updated);
-                          toast.success('Cours supprimé');
-                        } catch (error) {
-                          toast.error('Backend non démarré - Impossible de supprimer');
+                      toast(`Supprimer "${course.title}" ?`, {
+                        action: {
+                          label: 'Confirmer',
+                          onClick: async () => {
+                            try {
+                              await apiService.deleteCourse(course.id);
+                              const updated = await apiService.getCourses();
+                              setCourses(updated);
+                              toast.success('Cours supprimé');
+                            } catch (error) {
+                              toast.error('Backend non démarré - Impossible de supprimer');
+                            }
+                          }
+                        },
+                        cancel: {
+                          label: 'Annuler',
+                          onClick: () => {}
                         }
-                      }
+                      });
                     }}
                   >
                     <Trash2 className="h-4 w-4" />
