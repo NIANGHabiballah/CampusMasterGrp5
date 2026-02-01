@@ -103,6 +103,11 @@ export default function TeacherAssignmentsPage() {
         setAssignments(assignmentsData);
         setCourses(coursesData);
         
+        // Sélectionner le premier devoir par défaut
+        if (assignmentsData.length > 0) {
+          setSelectedAssignment(assignmentsData[0]);
+        }
+        
         // Charger les soumissions pour chaque devoir
         const submissionsData = {};
         for (const assignment of assignmentsData) {
@@ -111,17 +116,7 @@ export default function TeacherAssignmentsPage() {
             submissionsData[assignment.id] = assignmentSubmissions;
           } catch (error) {
             console.log('Pas de soumissions pour:', assignment.id);
-            // Données de test temporaires
-            submissionsData[assignment.id] = [
-              {
-                id: `${assignment.id}-1`,
-                student: { firstName: 'Marie', lastName: 'Dupont' },
-                submittedAt: '2024-02-08T14:30:00',
-                grade: null,
-                feedback: '',
-                files: []
-              }
-            ];
+            submissionsData[assignment.id] = [];
           }
         }
         setSubmissions(submissionsData);
@@ -135,7 +130,7 @@ export default function TeacherAssignmentsPage() {
   }, []);
   
   const [selectedTab, setSelectedTab] = useState('assignments');
-  const [selectedAssignment, setSelectedAssignment] = useState(mockAssignments[0]);
+  const [selectedAssignment, setSelectedAssignment] = useState(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -283,14 +278,21 @@ export default function TeacherAssignmentsPage() {
     try {
       console.log('Notation soumission:', { submissionId, grade, feedback });
       
-      // Simuler la sauvegarde pour le moment
-      const updatedSubmissions = { ...submissions };
-      Object.keys(updatedSubmissions).forEach(assignmentId => {
-        updatedSubmissions[assignmentId] = updatedSubmissions[assignmentId].map(sub => 
-          sub.id === submissionId ? { ...sub, grade, feedback } : sub
-        );
-      });
-      setSubmissions(updatedSubmissions);
+      // Utiliser l'API pour noter la soumission
+      await apiService.gradeSubmission(submissionId, { grade, feedback });
+      
+      // Recharger les soumissions
+      const submissionsData = {};
+      for (const assignment of assignments) {
+        try {
+          const assignmentSubmissions = await apiService.getSubmissionsByAssignment(assignment.id);
+          submissionsData[assignment.id] = assignmentSubmissions;
+        } catch (error) {
+          console.log('Pas de soumissions pour:', assignment.id);
+          submissionsData[assignment.id] = [];
+        }
+      }
+      setSubmissions(submissionsData);
       
       toast.success('Note enregistrée avec succès');
     } catch (error) {
@@ -597,7 +599,17 @@ export default function TeacherAssignmentsPage() {
                               variant="outline" 
                               size="sm" 
                               className="flex-1 bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 border-blue-200 hover:border-blue-300 text-blue-700 hover:text-blue-800 transition-all duration-300 hover:shadow-md font-medium"
-                              onClick={() => handleViewAssignment(assignment)}
+                              onClick={() => {
+                                // Vérifier s'il y a des soumissions pour ce devoir
+                                const hasSubmissions = submissions[assignment.id] && submissions[assignment.id].length > 0;
+                                if (hasSubmissions) {
+                                  // Rediriger vers l'onglet correction
+                                  setSelectedTab('grading');
+                                } else {
+                                  // Afficher les détails si pas de soumissions
+                                  handleViewAssignment(assignment);
+                                }
+                              }}
                             >
                               <Eye className="h-4 w-4 mr-2" />
                               Voir
@@ -609,7 +621,7 @@ export default function TeacherAssignmentsPage() {
                               onClick={() => handleEditAssignment(assignment)}
                             >
                               <FileText className="h-4 w-4 mr-2" />
-                              Modifier
+                              Corriger
                             </Button>
                           </div>
                         </CardContent>
@@ -628,16 +640,21 @@ export default function TeacherAssignmentsPage() {
                       <CardTitle className="text-xl font-semibold text-gray-900">Notes des étudiants</CardTitle>
                       <CardDescription className="text-gray-600 mt-1">Consultez les notes attribuées aux devoirs</CardDescription>
                     </div>
-                    <Select value={selectedAssignment.id} onValueChange={(value) => {
-                      const assignment = mockAssignments.find(a => a.id === value);
-                      if (assignment) setSelectedAssignment(assignment);
+                    <Select value={selectedAssignment?.id?.toString() || 'all'} onValueChange={(value) => {
+                      if (value === 'all') {
+                        setSelectedAssignment(null);
+                      } else {
+                        const assignment = assignments.find(a => a.id.toString() === value);
+                        if (assignment) setSelectedAssignment(assignment);
+                      }
                     }}>
                       <SelectTrigger className="w-64 bg-white border-gray-300">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
-                        {mockAssignments.map((assignment) => (
-                          <SelectItem key={assignment.id} value={assignment.id}>
+                        <SelectItem value="all">Tous les devoirs</SelectItem>
+                        {assignments.map((assignment) => (
+                          <SelectItem key={assignment.id} value={assignment.id.toString()}>
                             {assignment.title}
                           </SelectItem>
                         ))}
@@ -646,50 +663,115 @@ export default function TeacherAssignmentsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
-                  {mockSubmissions.length === 0 ? (
-                    <div className="text-center py-12">
-                      <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune note disponible</h3>
-                      <p className="text-gray-600">Les notes apparaîtront ici après correction des devoirs.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {submissions[selectedAssignment.id]?.filter(sub => sub.grade !== null).map((submission) => (
-                          <Card key={submission.id} className="border border-gray-200">
-                            <CardHeader className="pb-3">
-                              <CardTitle className="text-lg flex items-center justify-between">
-                                <span>{submission.studentName || submission.student?.firstName + ' ' + submission.student?.lastName}</span>
-                                <Badge variant={submission.grade >= 70 ? "default" : submission.grade >= 50 ? "secondary" : "destructive"}>
-                                  {submission.grade}/100
-                                </Badge>
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-3">
-                                <div className="flex justify-between text-sm">
-                                  <span className="text-gray-500">Soumis le:</span>
-                                  <span>{new Date(submission.submittedAt).toLocaleDateString('fr-FR')}</span>
-                                </div>
-                                {submission.feedback && (
-                                  <div className="bg-blue-50 p-3 rounded-lg">
-                                    <p className="text-sm font-medium text-blue-900 mb-1">Commentaire:</p>
-                                    <p className="text-sm text-blue-800">{submission.feedback}</p>
-                                  </div>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        )) || []}
-                      </div>
+                  {(() => {
+                    // Si "Tous les devoirs" est sélectionné
+                    if (!selectedAssignment) {
+                      const allGradedSubmissions = Object.values(submissions).flat().filter(sub => sub && sub.grade !== null && sub.grade !== undefined);
                       
-                      {submissions[selectedAssignment.id]?.filter(sub => sub.grade !== null).length === 0 && (
+                      if (allGradedSubmissions.length === 0) {
+                        return (
+                          <div className="text-center py-12">
+                            <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune note disponible</h3>
+                            <p className="text-gray-600">Les notes apparaîtront ici après correction des devoirs.</p>
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {allGradedSubmissions.map((submission) => {
+                              const assignment = assignments.find(a => a.id.toString() === submission.assignmentId?.toString());
+                              return (
+                                <Card key={submission.id} className="border border-gray-200">
+                                  <CardHeader className="pb-3">
+                                    <CardTitle className="text-lg flex items-center justify-between">
+                                      <span>{submission.student?.firstName} {submission.student?.lastName}</span>
+                                      <Badge variant={submission.grade >= 14 ? "default" : submission.grade >= 10 ? "secondary" : "destructive"} className="text-black">
+                                        {submission.grade}/20
+                                      </Badge>
+                                    </CardTitle>
+                                    <CardDescription className="text-sm font-medium text-blue-600">
+                                      {assignment?.title || 'Devoir inconnu'}
+                                    </CardDescription>
+                                  </CardHeader>
+                                  <CardContent>
+                                    <div className="space-y-3">
+                                      <div className="flex justify-between text-sm">
+                                        <span className="text-gray-500">Soumis le:</span>
+                                        <span>{new Date(submission.submittedAt).toLocaleDateString('fr-FR')}</span>
+                                      </div>
+                                      {submission.feedback && (
+                                        <div className="bg-blue-50 p-3 rounded-lg">
+                                          <p className="text-sm font-medium text-blue-900 mb-1">Commentaire:</p>
+                                          <p className="text-sm text-blue-800">{submission.feedback}</p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    // Si un devoir spécifique est sélectionné
+                    if (!submissions[selectedAssignment.id] || submissions[selectedAssignment.id].length === 0) {
+                      return (
+                        <div className="text-center py-12">
+                          <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune note disponible</h3>
+                          <p className="text-gray-600">Les notes apparaîtront ici après correction des devoirs.</p>
+                        </div>
+                      );
+                    }
+                    
+                    const gradedSubmissions = submissions[selectedAssignment.id].filter(sub => sub.grade !== null && sub.grade !== undefined);
+                    
+                    if (gradedSubmissions.length === 0) {
+                      return (
                         <div className="text-center py-8">
                           <p className="text-gray-500">Aucune note attribuée pour ce devoir.</p>
                         </div>
-                      )}
-                    </div>
-                  )}
+                      );
+                    }
+                    
+                    return (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {gradedSubmissions.map((submission) => (
+                            <Card key={submission.id} className="border border-gray-200">
+                              <CardHeader className="pb-3">
+                                <CardTitle className="text-lg flex items-center justify-between">
+                                  <span>{submission.student?.firstName} {submission.student?.lastName}</span>
+                                  <Badge variant={submission.grade >= 14 ? "default" : submission.grade >= 10 ? "secondary" : "destructive"} className="text-black">
+                                    {submission.grade}/20
+                                  </Badge>
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent>
+                                <div className="space-y-3">
+                                  <div className="flex justify-between text-sm">
+                                    <span className="text-gray-500">Soumis le:</span>
+                                    <span>{new Date(submission.submittedAt).toLocaleDateString('fr-FR')}</span>
+                                  </div>
+                                  {submission.feedback && (
+                                    <div className="bg-blue-50 p-3 rounded-lg">
+                                      <p className="text-sm font-medium text-blue-900 mb-1">Commentaire:</p>
+                                      <p className="text-sm text-blue-800">{submission.feedback}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -701,7 +783,7 @@ export default function TeacherAssignmentsPage() {
                   <CardDescription className="text-gray-600 mt-1">Attribuez des notes et commentaires</CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
-                  {mockSubmissions.filter(s => !s.grade).length === 0 ? (
+                  {Object.values(submissions).flat().filter(s => s && !s.grade).length === 0 ? (
                     <div className="text-center py-16">
                       <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                         <CheckCircle className="h-8 w-8 text-green-600" />
@@ -713,21 +795,21 @@ export default function TeacherAssignmentsPage() {
                     <div className="space-y-4">
                       <div className="mb-4">
                         <p className="text-sm text-gray-600">
-                          {mockSubmissions.filter(s => !s.grade).length} soumission(s) en attente de correction
+                          {Object.values(submissions).flat().filter(s => s && !s.grade).length} soumission(s) en attente de correction
                         </p>
                       </div>
-                      {mockSubmissions.filter(s => !s.grade).map((submission) => (
+                      {Object.values(submissions).flat().filter(s => s && !s.grade).map((submission) => (
                         <SubmissionViewer
                           key={submission.id}
                           submission={{
                             ...submission,
-                            files: submission.files.map(fileName => ({
-                              id: `${submission.id}-${fileName}`,
-                              name: fileName,
-                              url: `/api/files/${fileName}`,
-                              size: Math.random() * 1000000,
-                              type: fileName.endsWith('.pdf') ? 'application/pdf' : 
-                                    fileName.endsWith('.zip') ? 'application/zip' : 'text/plain'
+                            studentName: `${submission.student?.firstName || ''} ${submission.student?.lastName || ''}`.trim(),
+                            files: (submission.files || []).map(file => ({
+                              id: file.id || `${submission.id}-${file.originalName}`,
+                              name: file.originalName || file.fileName || 'Fichier',
+                              url: file.filePath || `/api/files/${file.fileName}`,
+                              size: file.fileSize || 0,
+                              type: file.mimeType || 'application/octet-stream'
                             }))
                           }}
                           onGrade={handleGradeSubmission}

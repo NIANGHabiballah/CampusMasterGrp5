@@ -62,8 +62,8 @@ export default function AssignmentsPage() {
         const assignmentsData = await apiService.getAssignments();
         setAssignments(assignmentsData || []);
         
-        // Charger les soumissions de l'étudiant
         if (user?.role === 'STUDENT') {
+          // Charger les soumissions de l'étudiant
           const submissionsData = [];
           for (const assignment of assignmentsData || []) {
             try {
@@ -77,6 +77,22 @@ export default function AssignmentsPage() {
             }
           }
           setSubmissions(submissionsData);
+        } else if (user?.role === 'TEACHER') {
+          // Charger toutes les soumissions pour l'enseignant
+          const allSubmissions = [];
+          for (const assignment of assignmentsData || []) {
+            try {
+              const assignmentSubmissions = await apiService.getSubmissionsByAssignment(assignment.id.toString());
+              allSubmissions.push(...assignmentSubmissions.map(s => ({
+                ...s,
+                assignmentTitle: assignment.title,
+                assignmentId: assignment.id
+              })));
+            } catch (error) {
+              console.log(`Pas de soumissions pour le devoir ${assignment.id}`);
+            }
+          }
+          setSubmissions(allSubmissions);
         }
       } catch (error) {
         console.error('Erreur lors du chargement:', error);
@@ -113,11 +129,24 @@ export default function AssignmentsPage() {
     }
   ];
 
-  const handleGradeSubmission = () => {
-    toast.success(`Note attribuée: ${grade}/${selectedSubmission?.maxPoints}`);
-    setIsGradingOpen(false);
-    setGrade('');
-    setFeedback('');
+  const handleGradeSubmission = async () => {
+    try {
+      await apiService.gradeSubmission(selectedSubmission.id, {
+        grade: parseInt(grade),
+        feedback: feedback
+      });
+      
+      toast.success(`Note attribuée: ${grade}/${selectedSubmission?.maxPoints}`);
+      setIsGradingOpen(false);
+      setGrade('');
+      setFeedback('');
+      
+      // Recharger les données
+      window.location.reload();
+    } catch (error) {
+      console.error('Erreur notation:', error);
+      toast.error('Erreur lors de la notation');
+    }
   };
   const mockAssignments = [
     {
@@ -652,20 +681,24 @@ export default function AssignmentsPage() {
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">Devoirs à corriger</h2>
               <div className="grid gap-4">
-                {mockSubmissions.map((submission) => (
+                {submissions.filter(s => s && s.id && !s.grade).map((submission) => (
                   <Card key={submission.id} className="p-4">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
-                        <h3 className="font-medium">{submission.assignmentTitle}</h3>
-                        <p className="text-sm text-gray-600">Par: {submission.studentName}</p>
-                        <p className="text-sm text-gray-500">Soumis le: {new Date(submission.submittedAt).toLocaleDateString('fr-FR')}</p>
+                        <h3 className="font-medium">{String(submission.assignmentTitle || 'Devoir sans titre')}</h3>
+                        <p className="text-sm text-gray-600">Par: {String(submission.student?.firstName || '')} {String(submission.student?.lastName || '')}</p>
+                        <p className="text-sm text-gray-500">Soumis le: {String(new Date(submission.submittedAt || Date.now()).toLocaleDateString('fr-FR'))}</p>
                       </div>
                       <div className="flex space-x-2">
                         <Button 
                           size="sm" 
                           variant="outline"
                           onClick={() => {
-                            setSelectedSubmission(submission);
+                            setSelectedSubmission({
+                              ...submission,
+                              studentName: `${submission.student?.firstName || ''} ${submission.student?.lastName || ''}`.trim(),
+                              maxPoints: submission.assignment?.maxPoints || 20
+                            });
                             setIsGradingOpen(true);
                           }}
                         >
@@ -674,13 +707,18 @@ export default function AssignmentsPage() {
                         </Button>
                         {submission.grade && (
                           <Badge variant="outline">
-                            {submission.grade}/{submission.maxPoints}
+                            {submission.grade}/{submission.assignment?.maxPoints || 20}
                           </Badge>
                         )}
                       </div>
                     </div>
                   </Card>
                 ))}
+                {submissions.filter(s => s && s.id && !s.grade).length === 0 && (
+                  <Card className="p-8 text-center">
+                    <p className="text-gray-500">Aucun devoir à corriger pour le moment</p>
+                  </Card>
+                )}
             </div>
           </div>
           </TabsContent>
