@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { BookOpen, Plus, Users, Edit, Trash2, Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiService } from '@/services/api';
 
 interface Course {
   id: number;
@@ -24,31 +25,37 @@ export default function AdminCoursesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [courses, setCourses] = useState<Course[]>([
-    {
-      id: 1,
-      title: 'React Avancé',
-      description: 'Développement d\'applications React complexes',
-      teacher: 'Prof. Dubois',
-      students: 25,
-      status: 'active',
-      semester: 'S1 2024'
-    },
-    {
-      id: 2,
-      title: 'Node.js Backend',
-      description: 'Développement d\'APIs avec Node.js',
-      teacher: 'Prof. Martin',
-      students: 22,
-      status: 'active',
-      semester: 'S1 2024'
-    }
-  ]);
+  const [courses, setCourses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleDeleteCourse = (courseId: number) => {
-    setCourses(prev => prev.filter(c => c.id !== courseId));
-    toast.success('Cours supprimé avec succès');
+  useEffect(() => {
+    loadCourses();
+  }, []);
+
+  const loadCourses = async () => {
+    try {
+      setIsLoading(true);
+      const data = await apiService.getCourses();
+      setCourses(data || []);
+    } catch (error) {
+      console.error('Erreur chargement cours:', error);
+      toast.error('Erreur lors du chargement des cours');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteCourse = async (courseId: number) => {
+    try {
+      await apiService.deleteCourse(courseId.toString());
+      toast.success('Cours supprimé avec succès');
+      loadCourses();
+    } catch (error) {
+      toast.error('Erreur lors de la suppression');
+    }
   };
 
   const handleEditCourse = (course: Course) => {
@@ -97,9 +104,46 @@ export default function AdminCoursesPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="teacher">Enseignant assigné</Label>
-                  <Input 
+                  <select 
                     id="teacher"
-                    placeholder="Nom de l'enseignant" 
+                    className="w-full p-2 border border-gray-300 rounded-md bg-white"
+                  >
+                    <option value="">Sélectionner un enseignant</option>
+                    <option value="5">Jean Dupont (prof@campus.sn)</option>
+                    <option value="1">Admin Campus (admin@campus.sn)</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="semester">Semestre</Label>
+                    <select 
+                      id="semester"
+                      className="w-full p-2 border border-gray-300 rounded-md bg-white"
+                    >
+                      <option value="S1">Semestre 1</option>
+                      <option value="S2">Semestre 2</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="credits">Crédits ECTS</Label>
+                    <Input 
+                      id="credits"
+                      type="number"
+                      min="1"
+                      max="10"
+                      defaultValue="3"
+                      className="bg-white border-gray-300"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="maxStudents">Nombre max d'étudiants</Label>
+                  <Input 
+                    id="maxStudents"
+                    type="number"
+                    min="1"
+                    max="200"
+                    defaultValue="30"
                     className="bg-white border-gray-300"
                   />
                 </div>
@@ -107,9 +151,46 @@ export default function AdminCoursesPage() {
                   <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                     Annuler
                   </Button>
-                  <Button onClick={() => {
-                    setIsCreateDialogOpen(false);
-                    toast.success('Cours créé avec succès');
+                  <Button onClick={async () => {
+                    try {
+                      const title = document.getElementById('title').value;
+                      const description = document.getElementById('description').value;
+                      const semester = document.getElementById('semester').value;
+                      const credits = parseInt(document.getElementById('credits').value);
+                      const maxStudents = parseInt(document.getElementById('maxStudents').value);
+                      const teacherId = document.getElementById('teacher').value;
+                      
+                      if (!teacherId) {
+                        toast.error('Veuillez sélectionner un enseignant');
+                        return;
+                      }
+                      
+                      const courseData = {
+                        title,
+                        description,
+                        semester,
+                        credits,
+                        maxStudents,
+                        teacherId: parseInt(teacherId)
+                      };
+                      
+                      const response = await fetch('http://localhost:8080/api/courses', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(courseData)
+                      });
+                      
+                      if (response.ok) {
+                        setIsCreateDialogOpen(false);
+                        toast.success('Cours créé avec succès');
+                        // Recharger la liste des cours
+                        loadCourses();
+                      } else {
+                        toast.error('Erreur lors de la création');
+                      }
+                    } catch (error) {
+                      toast.error('Erreur: ' + error.message);
+                    }
                   }} className="bg-blue-600 hover:bg-blue-700 text-white">
                     Créer le cours
                   </Button>
@@ -161,6 +242,11 @@ export default function AdminCoursesPage() {
           </Card>
         </div>
 
+        {isLoading ? (
+          <div className="text-center py-8">
+            <div className="text-gray-500">Chargement des cours...</div>
+          </div>
+        ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course) => (
             <Card key={course.id}>
@@ -170,19 +256,19 @@ export default function AdminCoursesPage() {
                     <CardTitle className="text-lg">{course.title}</CardTitle>
                     <CardDescription className="mt-2">{course.description}</CardDescription>
                   </div>
-                  <Badge variant={course.status === 'active' ? 'default' : 'secondary'}>
-                    {course.status === 'active' ? 'Actif' : 'Inactif'}
-                  </Badge>
+                  <Badge variant="default">Actif</Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex items-center text-sm text-gray-600">
                     <Users className="h-4 w-4 mr-2" />
-                    {course.students} étudiants
+                    0 étudiants
                   </div>
-                  <p className="text-sm text-gray-600">Enseignant: {course.teacher}</p>
+                  <p className="text-sm text-gray-600">Enseignant: {course.teacher?.firstName} {course.teacher?.lastName}</p>
                   <p className="text-sm text-gray-600">Semestre: {course.semester}</p>
+                  <p className="text-sm text-gray-600">Crédits: {course.credits} ECTS</p>
+                  <p className="text-sm text-gray-600">Max étudiants: {course.maxStudents}</p>
                 </div>
                 <div className="flex space-x-2 mt-4">
                   <Button 
@@ -197,7 +283,10 @@ export default function AdminCoursesPage() {
                     variant="outline" 
                     size="sm" 
                     className="text-red-600 hover:text-red-700"
-                    onClick={() => handleDeleteCourse(course.id)}
+                    onClick={() => {
+                      setCourseToDelete(course);
+                      setIsDeleteDialogOpen(true);
+                    }}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Supprimer
@@ -207,6 +296,36 @@ export default function AdminCoursesPage() {
             </Card>
           ))}
         </div>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent className="max-w-md bg-white">
+            <DialogHeader>
+              <DialogTitle className="text-red-600">Supprimer le cours</DialogTitle>
+              <DialogDescription>
+                Êtes-vous sûr de vouloir supprimer le cours "{courseToDelete?.title}" ? Cette action est irréversible.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                Annuler
+              </Button>
+              <Button 
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={async () => {
+                  if (courseToDelete) {
+                    await handleDeleteCourse(courseToDelete.id);
+                    setIsDeleteDialogOpen(false);
+                    setCourseToDelete(null);
+                  }
+                }}
+              >
+                Supprimer
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Course Dialog */}
         {selectedCourse && (
@@ -237,28 +356,108 @@ export default function AdminCoursesPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="editTeacher">Enseignant assigné</Label>
-                  <Input 
+                  <select 
                     id="editTeacher"
-                    defaultValue={selectedCourse.teacher}
-                    className="bg-white border-gray-300"
-                  />
+                    defaultValue={selectedCourse.teacher?.id || ''}
+                    className="w-full p-2 border border-gray-300 rounded-md bg-white"
+                  >
+                    <option value="">Sélectionner un enseignant</option>
+                    <option value="5">Jean Dupont (prof@campus.sn)</option>
+                    <option value="1">Admin Campus (admin@campus.sn)</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="editCredits">Crédits ECTS</Label>
+                    <Input 
+                      id="editCredits"
+                      type="number"
+                      min="1"
+                      max="10"
+                      defaultValue={selectedCourse.credits}
+                      className="bg-white border-gray-300"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="editMaxStudents">Nombre max d'étudiants</Label>
+                    <Input 
+                      id="editMaxStudents"
+                      type="number"
+                      min="1"
+                      max="200"
+                      defaultValue={selectedCourse.maxStudents}
+                      className="bg-white border-gray-300"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="editSemester">Semestre</Label>
-                  <Input 
+                  <select 
                     id="editSemester"
                     defaultValue={selectedCourse.semester}
-                    className="bg-white border-gray-300"
-                  />
+                    className="w-full p-2 border border-gray-300 rounded-md bg-white"
+                  >
+                    <option value="S1">Semestre 1</option>
+                    <option value="S2">Semestre 2</option>
+                  </select>
                 </div>
                 <div className="flex justify-end space-x-2">
                   <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                     Annuler
                   </Button>
-                  <Button onClick={() => {
-                    setIsEditDialogOpen(false);
-                    setSelectedCourse(null);
-                    toast.success('Cours modifié avec succès');
+                  <Button onClick={async () => {
+                    try {
+                      const title = document.getElementById('editTitle').value;
+                      const description = document.getElementById('editDescription').value;
+                      const semester = document.getElementById('editSemester').value;
+                      const credits = parseInt(document.getElementById('editCredits').value) || 0;
+                      const maxStudents = parseInt(document.getElementById('editMaxStudents').value) || 0;
+                      const teacherId = document.getElementById('editTeacher').value;
+                      
+                      console.log('Valeurs récupérées du formulaire:');
+                      console.log('- title:', title);
+                      console.log('- description:', description);
+                      console.log('- semester:', semester);
+                      console.log('- credits:', credits);
+                      console.log('- maxStudents:', maxStudents);
+                      console.log('- teacherId:', teacherId);
+                      
+                      const updateData = {
+                        title,
+                        description,
+                        semester,
+                        credits,
+                        maxStudents,
+                        teacherId: teacherId ? parseInt(teacherId) : null
+                      };
+                      
+                      console.log('Données à envoyer:', updateData);
+                      
+                      console.log('=== DÉBUT MODIFICATION ADMIN ===');
+                      console.log('ID du cours sélectionné:', selectedCourse.id);
+                      console.log('Type de l\'ID:', typeof selectedCourse.id);
+                      console.log('URL complète:', `http://localhost:8080/api/courses/${selectedCourse.id}`);
+                      
+                      const response = await fetch(`http://localhost:8080/api/courses/${selectedCourse.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                      });
+                      
+                      console.log('Statut de la réponse:', response.status);
+                      console.log('Réponse OK:', response.ok);
+                      
+                      if (response.ok) {
+                        setIsEditDialogOpen(false);
+                        setSelectedCourse(null);
+                        toast.success('Cours modifié avec succès');
+                        loadCourses();
+                      } else {
+                        toast.error('Erreur lors de la modification');
+                      }
+                    } catch (error) {
+                      toast.error('Erreur: ' + error.message);
+                    }
                   }} className="bg-blue-600 hover:bg-blue-700 text-white">
                     Enregistrer
                   </Button>

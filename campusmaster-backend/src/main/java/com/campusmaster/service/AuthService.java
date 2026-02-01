@@ -2,7 +2,9 @@ package com.campusmaster.service;
 
 import com.campusmaster.dto.*;
 import com.campusmaster.entity.User;
+import com.campusmaster.entity.Notification;
 import com.campusmaster.repository.UserRepository;
+import com.campusmaster.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,9 @@ public class AuthService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -43,8 +48,40 @@ public class AuthService {
     }
 
     public RegisterResponse register(RegisterRequest request) throws Exception {
+        // Validation des champs obligatoires
+        if (request.getFirstName() == null || request.getFirstName().trim().isEmpty()) {
+            throw new Exception("Le prénom est obligatoire");
+        }
+        if (request.getLastName() == null || request.getLastName().trim().isEmpty()) {
+            throw new Exception("Le nom est obligatoire");
+        }
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new Exception("L'email est obligatoire");
+        }
+        
+        // Validation format email
+        String emailRegex = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";
+        if (!request.getEmail().matches(emailRegex)) {
+            throw new Exception("Format d'email invalide");
+        }
+        
+        // Validation téléphone si renseigné
+        if (request.getPhone() != null && !request.getPhone().isEmpty()) {
+            String phoneRegex = "^[+]?[0-9\\s\\-()]{8,15}$";
+            if (!request.getPhone().matches(phoneRegex)) {
+                throw new Exception("Format de téléphone invalide");
+            }
+        }
+        
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new Exception("Email already exists");
+            throw new Exception("Cet email existe déjà");
+        }
+        
+        // Vérification unicité numéro étudiant
+        if (request.getStudentId() != null && !request.getStudentId().trim().isEmpty()) {
+            if (userRepository.existsByStudentId(request.getStudentId())) {
+                throw new Exception("Ce numéro étudiant existe déjà");
+            }
         }
         
         User user = new User();
@@ -54,6 +91,20 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(User.Role.valueOf(request.getRole().toUpperCase()));
         user.setStatus(User.Status.ACTIVE);
+        
+        // Ajouter les nouveaux champs
+        if (request.getStudentId() != null && !request.getStudentId().isEmpty()) {
+            user.setStudentId(request.getStudentId());
+        }
+        if (request.getDepartment() != null && !request.getDepartment().isEmpty()) {
+            user.setDepartment(request.getDepartment());
+        }
+        if (request.getSemester() != null && !request.getSemester().isEmpty()) {
+            user.setSemester(request.getSemester());
+        }
+        if (request.getPhone() != null && !request.getPhone().isEmpty()) {
+            user.setPhone(request.getPhone());
+        }
         
         User savedUser = userRepository.save(user);
         

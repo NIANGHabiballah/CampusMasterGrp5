@@ -52,7 +52,7 @@ public class DataLoader implements CommandLineRunner {
 
         // Créer des utilisateurs de test
         User admin = new User();
-        admin.setEmail("admin@campus.fr");
+        admin.setEmail("admin@campus.sn");
         admin.setPassword(passwordEncoder.encode("password"));
         admin.setFirstName("Admin");
         admin.setLastName("Campus");
@@ -61,7 +61,7 @@ public class DataLoader implements CommandLineRunner {
         userRepository.save(admin);
 
         User teacher = new User();
-        teacher.setEmail("prof@campus.fr");
+        teacher.setEmail("prof@campus.sn");
         teacher.setPassword(passwordEncoder.encode("password"));
         teacher.setFirstName("Jean");
         teacher.setLastName("Dupont");
@@ -70,7 +70,7 @@ public class DataLoader implements CommandLineRunner {
         userRepository.save(teacher);
 
         User student = new User();
-        student.setEmail("etudiant@campus.fr");
+        student.setEmail("etudiant@campus.sn");
         student.setPassword(passwordEncoder.encode("password"));
         student.setFirstName("Marie");
         student.setLastName("Martin");
@@ -85,6 +85,7 @@ public class DataLoader implements CommandLineRunner {
         course1.setCode("DWA-M2");
         course1.setCredits(6);
         course1.setSemester("S1");
+        course1.setMaxStudents(30);
         course1.setTeacher(teacher);
         courseRepository.save(course1);
 
@@ -94,6 +95,7 @@ public class DataLoader implements CommandLineRunner {
         course2.setCode("BDD-M2");
         course2.setCredits(4);
         course2.setSemester("S1");
+        course2.setMaxStudents(25);
         course2.setTeacher(teacher);
         courseRepository.save(course2);
 

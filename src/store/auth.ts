@@ -161,6 +161,10 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.isHydrated = true;
+          // Maintenir l'authentification si les données existent
+          if (state.user && state.token) {
+            state.isAuthenticated = true;
+          }
         }
       }
     }

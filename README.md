@@ -103,9 +103,9 @@ npm run lint     # Linting du code
 Le système utilise actuellement un mock d'authentification avec des comptes de démonstration :
 
 ### Comptes de test
-- **Étudiant**: `etudiant@campus.fr` / `password`
-- **Enseignant**: `prof@campus.fr` / `password`  
-- **Administrateur**: `admin@campus.fr` / `password`
+- **Étudiant**: `etudiant@campus.sn` / `password`
+- **Enseignant**: `prof@campus.sn` / `password`  
+- **Administrateur**: `admin@campus.sn` / `password`
 
 ## 🎨 Design System
 

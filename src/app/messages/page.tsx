@@ -27,6 +27,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
+import { useNotificationStore } from '@/store/notifications';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -48,6 +49,8 @@ interface Message {
   isArchived: boolean;
   createdAt: string;
   attachments?: any[];
+  parentId?: string; // ID du message parent pour les réponses
+  replies?: Message[]; // Messages enfants
 }
 
 const mockMessages: Message[] = [
@@ -107,10 +110,55 @@ const availableTags = [
   { value: 'nouveau', label: 'Nouveau', color: 'bg-indigo-100 text-indigo-800' }
 ];
 
-import { apiService } from '@/services/api';
+import { apiService, createMessage, toggleMessageStar, toggleMessageArchive, markMessageAsRead } from '@/services/api';
+
+// Fonction pour trouver le message parent basé sur le sujet
+const findParentMessage = (messages: any[], originalSubject: string): string | undefined => {
+  const parent = messages.find(msg => 
+    msg.subject.toLowerCase() === originalSubject.toLowerCase()
+  );
+  return parent?.id?.toString();
+};
+
+// Fonction pour organiser les messages en threads
+const organizeMessagesInThreads = (messages: Message[]): Message[] => {
+  const messageMap = new Map<string, Message>();
+  const rootMessages: Message[] = [];
+  
+  // Créer une map de tous les messages
+  messages.forEach(msg => {
+    messageMap.set(msg.id, { ...msg, replies: [] });
+  });
+  
+  // Organiser en threads
+  messages.forEach(msg => {
+    const message = messageMap.get(msg.id)!;
+    
+    if (msg.parentId && messageMap.has(msg.parentId)) {
+      // C'est une réponse, l'ajouter au parent
+      const parent = messageMap.get(msg.parentId)!;
+      parent.replies!.push(message);
+    } else {
+      // C'est un message racine
+      rootMessages.push(message);
+    }
+  });
+  
+  // Trier les réponses par date
+  const sortReplies = (msg: Message) => {
+    if (msg.replies && msg.replies.length > 0) {
+      msg.replies.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      msg.replies.forEach(sortReplies);
+    }
+  };
+  
+  rootMessages.forEach(sortReplies);
+  return rootMessages;
+};
 
 export default function MessagesPage() {
   const { user } = useAuthStore();
+  const { addNotification, markAsRead: markNotificationAsRead } = useNotificationStore();
   const [messages, setMessages] = useState<Message[]>(mockMessages);
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
@@ -122,19 +170,46 @@ export default function MessagesPage() {
         setIsLoading(true);
         console.log('Chargement des données...');
         
-        const [usersData, coursesData] = await Promise.all([
+        const [usersData, coursesData, messagesData] = await Promise.all([
           apiService.getUsers(),
-          apiService.getCourses()
+          apiService.getCourses(),
+          apiService.getMessages()
         ]);
         
         console.log('Utilisateurs chargés:', usersData);
         console.log('Cours chargés:', coursesData);
+        console.log('Messages chargés:', messagesData);
         
         setUsers(usersData || []);
         setCourses(coursesData || []);
+        
+        // Convertir les messages de l'API au format attendu
+        const formattedMessages = (messagesData || []).map((msg: any) => ({
+          id: msg.id.toString(),
+          senderId: msg.sender.id.toString(),
+          senderName: `${msg.sender.firstName} ${msg.sender.lastName}`,
+          senderRole: msg.sender.role,
+          receiverId: msg.receiver?.id?.toString(),
+          receiverName: msg.receiver ? `${msg.receiver.firstName} ${msg.receiver.lastName}` : undefined,
+          courseId: msg.course?.id?.toString(),
+          courseName: msg.course?.title,
+          subject: msg.subject,
+          content: msg.content,
+          tags: [],
+          isRead: msg.isRead || false,
+          isStarred: msg.isStarred || false,
+          isArchived: msg.isArchived || false,
+          createdAt: msg.createdAt,
+          parentId: msg.subject.toLowerCase().startsWith('re:') ? 
+            findParentMessage(messagesData, msg.subject.substring(3).trim()) : undefined,
+          replies: []
+        }));
+        
+        // Organiser les messages en threads
+        const threaded = organizeMessagesInThreads(formattedMessages);
+        setMessages(threaded);
       } catch (error) {
         console.error('Erreur lors du chargement:', error);
-        // En cas d'erreur, utiliser des données de fallback
         setUsers([
           { id: 4, firstName: 'Admin', lastName: 'Campus', role: 'ADMIN' },
           { id: 5, firstName: 'Jean', lastName: 'Dupont', role: 'TEACHER' },
@@ -145,6 +220,7 @@ export default function MessagesPage() {
           { id: 2, title: 'Node.js Backend' },
           { id: 3, title: 'Base de Données' }
         ]);
+        setMessages(mockMessages);
       } finally {
         setIsLoading(false);
       }
@@ -167,34 +243,67 @@ export default function MessagesPage() {
     tags: [] as string[]
   });
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!newMessage.subject || !newMessage.content) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
-    const message: Message = {
-      id: `msg-${Date.now()}`,
-      senderId: user?.id || '',
-      senderName: `${user?.firstName} ${user?.lastName}`,
-      senderRole: user?.role || 'STUDENT',
-      receiverId: newMessage.receiverId || undefined,
-      receiverName: newMessage.receiverId ? 'Destinataire' : undefined,
-      courseId: newMessage.courseId || undefined,
-      courseName: newMessage.courseId ? 'Cours sélectionné' : undefined,
-      subject: newMessage.subject,
-      content: newMessage.content,
-      tags: newMessage.tags,
-      isRead: false,
-      isStarred: false,
-      isArchived: false,
-      createdAt: new Date().toISOString()
-    };
+    try {
+      const messageData = {
+        senderId: user?.id || 1,
+        receiverId: newMessage.receiverId || null,
+        courseId: newMessage.courseId || null,
+        subject: newMessage.subject,
+        content: newMessage.content
+      };
+      
+      console.log('Sending message:', messageData);
+      const result = await createMessage(messageData);
+      console.log('Message sent successfully:', result);
 
-    setMessages([message, ...messages]);
-    setNewMessage({ receiverId: '', courseId: '', subject: '', content: '', tags: [] });
-    setIsComposeOpen(false);
-    toast.success('Message envoyé avec succès');
+      toast.success('Message envoyé avec succès');
+      setNewMessage({ receiverId: '', courseId: '', subject: '', content: '', tags: [] });
+      setIsComposeOpen(false);
+      
+      // Recharger les messages
+      const messagesData = await apiService.getMessages();
+      const formattedMessages = (messagesData || []).map((msg: any) => ({
+        id: msg.id.toString(),
+        senderId: msg.sender.id.toString(),
+        senderName: `${msg.sender.firstName} ${msg.sender.lastName}`,
+        senderRole: msg.sender.role,
+        receiverId: msg.receiver?.id?.toString(),
+        receiverName: msg.receiver ? `${msg.receiver.firstName} ${msg.receiver.lastName}` : undefined,
+        courseId: msg.course?.id?.toString(),
+        courseName: msg.course?.title,
+        subject: msg.subject,
+        content: msg.content,
+        tags: [],
+        isRead: msg.isRead || false,
+        isStarred: msg.isStarred || false,
+        isArchived: msg.isArchived || false,
+        createdAt: msg.createdAt,
+        parentId: msg.subject.toLowerCase().startsWith('re:') ? 
+          findParentMessage(messagesData, msg.subject.substring(3).trim()) : undefined,
+        replies: []
+      }));
+      const threaded = organizeMessagesInThreads(formattedMessages);
+      setMessages(threaded);
+      
+      // Ajouter une notification pour le nouveau message
+      addNotification({
+        userId: messageData.receiverId?.toString() || '1',
+        type: 'message',
+        title: 'Nouveau message',
+        message: `Nouveau message de ${user?.firstName} ${user?.lastName}: ${messageData.subject}`,
+        isRead: false,
+        actionUrl: '/messages'
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi:', error);
+      toast.error(`Erreur lors de l'envoi du message : ${error.message}`);
+    }
   };
 
   const handleTagToggle = (tag: string) => {
@@ -206,23 +315,72 @@ export default function MessagesPage() {
     }));
   };
 
-  const toggleMessageStar = (messageId: string) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId ? { ...msg, isStarred: !msg.isStarred } : msg
-    ));
+  const handleToggleMessageStar = async (messageId: string) => {
+    try {
+      await toggleMessageStar(messageId);
+      const updateMessageInTree = (messages: Message[]): Message[] => {
+        return messages.map(msg => {
+          if (msg.id === messageId) {
+            return { ...msg, isStarred: !msg.isStarred };
+          }
+          if (msg.replies && msg.replies.length > 0) {
+            return { ...msg, replies: updateMessageInTree(msg.replies) };
+          }
+          return msg;
+        });
+      };
+      setMessages(prev => updateMessageInTree(prev));
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour des favoris:', error);
+      toast.error('Erreur lors de la mise à jour');
+    }
   };
 
-  const markAsRead = (messageId: string) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId ? { ...msg, isRead: true } : msg
-    ));
+  const markAsRead = async (messageId: string) => {
+    if (!messageId || messageId === 'undefined') {
+      console.error('ID de message invalide:', messageId);
+      return;
+    }
+    
+    try {
+      await markMessageAsRead(messageId);
+      const updateMessageInTree = (messages: Message[]): Message[] => {
+        return messages.map(msg => {
+          if (msg.id === messageId) {
+            return { ...msg, isRead: true };
+          }
+          if (msg.replies && msg.replies.length > 0) {
+            return { ...msg, replies: updateMessageInTree(msg.replies) };
+          }
+          return msg;
+        });
+      };
+      setMessages(prev => updateMessageInTree(prev));
+    } catch (error) {
+      console.error('Erreur lors du marquage comme lu pour ID', messageId, ':', error);
+    }
   };
 
-  const archiveMessage = (messageId: string) => {
-    setMessages(prev => prev.map(msg => 
-      msg.id === messageId ? { ...msg, isArchived: true } : msg
-    ));
-    toast.success('Message archivé');
+  const archiveMessage = async (messageId: string) => {
+    try {
+      await toggleMessageArchive(messageId);
+      const updateMessageInTree = (messages: Message[]): Message[] => {
+        return messages.map(msg => {
+          if (msg.id === messageId) {
+            return { ...msg, isArchived: true };
+          }
+          if (msg.replies && msg.replies.length > 0) {
+            return { ...msg, replies: updateMessageInTree(msg.replies) };
+          }
+          return msg;
+        });
+      };
+      setMessages(prev => updateMessageInTree(prev));
+      toast.success('Message archivé');
+    } catch (error) {
+      console.error('Erreur lors de l\'archivage:', error);
+      toast.error('Erreur lors de l\'archivage');
+    }
   };
 
   const filteredMessages = messages.filter(msg => {
@@ -245,6 +403,165 @@ export default function MessagesPage() {
     
     return matchesSearch && matchesTags && matchesTab;
   });
+
+  // Composant pour afficher un message et ses réponses
+  const MessageThread = ({ message, depth = 0, parentSubject }: { message: Message; depth?: number; parentSubject?: string }) => (
+    <div className={`${depth > 0 ? 'ml-8 border-l-2 border-gray-200 pl-4 mt-2' : ''}`}>
+      <Card 
+        className={`cursor-pointer hover:shadow-md transition-all duration-200 group mb-2 ${
+          !message.isRead ? 'border-l-4 border-l-blue-500 bg-blue-50/50 shadow-sm' : 'hover:bg-gray-50'
+        } ${depth > 0 ? 'bg-gray-50/30' : ''}`}
+        onClick={() => {
+          setSelectedMessage(message);
+          if (!message.isRead) markAsRead(message.id);
+        }}
+      >
+        <CardContent className="p-4">
+          <div className="flex justify-between items-start mb-3">
+            <div className="flex-1">
+              <div className="flex items-center space-x-2 mb-2">
+                <div className="flex items-center space-x-1">
+                  {!message.isRead && (
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" title="Non lu"></div>
+                  )}
+                  {depth > 0 && (
+                    <div className="flex items-center text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7.707 3.293a1 1 0 010 1.414L5.414 7H11a7 7 0 017 7v2a1 1 0 11-2 0v-2a5 5 0 00-5-5H5.414l2.293 2.293a1 1 0 11-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-xs ml-1 font-medium">Réponse à</span>
+                    </div>
+                  )}
+                </div>
+                
+                <h4 className={`font-medium text-gray-900 ${
+                  !message.isRead ? 'font-bold' : ''
+                }`}>
+                  {message.subject}
+                </h4>
+              </div>
+              
+              {/* Afficher le message parent pour les réponses */}
+              {depth > 0 && parentSubject && (
+                <div className="mb-2 p-2 bg-blue-50 border-l-2 border-blue-300 rounded">
+                  <div className="flex items-center space-x-1 text-xs text-blue-700">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-medium">En réponse à :</span>
+                  </div>
+                  <p className="text-sm text-blue-800 font-medium mt-1">"{parentSubject}"</p>
+                </div>
+              )}
+              
+              <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                <div className="flex items-center space-x-1">
+                  <div className={`w-2 h-2 rounded-full ${
+                    message.senderRole === 'ADMIN' ? 'bg-red-500' :
+                    message.senderRole === 'TEACHER' ? 'bg-blue-500' : 'bg-green-500'
+                  }`}></div>
+                  <span className="font-medium">
+                    {activeTab === 'sent' ? 
+                      `À: ${message.receiverName || message.courseName || 'Groupe'}` : 
+                      `De: ${message.senderName}`
+                    }
+                  </span>
+                  <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded text-gray-600">
+                    {message.senderRole === 'ADMIN' ? 'Admin' :
+                     message.senderRole === 'TEACHER' ? 'Prof' : 'Étudiant'}
+                  </span>
+                </div>
+                
+                {message.courseName && (
+                  <div className="flex items-center space-x-1 text-xs">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
+                    </svg>
+                    <span>{message.courseName}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2 ml-4">
+              <div className="flex items-center space-x-1">
+                {message.isRead && (
+                  <div className="text-green-500" title="Lu">
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                )}
+              </div>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggleMessageStar(message.id);
+                }}
+                className="opacity-60 group-hover:opacity-100 transition-opacity"
+              >
+                <Star className={`w-4 h-4 ${message.isStarred ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`} />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  archiveMessage(message.id);
+                }}
+                className="opacity-60 group-hover:opacity-100 transition-opacity"
+              >
+                <Archive className="w-4 h-4 text-gray-400" />
+              </Button>
+            </div>
+          </div>
+          
+          <p className="text-sm text-gray-700 line-clamp-2 mb-3 pl-6">
+            {message.content}
+          </p>
+          
+          <div className="flex justify-between items-center pl-6">
+            <div className="flex flex-wrap gap-1">
+              {message.tags.map(tag => (
+                <Badge key={tag} className={`text-xs ${getTagStyle(tag)}`}>
+                  {availableTags.find(t => t.value === tag)?.label || tag}
+                </Badge>
+              ))}
+              
+              {(message.subject.toLowerCase().includes('urgent') || 
+                message.content.toLowerCase().includes('urgent')) && (
+                <Badge className="text-xs bg-red-100 text-red-800">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  Urgent
+                </Badge>
+              )}
+              
+              {message.replies && message.replies.length > 0 && (
+                <Badge className="text-xs bg-blue-100 text-blue-800">
+                  <MessageSquare className="w-3 h-3 mr-1" />
+                  {message.replies.length} réponse{message.replies.length > 1 ? 's' : ''}
+                </Badge>
+              )}
+            </div>
+            
+            <div className="flex items-center space-x-2 text-xs text-gray-500">
+              <Clock className="w-3 h-3" />
+              <span>
+                {format(new Date(message.createdAt), 'dd MMM yyyy à HH:mm', { locale: fr })}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Réponses imbriquées */}
+      {message.replies && message.replies.map(reply => (
+        <MessageThread key={reply.id} message={reply} depth={depth + 1} parentSubject={message.subject} />
+      ))}
+    </div>
+  );
 
   const getTagStyle = (tag: string) => {
     const tagConfig = availableTags.find(t => t.value === tag);
@@ -278,46 +595,34 @@ export default function MessagesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="recipient">Destinataire</Label>
-                  <Select value={newMessage.receiverId} onValueChange={(value) => setNewMessage({...newMessage, receiverId: value})}>
-                    <SelectTrigger className="bg-white border-gray-300">
-                      <SelectValue placeholder={isLoading ? "Chargement..." : "Sélectionner un destinataire"} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      {isLoading ? (
-                        <SelectItem value="loading" disabled>Chargement des utilisateurs...</SelectItem>
-                      ) : users.length === 0 ? (
-                        <SelectItem value="empty" disabled>Aucun utilisateur trouvé</SelectItem>
-                      ) : (
-                        users.filter(u => u.id !== user?.id).map(u => (
-                          <SelectItem key={u.id} value={u.id.toString()}>
-                            {u.firstName} {u.lastName} ({u.role})
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <select 
+                    value={newMessage.receiverId} 
+                    onChange={(e) => setNewMessage({...newMessage, receiverId: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded-md bg-white"
+                  >
+                    <option value="">{isLoading ? "Chargement..." : "Sélectionner un destinataire"}</option>
+                    {!isLoading && users.filter((u: any) => u.id !== user?.id).map((u: any) => (
+                      <option key={u.id} value={u.id.toString()}>
+                        {u.firstName} {u.lastName} ({u.role})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 
                 <div>
                   <Label htmlFor="course">Groupe de cours (optionnel)</Label>
-                  <Select value={newMessage.courseId} onValueChange={(value) => setNewMessage({...newMessage, courseId: value})}>
-                    <SelectTrigger className="bg-white border-gray-300">
-                      <SelectValue placeholder={isLoading ? "Chargement..." : "Sélectionner un cours"} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white">
-                      {isLoading ? (
-                        <SelectItem value="loading" disabled>Chargement des cours...</SelectItem>
-                      ) : courses.length === 0 ? (
-                        <SelectItem value="empty" disabled>Aucun cours trouvé</SelectItem>
-                      ) : (
-                        courses.map(course => (
-                          <SelectItem key={course.id} value={course.id.toString()}>
-                            {course.title}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <select 
+                    value={newMessage.courseId} 
+                    onChange={(e) => setNewMessage({...newMessage, courseId: e.target.value})}
+                    className="w-full p-2 border border-gray-300 rounded-md bg-white"
+                  >
+                    <option value="">{isLoading ? "Chargement..." : "Sélectionner un cours"}</option>
+                    {!isLoading && courses.map((course: any) => (
+                      <option key={course.id} value={course.id.toString()}>
+                        {course.title}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               
@@ -435,7 +740,7 @@ export default function MessagesPage() {
 
         {/* Messages List */}
         <div className="lg:col-span-2">
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredMessages.length === 0 ? (
               <Card>
                 <CardContent className="text-center py-12">
@@ -446,76 +751,7 @@ export default function MessagesPage() {
               </Card>
             ) : (
               filteredMessages.map(message => (
-                <Card 
-                  key={message.id} 
-                  className={`cursor-pointer hover:shadow-md transition-shadow ${
-                    !message.isRead ? 'border-blue-200 bg-blue-50' : ''
-                  }`}
-                  onClick={() => {
-                    setSelectedMessage(message);
-                    if (!message.isRead) markAsRead(message.id);
-                  }}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h4 className={`font-medium ${!message.isRead ? 'font-bold' : ''}`}>
-                            {message.subject}
-                          </h4>
-                          {!message.isRead && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-600">
-                          {activeTab === 'sent' ? `À: ${message.receiverName || message.courseName}` : `De: ${message.senderName}`}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleMessageStar(message.id);
-                          }}
-                        >
-                          <Star className={`w-4 h-4 ${message.isStarred ? 'fill-yellow-400 text-yellow-400' : 'text-gray-400'}`} />
-                        </Button>
-                        
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            archiveMessage(message.id);
-                          }}
-                        >
-                          <Archive className="w-4 h-4 text-gray-400" />
-                        </Button>
-                      </div>
-                    </div>
-                    
-                    <p className="text-sm text-gray-700 line-clamp-2 mb-2">
-                      {message.content}
-                    </p>
-                    
-                    <div className="flex justify-between items-center">
-                      <div className="flex flex-wrap gap-1">
-                        {message.tags.map(tag => (
-                          <Badge key={tag} className={`text-xs ${getTagStyle(tag)}`}>
-                            {availableTags.find(t => t.value === tag)?.label || tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      
-                      <span className="text-xs text-gray-500">
-                        {format(new Date(message.createdAt), 'dd MMM yyyy à HH:mm', { locale: fr })}
-                      </span>
-                    </div>
-                  </CardContent>
-                </Card>
+                <MessageThread key={message.id} message={message} />
               ))
             )}
           </div>

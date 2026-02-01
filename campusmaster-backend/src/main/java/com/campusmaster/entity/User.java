@@ -28,6 +28,24 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @Column(name = "student_id")
+    private String studentId;
+
+    @Column(name = "department")
+    private String department;
+
+    @Column(name = "semester")
+    private String semester;
+
+    @Column(name = "specialty")
+    private String specialty;
+
+    @Column(name = "permissions")
+    private String permissions;
+
+    @Column(name = "phone")
+    private String phone;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -39,7 +57,7 @@ public class User {
     }
 
     public enum Status {
-        ACTIVE, INACTIVE, PENDING
+        ACTIVE, INACTIVE, PENDING, SUSPENDED
     }
 
     @PrePersist
@@ -80,4 +98,22 @@ public class User {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getStudentId() { return studentId; }
+    public void setStudentId(String studentId) { this.studentId = studentId; }
+
+    public String getDepartment() { return department; }
+    public void setDepartment(String department) { this.department = department; }
+
+    public String getSemester() { return semester; }
+    public void setSemester(String semester) { this.semester = semester; }
+
+    public String getSpecialty() { return specialty; }
+    public void setSpecialty(String specialty) { this.specialty = specialty; }
+
+    public String getPermissions() { return permissions; }
+    public void setPermissions(String permissions) { this.permissions = permissions; }
+
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
 }

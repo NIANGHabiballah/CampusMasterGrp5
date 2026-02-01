@@ -25,7 +25,7 @@ export default function CourseDetailPage() {
     title: 'Architecture des Systèmes Distribués',
     description: 'Ce cours couvre les concepts fondamentaux de l\'architecture des systèmes distribués, incluant la conception, l\'implémentation et la maintenance d\'applications distribuées modernes.',
     instructor: 'Prof. Jean Martin',
-    instructorEmail: 'jean.martin@campus.fr',
+    instructorEmail: 'jean.martin@campus.sn',
     semester: 'S1 2024',
     credits: 6,
     duration: '14 semaines',

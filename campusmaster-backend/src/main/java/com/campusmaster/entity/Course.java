@@ -33,6 +33,9 @@ public class Course {
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
     private List<Assignment> assignments;
 
+    @Column(name = "max_students")
+    private Integer maxStudents;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -80,4 +83,7 @@ public class Course {
 
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+
+    public Integer getMaxStudents() { return maxStudents; }
+    public void setMaxStudents(Integer maxStudents) { this.maxStudents = maxStudents; }
 }

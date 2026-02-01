@@ -43,6 +43,8 @@ public class CourseService {
             if (course.getCode() != null) courseToUpdate.setCode(course.getCode());
             if (course.getCredits() != null) courseToUpdate.setCredits(course.getCredits());
             if (course.getSemester() != null) courseToUpdate.setSemester(course.getSemester());
+            if (course.getMaxStudents() != null) courseToUpdate.setMaxStudents(course.getMaxStudents());
+            if (course.getTeacher() != null) courseToUpdate.setTeacher(course.getTeacher());
             return courseRepository.save(courseToUpdate);
         }
         return null;

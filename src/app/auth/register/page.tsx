@@ -132,7 +132,7 @@ export default function RegisterPage() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  placeholder="votre.email@campus.fr"
+                  placeholder="votre.email@campus.sn"
                   disabled={isLoading}
                   required
                 />

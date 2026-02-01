@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,83 +8,140 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { MessageSquare, Users, Search, Plus, Pin, Clock, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { apiService } from '@/services/api';
 
 export default function ForumsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isNewTopicOpen, setIsNewTopicOpen] = useState(false);
-  const [forums, setForums] = useState([]);
-  const [recentTopics, setRecentTopics] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [newTopic, setNewTopic] = useState({
     title: '',
     content: '',
     forumId: '',
-    priority: 'normal'
+    priority: ''
   });
 
-  useEffect(() => {
-    loadForums();
-  }, []);
-
-  useEffect(() => {
-    if (forums.length > 0) {
-      loadRecentTopics();
+  const forums = [
+    {
+      id: 1,
+      name: 'Architecture Logicielle',
+      description: 'Discussions sur les patterns, microservices et architecture système',
+      topics: 24,
+      posts: 156,
+      lastPost: {
+        author: 'Marie Dupont',
+        time: '2h',
+        title: 'Question sur les microservices'
+      },
+      color: 'bg-blue-500'
+    },
+    {
+      id: 2,
+      name: 'Intelligence Artificielle',
+      description: 'Machine Learning, Deep Learning et IA générative',
+      topics: 18,
+      posts: 89,
+      lastPost: {
+        author: 'Pierre Martin',
+        time: '4h',
+        title: 'Optimisation des réseaux de neurones'
+      },
+      color: 'bg-green-500'
+    },
+    {
+      id: 3,
+      name: 'Sécurité Informatique',
+      description: 'Cybersécurité, cryptographie et protection des données',
+      topics: 15,
+      posts: 67,
+      lastPost: {
+        author: 'Sophie Leroy',
+        time: '1j',
+        title: 'Nouvelles vulnérabilités OWASP'
+      },
+      color: 'bg-red-500'
+    },
+    {
+      id: 4,
+      name: 'Data Science',
+      description: 'Analyse de données, visualisation et Big Data',
+      topics: 21,
+      posts: 134,
+      lastPost: {
+        author: 'Thomas Dubois',
+        time: '3h',
+        title: 'Comparaison Python vs R'
+      },
+      color: 'bg-purple-500'
+    },
+    {
+      id: 5,
+      name: 'Projet de Fin d\'Études',
+      description: 'Partage d\'expériences et conseils pour les projets',
+      topics: 32,
+      posts: 198,
+      lastPost: {
+        author: 'Julie Bernard',
+        time: '30min',
+        title: 'Aide pour la soutenance'
+      },
+      color: 'bg-orange-500'
     }
-  }, [forums]);
+  ];
 
-  const loadForums = async () => {
-    try {
-      setLoading(true);
-      const data = await apiService.getForums();
-      setForums(data);
-    } catch (error) {
-      console.error('Erreur:', error);
-      toast.error('Erreur lors du chargement des forums');
-    } finally {
-      setLoading(false);
+  const recentTopics = [
+    {
+      id: 1,
+      title: 'Aide pour implémenter un pattern Observer',
+      author: 'Alex Martin',
+      forum: 'Architecture Logicielle',
+      replies: 8,
+      views: 45,
+      lastReply: '1h',
+      isPinned: true
+    },
+    {
+      id: 2,
+      title: 'Comparaison TensorFlow vs PyTorch',
+      author: 'Sarah Chen',
+      forum: 'Intelligence Artificielle',
+      replies: 12,
+      views: 78,
+      lastReply: '2h',
+      isPinned: false
+    },
+    {
+      id: 3,
+      title: 'Bonnes pratiques pour les API REST sécurisées',
+      author: 'David Wilson',
+      forum: 'Sécurité Informatique',
+      replies: 6,
+      views: 34,
+      lastReply: '3h',
+      isPinned: false
     }
-  };
+  ];
 
-  const loadRecentTopics = async () => {
-    try {
-      const topics = await fetch(`http://localhost:8080/api/forums/1/topics`).then(r => r.json());
-      setRecentTopics(topics.slice(0, 5));
-    } catch (error) {
-      console.error('Erreur chargement sujets:', error);
-    }
-  };
-
-  const handleCreateTopic = async () => {
+  const handleCreateTopic = () => {
     if (!newTopic.title || !newTopic.content || !newTopic.forumId) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
+      toast.error('Veuillez remplir tous les champs');
       return;
     }
     
-    try {
-      await apiService.createTopic(newTopic);
-      setNewTopic({ title: '', content: '', forumId: '', priority: 'normal' });
-      setIsNewTopicOpen(false);
-      toast.success('Sujet créé avec succès !');
-      loadRecentTopics(); // Recharger les sujets
-    } catch (error) {
-      console.error('Erreur:', error);
-      toast.error('Erreur lors de la création du sujet');
-    }
+    // Simuler la création du sujet
+    console.log('Nouveau sujet créé:', newTopic);
+    setNewTopic({ title: '', content: '', forumId: '' });
+    setIsNewTopicOpen(false);
+    toast.success('Sujet créé avec succès !');
   };
 
-  const filteredForums = (loading ? [] : forums).filter(forum =>
+  const filteredForums = forums.filter(forum =>
     forum.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     forum.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  if (loading) {
-    return <div className="flex justify-center py-8">Chargement des forums...</div>;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -132,6 +189,7 @@ export default function ForumsPage() {
                     onChange={(e) => setNewTopic({...newTopic, priority: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white"
                   >
+                    <option value="">Choisir une priorité</option>
                     <option value="low">Basse</option>
                     <option value="normal">Normale</option>
                     <option value="high">Haute</option>
@@ -185,6 +243,7 @@ export default function ForumsPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Forums List */}
           <div className="lg:col-span-2 space-y-4">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Forums par Matière</h2>
             
@@ -192,7 +251,7 @@ export default function ForumsPage() {
               <Card key={forum.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className={`w-12 h-12 ${forum.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
                       <MessageSquare className="h-6 w-6 text-white" />
                     </div>
                     
@@ -211,8 +270,17 @@ export default function ForumsPage() {
                         <div className="flex items-center space-x-4 text-sm text-gray-500">
                           <span className="flex items-center">
                             <MessageSquare className="h-4 w-4 mr-1" />
-                            {forum.topicCount || 0} sujets
+                            {forum.topics} sujets
                           </span>
+                          <span>{forum.posts} messages</span>
+                        </div>
+                        
+                        <div className="text-right">
+                          <p className="text-xs text-gray-500">Dernier message</p>
+                          <p className="text-sm font-medium">{forum.lastPost.title}</p>
+                          <p className="text-xs text-gray-500">
+                            par {forum.lastPost.author} • {forum.lastPost.time}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -222,7 +290,9 @@ export default function ForumsPage() {
             ))}
           </div>
 
+          {/* Sidebar */}
           <div className="space-y-6">
+            {/* Recent Topics */}
             <Card className="border-0 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Sujets Récents</CardTitle>
@@ -231,6 +301,9 @@ export default function ForumsPage() {
                 {recentTopics.map((topic) => (
                   <div key={topic.id} className="border-b border-gray-100 last:border-0 pb-3 last:pb-0">
                     <div className="flex items-start space-x-2 mb-2">
+                      {topic.isPinned && (
+                        <Pin className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                      )}
                       <Link href={`/forums/topic/${topic.id}`} className="hover:text-blue-600">
                         <h4 className="text-sm font-medium text-gray-900 hover:text-blue-600 line-clamp-2">
                           {topic.title}
@@ -239,31 +312,67 @@ export default function ForumsPage() {
                     </div>
                     
                     <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>par {topic.author?.firstName} {topic.author?.lastName}</span>
-                      <span className="px-2 py-1 bg-gray-100 rounded text-xs">{topic.priority}</span>
+                      <span>par {topic.author}</span>
+                      <span>{topic.lastReply}</span>
                     </div>
                     
-                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">{topic.content}</p>
+                    <div className="flex items-center space-x-3 mt-2 text-xs text-gray-500">
+                      <span className="flex items-center">
+                        <MessageSquare className="h-3 w-3 mr-1" />
+                        {topic.replies}
+                      </span>
+                      <span className="flex items-center">
+                        <Eye className="h-3 w-3 mr-1" />
+                        {topic.views}
+                      </span>
+                    </div>
                   </div>
                 ))}
-                {recentTopics.length === 0 && (
-                  <p className="text-sm text-gray-500">Aucun sujet récent</p>
-                )}
               </CardContent>
             </Card>
-            
+
+            {/* Forum Stats */}
             <Card className="border-0 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Statistiques</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Total forums</span>
-                  <span className="font-semibold">{forums.length}</span>
+                  <span className="text-sm text-gray-600">Total sujets</span>
+                  <span className="font-semibold">110</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Total sujets</span>
-                  <span className="font-semibold">{recentTopics.length}</span>
+                  <span className="text-sm text-gray-600">Total messages</span>
+                  <span className="font-semibold">644</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Membres actifs</span>
+                  <span className="font-semibold">89</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Aujourd'hui</span>
+                  <span className="font-semibold">23 messages</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Online Users */}
+            <Card className="border-0 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center">
+                  <Users className="h-5 w-5 mr-2" />
+                  En ligne (12)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {['Marie D.', 'Pierre M.', 'Sophie L.', 'Thomas D.', 'Julie B.'].map((user, index) => (
+                    <div key={index} className="flex items-center space-x-2 bg-green-50 px-2 py-1 rounded-full">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-xs font-medium text-green-700">{user}</span>
+                    </div>
+                  ))}
+                  <Badge variant="secondary" className="text-xs">+7 autres</Badge>
                 </div>
               </CardContent>
             </Card>

@@ -23,6 +23,7 @@ const courseSchema = z.object({
   semester: z.string(),
   credits: z.number().min(1).max(10),
   teacherId: z.number(),
+  maxStudents: z.number().min(1, 'Le nombre d\'étudiants doit être au moins 1'),
 });
 
 type CourseForm = z.infer<typeof courseSchema>;
@@ -84,13 +85,21 @@ export default function TeacherCoursesPage() {
       semester: 'S1',
       credits: 3,
       teacherId: 5, // ID du professeur Jean Dupont
+      maxStudents: 30,
     },
   });
 
   const onSubmit = async (data: CourseForm) => {
     try {
       console.log('Création cours:', data);
-      const result = await apiService.createCourse(data);
+      const courseData = {
+        title: data.title,
+        description: data.description,
+        semester: data.semester,
+        credits: data.credits,
+        maxStudents: data.maxStudents
+      };
+      const result = await apiService.createCourse(courseData);
       console.log('Résultat création:', result);
       // Recharger immédiatement
       const updatedCourses = await apiService.getCourses();
@@ -210,6 +219,26 @@ export default function TeacherCoursesPage() {
                               type="number" 
                               min="1" 
                               max="10"
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="maxStudents"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre max d'étudiants</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              min="1" 
+                              max="200"
                               {...field}
                               onChange={(e) => field.onChange(parseInt(e.target.value))}
                             />
@@ -361,9 +390,35 @@ export default function TeacherCoursesPage() {
                     Annuler
                   </Button>
                   <Button onClick={async () => {
-                    toast.info('Modification temporairement désactivée');
-                    setIsEditOpen(false);
-                    setSelectedCourse(null);
+                    try {
+                      const editTitle = document.getElementById('editTitle').value;
+                      const editDescription = document.getElementById('editDescription').value;
+                      
+                      console.log('=== MODIFICATION COURS ===');
+                      console.log('ID du cours:', selectedCourse.id);
+                      console.log('Type de l\'ID:', typeof selectedCourse.id);
+                      console.log('Nouvelles valeurs:', { title: editTitle, description: editDescription });
+                      
+                      const updateData = {
+                        title: editTitle,
+                        description: editDescription
+                      };
+                      
+                      console.log('Appel API avec ID:', selectedCourse.id.toString());
+                      const result = await apiService.updateCourse(selectedCourse.id.toString(), updateData);
+                      console.log('Résultat modification:', result);
+                      
+                      const updatedCourses = await apiService.getCourses();
+                      console.log('Cours après modification:', updatedCourses);
+                      setCourses(updatedCourses);
+                      setIsEditOpen(false);
+                      setSelectedCourse(null);
+                      toast.success('Cours modifié avec succès');
+                    } catch (error) {
+                      console.error('Erreur modification complète:', error);
+                      console.error('Stack trace:', error.stack);
+                      toast.error('Erreur lors de la modification: ' + error.message);
+                    }
                   }} className="bg-blue-600 hover:bg-blue-700 text-white">
                     Enregistrer
                   </Button>

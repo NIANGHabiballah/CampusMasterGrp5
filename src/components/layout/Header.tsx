@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -11,15 +11,41 @@ import { Badge } from '@/components/ui/badge';
 import { Bell, BookOpen, GraduationCap, Menu, MessageSquare, Settings, User, LogOut, FileText, BarChart3, Users, Shield } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { useNotificationStore } from '@/store/notifications';
+import { apiService } from '@/services/api';
 import { ROUTES, USER_ROLES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuthStore();
-  const { unreadCount } = useNotificationStore();
+  const { unreadCount, fetchUnreadCount } = useNotificationStore();
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Charger le compteur de notifications basé sur les messages non lus
+  useEffect(() => {
+    if (user?.id) {
+      const fetchMessageCount = async () => {
+        try {
+          const messages = await apiService.getMessages();
+          const unreadMessages = messages.filter((msg: any) => 
+            !msg.isRead && (msg.receiver?.id?.toString() === user.id || msg.course)
+          );
+          const { unreadCount: currentCount } = useNotificationStore.getState();
+          if (currentCount !== unreadMessages.length) {
+            useNotificationStore.setState({ unreadCount: unreadMessages.length });
+          }
+        } catch (error) {
+          // Ignorer les erreurs si l'API n'est pas disponible
+        }
+      };
+      
+      fetchMessageCount();
+      // Recharger toutes les 30 secondes
+      const interval = setInterval(fetchMessageCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user?.id]);
 
   const handleLogout = () => {
     logout();

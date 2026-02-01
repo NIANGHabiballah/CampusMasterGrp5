@@ -8,17 +8,18 @@ import { useAuthStore } from '@/store/auth';
 const publicRoutes = ['/auth/login', '/auth/register', '/'];
 
 export function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading, isHydrated } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated && !publicRoutes.includes(pathname)) {
+    if (isHydrated && !isLoading && !isAuthenticated && !publicRoutes.includes(pathname)) {
       router.push('/auth/login');
     }
-  }, [isAuthenticated, isLoading, pathname, router]);
+  }, [isAuthenticated, isLoading, isHydrated, pathname, router]);
 
-  if (isLoading) {
+  // Attendre l'hydratation avant de faire quoi que ce soit
+  if (!isHydrated || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

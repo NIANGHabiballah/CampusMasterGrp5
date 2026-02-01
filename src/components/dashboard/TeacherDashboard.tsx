@@ -151,6 +151,12 @@ export function TeacherDashboard() {
                 value={newCourse.credits}
                 onChange={(e) => setNewCourse({...newCourse, credits: parseInt(e.target.value)})}
               />
+              <Input
+                type="number"
+                placeholder="Nombre max d'étudiants"
+                defaultValue="30"
+                onChange={(e) => setNewCourse({...newCourse, maxStudents: parseInt(e.target.value)})}
+              />
               <Button onClick={handleCreateCourse} className="w-full">
                 Créer le cours
               </Button>

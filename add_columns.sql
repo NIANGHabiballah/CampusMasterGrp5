@@ -1,0 +1,11 @@
+-- Ajouter les colonnes manquantes à la table users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS student_id VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS department VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS semester VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS specialty VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS permissions VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(255);
+
+-- Ajouter les colonnes manquantes à la table messages
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_starred BOOLEAN DEFAULT FALSE;
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE;

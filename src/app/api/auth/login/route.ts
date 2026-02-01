@@ -4,9 +4,9 @@ export async function POST(request: NextRequest) {
   const { email, password } = await request.json();
   
   const users = [
-    { id: 1, email: 'admin@campus.fr', password: 'password', role: 'ADMIN' },
-    { id: 2, email: 'prof@campus.fr', password: 'password', role: 'TEACHER' },
-    { id: 3, email: 'etudiant@campus.fr', password: 'password', role: 'STUDENT' }
+    { id: 1, email: 'admin@campus.sn', password: 'password', role: 'ADMIN' },
+    { id: 2, email: 'prof@campus.sn', password: 'password', role: 'TEACHER' },
+    { id: 3, email: 'etudiant@campus.sn', password: 'password', role: 'STUDENT' }
   ];
   
   const user = users.find(u => u.email === email && u.password === password);

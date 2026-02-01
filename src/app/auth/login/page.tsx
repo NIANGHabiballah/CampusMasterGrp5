@@ -68,7 +68,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="votre.email@campus.fr"
+                  placeholder="votre.email@campus.sn"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
@@ -151,13 +151,13 @@ export default function LoginPage() {
             </div>
             <div className="space-y-2 text-xs">
               <div className="p-2 bg-white rounded border">
-                <strong>Admin:</strong> admin@campus.fr / password
+                <strong>Admin:</strong> admin@campus.sn / password
               </div>
               <div className="p-2 bg-white rounded border">
-                <strong>Enseignant:</strong> prof@campus.fr / password
+                <strong>Enseignant:</strong> prof@campus.sn / password
               </div>
               <div className="p-2 bg-white rounded border">
-                <strong>Étudiant:</strong> etudiant@campus.fr / password
+                <strong>Étudiant:</strong> etudiant@campus.sn / password
               </div>
             </div>
           </CardContent>

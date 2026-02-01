@@ -43,11 +43,23 @@ public class UserService {
         Optional<User> existingUser = userRepository.findById(id);
         if (existingUser.isPresent()) {
             User userToUpdate = existingUser.get();
-            userToUpdate.setFirstName(user.getFirstName());
-            userToUpdate.setLastName(user.getLastName());
-            userToUpdate.setEmail(user.getEmail());
-            userToUpdate.setStatus(user.getStatus());
-            return userRepository.save(userToUpdate);
+            if (user.getFirstName() != null) userToUpdate.setFirstName(user.getFirstName());
+            if (user.getLastName() != null) userToUpdate.setLastName(user.getLastName());
+            if (user.getEmail() != null) userToUpdate.setEmail(user.getEmail());
+            if (user.getRole() != null) userToUpdate.setRole(user.getRole());
+            if (user.getStatus() != null) userToUpdate.setStatus(user.getStatus());
+            if (user.getStudentId() != null) userToUpdate.setStudentId(user.getStudentId());
+            if (user.getDepartment() != null) userToUpdate.setDepartment(user.getDepartment());
+            if (user.getSemester() != null) userToUpdate.setSemester(user.getSemester());
+            if (user.getSpecialty() != null) userToUpdate.setSpecialty(user.getSpecialty());
+            if (user.getPhone() != null) userToUpdate.setPhone(user.getPhone());
+            
+            try {
+                return userRepository.save(userToUpdate);
+            } catch (Exception e) {
+                System.err.println("Erreur lors de la sauvegarde: " + e.getMessage());
+                throw e;
+            }
         }
         return null;
     }

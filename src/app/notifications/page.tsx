@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Header } from '@/components/layout/Header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,124 +48,120 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header />
-      
-      <main className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Notifications</h1>
-            <p className="text-gray-600">
-              {unreadCount > 0 ? `${unreadCount} notification${unreadCount > 1 ? 's' : ''} non lue${unreadCount > 1 ? 's' : ''}` : 'Toutes vos notifications sont lues'}
-            </p>
-          </div>
-          
-          {unreadCount > 0 && (
-            <Button onClick={markAllAsRead} variant="outline">
-              <Check className="h-4 w-4 mr-2" />
-              Tout marquer comme lu
-            </Button>
-          )}
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Notifications</h1>
+          <p className="text-gray-600">
+            {unreadCount > 0 ? `${unreadCount} notification${unreadCount > 1 ? 's' : ''} non lue${unreadCount > 1 ? 's' : ''}` : 'Toutes vos notifications sont lues'}
+          </p>
         </div>
+        
+        {unreadCount > 0 && (
+          <Button onClick={markAllAsRead} variant="outline">
+            <Check className="h-4 w-4 mr-2" />
+            Tout marquer comme lu
+          </Button>
+        )}
+      </div>
 
-        <Tabs value={filter} onValueChange={(value) => setFilter(value as 'all' | 'unread')} className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="all">
-              Toutes ({notifications.length})
-            </TabsTrigger>
-            <TabsTrigger value="unread">
-              Non lues ({unreadCount})
-            </TabsTrigger>
-          </TabsList>
+      <Tabs value={filter} onValueChange={(value) => setFilter(value as 'all' | 'unread')} className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="all">
+            Toutes ({notifications.length})
+          </TabsTrigger>
+          <TabsTrigger value="unread">
+            Non lues ({unreadCount})
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsContent value={filter} className="space-y-4">
-            {filteredNotifications.length === 0 ? (
-              <Card className="border-0 shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <Bell className="h-12 w-12 text-gray-400 mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    {filter === 'unread' ? 'Aucune notification non lue' : 'Aucune notification'}
-                  </h3>
-                  <p className="text-gray-600 text-center">
-                    {filter === 'unread' 
-                      ? 'Toutes vos notifications ont été lues.' 
-                      : 'Vous recevrez ici vos notifications importantes.'}
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-3">
-                {filteredNotifications.map((notification) => (
-                  <Card 
-                    key={notification.id} 
-                    className={`border-0 shadow-sm transition-all duration-200 hover:shadow-md ${
-                      !notification.isRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'bg-white'
-                    }`}
-                  >
-                    <CardContent className="p-6">
-                      <div className="flex items-start space-x-4">
-                        <div className="flex-shrink-0 mt-1">
-                          {getNotificationIcon(notification.type)}
+        <TabsContent value={filter} className="space-y-4">
+          {filteredNotifications.length === 0 ? (
+            <Card className="border-0 shadow-sm">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Bell className="h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {filter === 'unread' ? 'Aucune notification non lue' : 'Aucune notification'}
+                </h3>
+                <p className="text-gray-600 text-center">
+                  {filter === 'unread' 
+                    ? 'Toutes vos notifications ont été lues.' 
+                    : 'Vous recevrez ici vos notifications importantes.'}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {filteredNotifications.map((notification) => (
+                <Card 
+                  key={notification.id} 
+                  className={`border-0 shadow-sm transition-all duration-200 hover:shadow-md ${
+                    !notification.isRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'bg-white'
+                  }`}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start space-x-4">
+                      <div className="flex-shrink-0 mt-1">
+                        {getNotificationIcon(notification.type)}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <h3 className="text-sm font-medium text-gray-900">
+                              {notification.title}
+                            </h3>
+                            {!notification.isRead && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            )}
+                          </div>
+                          {getNotificationBadge(notification.type)}
                         </div>
                         
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center space-x-2">
-                              <h3 className="text-sm font-medium text-gray-900">
-                                {notification.title}
-                              </h3>
-                              {!notification.isRead && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              )}
-                            </div>
-                            {getNotificationBadge(notification.type)}
+                        <p className="text-sm text-gray-600 mb-3">
+                          {notification.message}
+                        </p>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center text-xs text-gray-500">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Il y a quelques minutes
                           </div>
                           
-                          <p className="text-sm text-gray-600 mb-3">
-                            {notification.message}
-                          </p>
-                          
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center text-xs text-gray-500">
-                              <Clock className="h-3 w-3 mr-1" />
-                              Il y a quelques minutes
-                            </div>
+                          <div className="flex items-center space-x-2">
+                            {notification.actionUrl && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                asChild
+                                onClick={() => markAsRead(notification.id)}
+                              >
+                                <Link href={notification.actionUrl}>
+                                  Voir détails
+                                </Link>
+                              </Button>
+                            )}
                             
-                            <div className="flex items-center space-x-2">
-                              {notification.actionUrl && (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  asChild
-                                  onClick={() => markAsRead(notification.id)}
-                                >
-                                  <Link href={notification.actionUrl}>
-                                    Voir détails
-                                  </Link>
-                                </Button>
-                              )}
-                              
-                              {!notification.isRead && (
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => markAsRead(notification.id)}
-                                >
-                                  Marquer comme lu
-                                </Button>
-                              )}
-                            </div>
+                            {!notification.isRead && (
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => markAsRead(notification.id)}
+                              >
+                                Marquer comme lu
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </main>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
