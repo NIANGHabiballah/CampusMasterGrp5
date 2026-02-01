@@ -1,5 +1,6 @@
 package com.campusmaster.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,8 +31,13 @@ public class Course {
     @JoinColumn(name = "teacher_id")
     private User teacher;
 
-    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("course")
     private List<Assignment> assignments;
+
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("course")
+    private List<Material> materials;
 
     @Column(name = "max_students")
     private Integer maxStudents;
@@ -86,4 +92,7 @@ public class Course {
 
     public Integer getMaxStudents() { return maxStudents; }
     public void setMaxStudents(Integer maxStudents) { this.maxStudents = maxStudents; }
+
+    public List<Material> getMaterials() { return materials; }
+    public void setMaterials(List<Material> materials) { this.materials = materials; }
 }

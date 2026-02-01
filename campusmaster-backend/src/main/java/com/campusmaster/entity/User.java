@@ -46,6 +46,12 @@ public class User {
     @Column(name = "phone")
     private String phone;
 
+    @Column(name = "address")
+    private String address;
+
+    @Column(name = "bio", columnDefinition = "TEXT")
+    private String bio;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -116,4 +122,10 @@ public class User {
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
 }

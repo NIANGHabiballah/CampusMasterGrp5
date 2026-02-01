@@ -105,6 +105,7 @@ public class DataLoader implements CommandLineRunner {
         assignment1.setDescription("Créer une application React complète");
         assignment1.setCourse(course1);
         assignment1.setDueDate(LocalDateTime.now().plusDays(7));
+        assignment1.setMaxPoints(100);
         assignmentRepository.save(assignment1);
 
         Assignment assignment2 = new Assignment();
@@ -112,6 +113,7 @@ public class DataLoader implements CommandLineRunner {
         assignment2.setDescription("Concevoir un modèle de base de données");
         assignment2.setCourse(course2);
         assignment2.setDueDate(LocalDateTime.now().plusDays(14));
+        assignment2.setMaxPoints(80);
         assignmentRepository.save(assignment2);
 
         // Créer des forums de test

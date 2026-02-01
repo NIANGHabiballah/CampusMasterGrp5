@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FileUpload } from '@/components/ui/file-upload';
-import { Plus, Edit, Users, FileText, Upload, Eye, Download } from 'lucide-react';
+import { Plus, Edit, Users, FileText, Upload, Eye, Download, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -24,6 +24,7 @@ const courseSchema = z.object({
   credits: z.number().min(1).max(10),
   teacherId: z.number(),
   maxStudents: z.number().min(1, 'Le nombre d\'étudiants doit être au moins 1'),
+  materials: z.array(z.any()).optional(),
 });
 
 type CourseForm = z.infer<typeof courseSchema>;
@@ -42,6 +43,7 @@ export default function TeacherCoursesPage() {
         setIsLoading(true);
         const data = await apiService.getCourses();
         console.log('Cours chargés:', data);
+        console.log('Premier cours:', data[0]); // Debug
         setCourses(data);
       } catch (error) {
         console.error('Erreur:', error);
@@ -50,10 +52,6 @@ export default function TeacherCoursesPage() {
       }
     };
     loadCourses();
-    
-    // Recharger toutes les 5 secondes
-    const interval = setInterval(loadCourses, 5000);
-    return () => clearInterval(interval);
   }, []);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -84,8 +82,9 @@ export default function TeacherCoursesPage() {
       description: '',
       semester: 'S1',
       credits: 3,
-      teacherId: 5, // ID du professeur Jean Dupont
+      teacherId: 5,
       maxStudents: 30,
+      materials: [],
     },
   });
 
@@ -101,9 +100,14 @@ export default function TeacherCoursesPage() {
       };
       const result = await apiService.createCourse(courseData);
       console.log('Résultat création:', result);
-      // Recharger immédiatement
+      
+      // Upload des fichiers si présents
+      if (data.materials && data.materials.length > 0) {
+        const courseId = result.id || 1; // Utiliser l'ID du résultat ou valeur par défaut
+        await apiService.uploadMaterials(courseId.toString(), data.materials);
+      }
+      
       const updatedCourses = await apiService.getCourses();
-      console.log('Cours après création:', updatedCourses);
       setCourses(updatedCourses);
       setIsCreateOpen(false);
       form.reset();
@@ -249,6 +253,26 @@ export default function TeacherCoursesPage() {
                     />
                   </div>
 
+                  <FormField
+                    control={form.control}
+                    name="materials"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Supports pédagogiques</FormLabel>
+                        <FormControl>
+                          <input
+                            type="file"
+                            multiple
+                            accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.zip"
+                            onChange={(e) => field.onChange(Array.from(e.target.files || []))}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <div className="flex justify-end gap-2">
                     <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
                       Annuler
@@ -294,11 +318,11 @@ export default function TeacherCoursesPage() {
               <CardContent>
                 <div className="grid grid-cols-3 gap-4 mb-4 text-center">
                   <div>
-                    <div className="text-lg font-bold text-blue-600">0</div>
-                    <div className="text-xs text-gray-600">Étudiants</div>
+                    <div className="text-lg font-bold text-blue-600">{course.maxStudents || 0}</div>
+                    <div className="text-xs text-gray-600">Max Étudiants</div>
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-green-600">0</div>
+                    <div className="text-lg font-bold text-green-600">{course.materials?.length || 0}</div>
                     <div className="text-xs text-gray-600">Supports</div>
                   </div>
                   <div>
@@ -307,49 +331,33 @@ export default function TeacherCoursesPage() {
                   </div>
                 </div>
                 
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={() => handleViewCourse(course)}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    Voir
+                <div className="flex gap-1">
+                  <Button size="sm" variant="outline" className="flex-1" onClick={() => handleViewCourse(course)}>
+                    <Eye className="h-4 w-4 mr-1" />Voir
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleEditCourse(course)}
-                  >
+                  <Button size="sm" variant="outline" onClick={() => handleEditCourse(course)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => handleExportCourse(course)}
-                  >
+                  <Button size="sm" variant="outline" onClick={() => handleExportCourse(course)}>
                     <Download className="h-4 w-4" />
                   </Button>
                   <Button 
                     size="sm" 
-                    variant="destructive"
+                    className="bg-red-500 hover:bg-red-600 text-white"
                     onClick={async () => {
-                      try {
-                        console.log('Suppression cours ID:', course.id);
-                        await apiService.deleteCourse(course.id);
-                        console.log('Cours supprimé, rechargement...');
-                        const updatedCourses = await apiService.getCourses();
-                        console.log('Nouveaux cours:', updatedCourses);
-                        setCourses(updatedCourses);
-                        toast.success('Cours supprimé avec succès');
-                      } catch (error) {
-                        console.error('Erreur suppression:', error);
-                        toast.error('Erreur lors de la suppression: ' + error.message);
+                      if (confirm(`Supprimer "${course.title}" ?`)) {
+                        try {
+                          await apiService.deleteCourse(course.id);
+                          const updated = await apiService.getCourses();
+                          setCourses(updated);
+                          toast.success('Cours supprimé');
+                        } catch (error) {
+                          toast.error('Backend non démarré - Impossible de supprimer');
+                        }
                       }
                     }}
                   >
-                    ×
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
@@ -383,6 +391,54 @@ export default function TeacherCoursesPage() {
                     id="editDescription"
                     defaultValue={selectedCourse.description} 
                     className="bg-white border-gray-300" 
+                    rows={4}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Semestre</label>
+                    <select 
+                      id="editSemester"
+                      defaultValue={selectedCourse.semester}
+                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="S1">Semestre 1</option>
+                      <option value="S2">Semestre 2</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Crédits ECTS</label>
+                    <Input 
+                      id="editCredits"
+                      type="number" 
+                      min="1" 
+                      max="10"
+                      defaultValue={selectedCourse.credits}
+                      className="bg-white border-gray-300" 
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Nombre max d'étudiants</label>
+                  <Input 
+                    id="editMaxStudents"
+                    type="number" 
+                    min="1" 
+                    max="200"
+                    defaultValue={selectedCourse.maxStudents}
+                    className="bg-white border-gray-300" 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Supports pédagogiques</label>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.zip"
+                    onChange={(e) => {
+                      window.editMaterials = Array.from(e.target.files || []);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div className="flex justify-end space-x-2">
@@ -393,30 +449,32 @@ export default function TeacherCoursesPage() {
                     try {
                       const editTitle = document.getElementById('editTitle').value;
                       const editDescription = document.getElementById('editDescription').value;
-                      
-                      console.log('=== MODIFICATION COURS ===');
-                      console.log('ID du cours:', selectedCourse.id);
-                      console.log('Type de l\'ID:', typeof selectedCourse.id);
-                      console.log('Nouvelles valeurs:', { title: editTitle, description: editDescription });
+                      const editSemester = document.getElementById('editSemester').value;
+                      const editCredits = parseInt(document.getElementById('editCredits').value);
+                      const editMaxStudents = parseInt(document.getElementById('editMaxStudents').value);
                       
                       const updateData = {
                         title: editTitle,
-                        description: editDescription
+                        description: editDescription,
+                        semester: editSemester,
+                        credits: editCredits,
+                        maxStudents: editMaxStudents
                       };
                       
-                      console.log('Appel API avec ID:', selectedCourse.id.toString());
-                      const result = await apiService.updateCourse(selectedCourse.id.toString(), updateData);
-                      console.log('Résultat modification:', result);
+                      await apiService.updateCourse(selectedCourse.id.toString(), updateData);
+                      
+                      // Upload des nouveaux fichiers si présents
+                      if (window.editMaterials && window.editMaterials.length > 0) {
+                        await apiService.uploadMaterials(selectedCourse.id.toString(), window.editMaterials);
+                      }
                       
                       const updatedCourses = await apiService.getCourses();
-                      console.log('Cours après modification:', updatedCourses);
                       setCourses(updatedCourses);
                       setIsEditOpen(false);
                       setSelectedCourse(null);
                       toast.success('Cours modifié avec succès');
                     } catch (error) {
-                      console.error('Erreur modification complète:', error);
-                      console.error('Stack trace:', error.stack);
+                      console.error('Erreur modification:', error);
                       toast.error('Erreur lors de la modification: ' + error.message);
                     }
                   }} className="bg-blue-600 hover:bg-blue-700 text-white">

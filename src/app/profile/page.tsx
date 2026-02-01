@@ -15,6 +15,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, Mail, Phone, MapPin, Calendar, Edit, Save, Camera, Award, BookOpen, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiService } from '@/services/api';
 import { useAuthStore } from '@/store/auth';
 import { ROUTES, USER_ROLES } from '@/lib/constants';
 
@@ -39,9 +40,9 @@ export default function ProfilePage() {
   const form = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: user?.firstName || '',
-      lastName: user?.lastName || '',
-      email: user?.email || '',
+      firstName: '',
+      lastName: '',
+      email: '',
       phone: '',
       address: '',
       bio: '',
@@ -51,14 +52,15 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) {
+      console.log('Utilisateur chargé:', user);
       form.reset({
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
-        phone: '',
-        address: '',
-        bio: '',
-        studentId: '',
+        phone: user.phone || '',
+        address: user.address || '',
+        bio: user.bio || '',
+        studentId: user.studentId || '',
       });
     }
   }, [user, form]);
@@ -72,12 +74,34 @@ export default function ProfilePage() {
   const onSubmit = async (data: ProfileForm) => {
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const success = await updateProfile({
+      console.log('=== MODIFICATION PROFIL ===');
+      console.log('Données à envoyer:', data);
+      
+      const updateData = {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
+        phone: data.phone || null,
+        studentId: data.studentId || null,
+        address: data.address || null,
+        bio: data.bio || null
+      };
+      
+      console.log('Appel API updateUser avec ID:', user.id);
+      const result = await apiService.updateUser(user.id.toString(), updateData);
+      console.log('Résultat modification:', result);
+      
+      // Mettre à jour le store local avec toutes les données
+      const success = await updateProfile({
+        firstName: result.firstName,
+        lastName: result.lastName,
+        email: result.email,
+        phone: result.phone,
+        studentId: result.studentId,
+        address: result.address,
+        bio: result.bio,
       });
+      
       if (success) {
         toast.success('Profil mis à jour avec succès !');
         setIsEditing(false);
@@ -333,12 +357,22 @@ export default function ProfilePage() {
                       <div className="grid md:grid-cols-2 gap-6">
                         <div>
                           <label className="text-sm font-medium text-gray-700">Téléphone</label>
-                          <p className="mt-1 text-gray-500">Non renseigné</p>
+                          <p className="mt-1 text-gray-900">{user.phone || 'Non renseigné'}</p>
                         </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Numéro étudiant</label>
-                          <p className="mt-1 text-gray-500">Non renseigné</p>
-                        </div>
+                        {user.role === USER_ROLES.STUDENT && (
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">Numéro étudiant</label>
+                            <p className="mt-1 text-gray-900">{user.studentId || 'Non renseigné'}</p>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Adresse</label>
+                        <p className="mt-1 text-gray-900">{user.address || 'Non renseigné'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Biographie</label>
+                        <p className="mt-1 text-gray-900">{user.bio || 'Non renseigné'}</p>
                       </div>
                     </div>
                   )}

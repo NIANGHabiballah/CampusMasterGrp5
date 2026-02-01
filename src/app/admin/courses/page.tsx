@@ -263,12 +263,11 @@ export default function AdminCoursesPage() {
                 <div className="space-y-2">
                   <div className="flex items-center text-sm text-gray-600">
                     <Users className="h-4 w-4 mr-2" />
-                    0 étudiants
+                    Max étudiants: {course.maxStudents}
                   </div>
                   <p className="text-sm text-gray-600">Enseignant: {course.teacher?.firstName} {course.teacher?.lastName}</p>
                   <p className="text-sm text-gray-600">Semestre: {course.semester}</p>
                   <p className="text-sm text-gray-600">Crédits: {course.credits} ECTS</p>
-                  <p className="text-sm text-gray-600">Max étudiants: {course.maxStudents}</p>
                 </div>
                 <div className="flex space-x-2 mt-4">
                   <Button 

@@ -125,7 +125,7 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href={ROUTES.DASHBOARD} className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-academic-600">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 shadow-lg">
               <GraduationCap className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold text-academic-900 hidden sm:block">CampusMaster</span>
@@ -225,7 +225,7 @@ export function Header() {
                   {/* Mobile Header */}
                   <div className="flex items-center justify-between p-6 border-b bg-white">
                     <div className="flex items-center space-x-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-academic-600">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 shadow-lg">
                         <GraduationCap className="h-5 w-5 text-white" />
                       </div>
                       <span className="text-lg font-bold text-academic-900">CampusMaster</span>

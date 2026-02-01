@@ -58,6 +58,12 @@ public class AuthService {
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new Exception("L'email est obligatoire");
         }
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            throw new Exception("Le mot de passe est obligatoire");
+        }
+        if (request.getRole() == null || request.getRole().trim().isEmpty()) {
+            throw new Exception("Le rôle est obligatoire");
+        }
         
         // Validation format email
         String emailRegex = "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$";

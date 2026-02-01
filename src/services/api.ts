@@ -161,6 +161,18 @@ class ApiService {
   }
 
   // Submissions
+  // Submissions
+  async getSubmissionsByAssignment(assignmentId: string) {
+    return this.request(`/submissions/assignment/${assignmentId}`);
+  }
+
+  async gradeSubmission(submissionId: string, gradeData: any) {
+    return this.request(`/submissions/${submissionId}/grade`, {
+      method: 'PUT',
+      body: JSON.stringify(gradeData),
+    });
+  }
+
   async createSubmission(submissionData: any) {
     return this.request('/submissions', {
       method: 'POST',
@@ -181,7 +193,21 @@ class ApiService {
     });
   }
 
-  // Messages
+  // Materials upload
+  async uploadMaterials(courseId: string, files: File[]) {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('files', file);
+    });
+    
+    return fetch(`${API_BASE_URL}/materials/upload/${courseId}`, {
+      method: 'POST',
+      body: formData,
+    }).then(response => {
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+      return response.json();
+    });
+  }
   async createMessage(messageData: any) {
     return this.request('/messages', {
       method: 'POST',

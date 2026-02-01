@@ -31,8 +31,18 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+        System.out.println("\n=== MODIFICATION UTILISATEUR ===");
+        System.out.println("ID: " + id);
+        System.out.println("Données reçues: " + user);
+        
         User updatedUser = userService.updateUser(id, user);
-        return ResponseEntity.ok(updatedUser);
+        if (updatedUser != null) {
+            System.out.println("Utilisateur modifié avec succès: " + updatedUser.getEmail());
+            return ResponseEntity.ok(updatedUser);
+        } else {
+            System.out.println("Utilisateur non trouvé avec ID: " + id);
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
