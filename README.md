@@ -100,12 +100,29 @@ npm run lint     # Linting du code
 
 ## 🔐 Authentification
 
-Le système utilise actuellement un mock d'authentification avec des comptes de démonstration :
+Le système utilise maintenant le back-end Spring Boot avec authentification JWT :
+
+### Configuration requise
+1. **Back-end Spring Boot** doit être démarré sur `http://localhost:8080`
+2. **Base de données** configurée (voir campusmaster-backend/)
+3. **Variables d'environnement** dans `.env.local`
+
+### Démarrage
+```bash
+# 1. Démarrer le back-end
+cd campusmaster-backend
+./mvnw spring-boot:run
+
+# 2. Vérifier la connexion
+./check-backend.sh
+
+# 3. Démarrer le frontend
+npm run dev
+```
 
 ### Comptes de test
-- **Étudiant**: `etudiant@campus.sn` / `password`
-- **Enseignant**: `prof@campus.sn` / `password`  
-- **Administrateur**: `admin@campus.sn` / `password`
+Les comptes sont maintenant gérés par le back-end Spring Boot.
+Consultez la documentation du back-end pour les comptes de démonstration.
 
 ## 🎨 Design System
 
@@ -131,10 +148,17 @@ Le système utilise actuellement un mock d'authentification avec des comptes de 
 
 ### Variables d'environnement
 ```env
-# À créer : .env.local
+# .env.local
+NEXT_PUBLIC_API_URL=http://localhost:8080
 NEXT_PUBLIC_APP_URL=http://localhost:3000
-# Ajouter d'autres variables selon les besoins
 ```
+
+### Architecture API
+- **Back-end**: Spring Boot sur port 8080
+- **Frontend**: Next.js sur port 3000
+- **Authentification**: JWT avec cookies sécurisés
+- **Intercepteur**: Gestion automatique des tokens
+- **Middleware**: Protection des routes
 
 ### Tailwind Config
 Configuration personnalisée avec :
@@ -186,10 +210,12 @@ npm start
 
 ## 📝 Roadmap
 
-### Version 2.0
-- [ ] Authentification réelle avec NextAuth
-- [ ] Base de données (PostgreSQL/MongoDB)
-- [ ] API REST complète
+### Version 2.0 ✅
+- [x] **Back-end Spring Boot** intégré
+- [x] **Authentification JWT** avec cookies
+- [x] **API REST complète** avec intercepteurs
+- [x] **Gestion des tokens** automatique
+- [x] **Middleware de protection** des routes
 - [ ] Notifications push
 - [ ] Mode hors ligne
 - [ ] Intégration calendrier

@@ -129,8 +129,10 @@ public class AuthService {
     public Optional<User> authenticate(String email, String password) {
         Optional<User> user = userRepository.findByEmail(email);
         
-        if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
-            return user;
+        if (user.isPresent()) {
+            if (passwordEncoder.matches(password, user.get().getPassword())) {
+                return user;
+            }
         }
         
         return Optional.empty();

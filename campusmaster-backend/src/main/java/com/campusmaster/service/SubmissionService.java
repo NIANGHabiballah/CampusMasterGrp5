@@ -18,6 +18,10 @@ public class SubmissionService {
         return submissionRepository.findByAssignmentId(assignmentId);
     }
 
+    public List<Submission> getSubmissionsByAssignmentIdAndStudentId(Long assignmentId, Long studentId) {
+        return submissionRepository.findByAssignmentIdAndStudentId(assignmentId, studentId);
+    }
+
     public Optional<Submission> getSubmissionById(Long id) {
         return submissionRepository.findById(id);
     }

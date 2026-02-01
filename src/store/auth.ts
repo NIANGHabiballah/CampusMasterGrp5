@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, UserRole } from '@/types';
-import { apiService } from '@/services/api';
+import { apiService } from '@/services/api-temp';
 
 interface AuthState {
   user: User | null;
@@ -16,6 +16,7 @@ interface AuthState {
   changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   hasRole: (role: UserRole) => boolean;
   hasPermission: (permission: string) => boolean;
+  setAuthToken: (token: string) => void;
 }
 
 interface RegisterData {
@@ -55,6 +56,20 @@ const rolePermissions: Record<UserRole, string[]> = {
   ]
 };
 
+// Fonction pour gérer les cookies
+const setCookie = (name: string, value: string, days: number = 7) => {
+  if (typeof document !== 'undefined') {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${value}; expires=${expires}; path=/; SameSite=Strict`;
+  }
+};
+
+const deleteCookie = (name: string) => {
+  if (typeof document !== 'undefined') {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+  }
+};
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -63,6 +78,11 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       isHydrated: false,
+
+      setAuthToken: (token: string) => {
+        setCookie('auth-token', token);
+        set({ token });
+      },
 
       login: async (email: string, password: string) => {
         set({ isLoading: true });
@@ -81,6 +101,9 @@ export const useAuthStore = create<AuthState>()(
             lastLogin: new Date().toISOString()
           };
           
+          // Stocker le token dans les cookies
+          setCookie('auth-token', response.token);
+          
           set({
             user,
             token: response.token,
@@ -91,6 +114,7 @@ export const useAuthStore = create<AuthState>()(
           return true;
         } catch (error) {
           set({ isLoading: false });
+          console.error('Login error:', error);
           return false;
         }
       },
@@ -109,6 +133,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: () => {
+        // Supprimer le token des cookies
+        deleteCookie('auth-token');
+        
         set({
           user: null,
           token: null,
@@ -164,6 +191,8 @@ export const useAuthStore = create<AuthState>()(
           // Maintenir l'authentification si les données existent
           if (state.user && state.token) {
             state.isAuthenticated = true;
+            // Remettre le token dans les cookies
+            setCookie('auth-token', state.token);
           }
         }
       }

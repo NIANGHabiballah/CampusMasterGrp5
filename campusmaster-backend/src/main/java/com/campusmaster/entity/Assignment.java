@@ -37,7 +37,7 @@ public class Assignment {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL)
-    @JsonIgnoreProperties({"assignment"})
+    @JsonIgnoreProperties({"assignment", "student", "gradedBy"})
     private List<Submission> submissions;
 
     @OneToMany(mappedBy = "assignment", cascade = CascadeType.ALL)

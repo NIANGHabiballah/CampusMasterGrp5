@@ -27,7 +27,31 @@ public class CourseService {
     }
 
     public Course createCourse(Course course) {
+        // Auto-generate course code if not provided
+        if (course.getCode() == null || course.getCode().isEmpty()) {
+            course.setCode(generateCourseCode(course.getTitle()));
+        }
+        
+        // Set default semester if not provided
+        if (course.getSemester() == null || course.getSemester().isEmpty()) {
+            course.setSemester("2024-2025");
+        }
+        
         return courseRepository.save(course);
+    }
+    
+    private String generateCourseCode(String title) {
+        // Generate code from title (first 3 letters + random number)
+        String prefix = title.replaceAll("[^A-Za-z]", "").toUpperCase();
+        if (prefix.length() > 3) {
+            prefix = prefix.substring(0, 3);
+        } else if (prefix.length() < 3) {
+            prefix = String.format("%-3s", prefix).replace(' ', 'X');
+        }
+        
+        // Add random number to ensure uniqueness
+        int randomNum = (int) (Math.random() * 1000);
+        return prefix + String.format("%03d", randomNum);
     }
 
     public Course updateCourse(Course course) {

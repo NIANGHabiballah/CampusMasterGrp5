@@ -1,38 +1,17 @@
-const API_BASE_URL = 'http://localhost:8080';
+import { API_CONFIG, ENDPOINTS } from '@/lib/config';
+import { apiRequest, apiUpload } from '@/lib/api-interceptor';
 
 class ApiService {
-  private async request(endpoint: string, options: RequestInit = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
-    console.log('Making API request to:', url);
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    };
-
-    console.log('Request config:', config);
-    const response = await fetch(url, config);
-    console.log('Response status:', response.status);
-    
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
-    }
-    
-    return response.json();
-  }
-
   // Auth
   async login(email: string, password: string) {
-    return this.request('/auth/login', {
+    return apiRequest(ENDPOINTS.AUTH.LOGIN, {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
   }
 
   async register(userData: any) {
-    return this.request('/auth/register', {
+    return apiRequest(ENDPOINTS.AUTH.REGISTER, {
       method: 'POST',
       body: JSON.stringify(userData),
     });
@@ -40,29 +19,29 @@ class ApiService {
 
   // Users
   async getUsers() {
-    return this.request('/users');
+    return apiRequest(ENDPOINTS.USERS.BASE);
   }
 
   async updateUser(id: string, userData: any) {
-    return this.request(`/users/${id}`, {
+    return apiRequest(ENDPOINTS.USERS.BY_ID(id), {
       method: 'PUT',
       body: JSON.stringify(userData),
     });
   }
 
   async deleteUser(id: string) {
-    return this.request(`/users/${id}`, {
+    return apiRequest(ENDPOINTS.USERS.BY_ID(id), {
       method: 'DELETE',
     });
   }
 
   // Courses
   async getCourses() {
-    return this.request('/courses');
+    return apiRequest(ENDPOINTS.COURSES.BASE);
   }
 
   async createCourse(courseData: any) {
-    return this.request('/courses', {
+    return apiRequest(ENDPOINTS.COURSES.BASE, {
       method: 'POST',
       body: JSON.stringify(courseData),
     });
@@ -72,123 +51,130 @@ class ApiService {
     console.log('\n=== FRONTEND: updateCourse appelé ===');
     console.log('ID:', id);
     console.log('Données:', courseData);
-    console.log('URL complète:', `${API_BASE_URL}/courses/${id}`);
+    console.log('URL complète:', `${API_CONFIG.BASE_URL}${ENDPOINTS.COURSES.BY_ID(id)}`);
     
-    return this.request(`/courses/${id}`, {
+    return apiRequest(ENDPOINTS.COURSES.BY_ID(id), {
       method: 'PUT',
       body: JSON.stringify(courseData),
     });
   }
 
   async deleteCourse(id: string) {
-    return this.request(`/courses/${id}`, {
+    return apiRequest(ENDPOINTS.COURSES.BY_ID(id), {
       method: 'DELETE',
     });
   }
 
   // Assignments
   async getAssignments() {
-    return this.request('/assignments');
+    return apiRequest(ENDPOINTS.ASSIGNMENTS.BASE);
   }
 
   async createAssignment(assignmentData: any) {
-    return this.request('/assignments', {
+    return apiRequest(ENDPOINTS.ASSIGNMENTS.BASE, {
       method: 'POST',
       body: JSON.stringify(assignmentData),
     });
   }
 
   async updateAssignment(id: string, assignmentData: any) {
-    return this.request(`/assignments/${id}`, {
+    return apiRequest(ENDPOINTS.ASSIGNMENTS.BY_ID(id), {
       method: 'PUT',
       body: JSON.stringify(assignmentData),
     });
   }
 
   async deleteAssignment(id: string) {
-    return this.request(`/assignments/${id}`, {
+    return apiRequest(ENDPOINTS.ASSIGNMENTS.BY_ID(id), {
       method: 'DELETE',
     });
   }
 
   // Forums
   async getForums() {
-    return this.request('/forums');
+    return apiRequest(ENDPOINTS.FORUMS.BASE);
   }
 
   async getTopicsByForum(forumId: number) {
-    return this.request(`/forums/${forumId}/topics`);
+    return apiRequest(ENDPOINTS.FORUMS.TOPICS(forumId));
   }
 
   async getTopicById(topicId: number) {
-    return this.request(`/topics/${topicId}`);
+    return apiRequest(ENDPOINTS.FORUMS.TOPIC_BY_ID(topicId));
   }
 
   async getPostsByTopic(topicId: number) {
-    return this.request(`/topics/${topicId}/posts`);
+    return apiRequest(ENDPOINTS.FORUMS.POSTS(topicId));
   }
 
   async createPost(postData: any) {
-    return this.request(`/topics/${postData.topicId}/posts`, {
+    return apiRequest(ENDPOINTS.FORUMS.CREATE_POST(postData.topicId), {
       method: 'POST',
       body: JSON.stringify(postData),
     });
   }
 
   async likePost(postId: number) {
-    return this.request(`/topics/posts/${postId}/like`, {
+    return apiRequest(ENDPOINTS.FORUMS.LIKE_POST(postId), {
       method: 'POST',
     });
   }
 
   async incrementTopicViews(topicId: number) {
-    return this.request(`/topics/${topicId}/view`, {
+    return apiRequest(ENDPOINTS.FORUMS.VIEW_TOPIC(topicId), {
       method: 'POST',
     });
   }
 
   async likeTopic(topicId: number) {
-    return this.request(`/topics/${topicId}/like`, {
+    return apiRequest(ENDPOINTS.FORUMS.LIKE_TOPIC(topicId), {
       method: 'POST',
     });
   }
 
   async createTopic(topicData: any) {
-    return this.request('/forums/topics', {
+    return apiRequest(ENDPOINTS.FORUMS.CREATE_TOPIC, {
       method: 'POST',
       body: JSON.stringify(topicData),
     });
   }
 
   // Submissions
-  // Submissions
   async getSubmissionsByAssignment(assignmentId: string) {
-    return this.request(`/submissions/assignment/${assignmentId}`);
+    return apiRequest(ENDPOINTS.SUBMISSIONS.BY_ASSIGNMENT(assignmentId));
   }
 
   async gradeSubmission(submissionId: string, gradeData: any) {
-    return this.request(`/submissions/${submissionId}/grade`, {
+    return apiRequest(ENDPOINTS.SUBMISSIONS.GRADE(submissionId), {
       method: 'PUT',
       body: JSON.stringify(gradeData),
     });
   }
 
-  async createSubmission(submissionData: any) {
-    return this.request('/submissions', {
-      method: 'POST',
-      body: JSON.stringify(submissionData),
+  async createSubmission(assignmentId: string, studentId: string, content: string, files: File[]) {
+    const formData = new FormData();
+    formData.append('assignmentId', assignmentId);
+    formData.append('studentId', studentId);
+    if (content) {
+      formData.append('content', content);
+    }
+    
+    files.forEach(file => {
+      formData.append('files', file);
     });
+    
+    return apiUpload('/api/submissions', formData);
   }
 
   async updateSubmission(id: string, submissionData: any) {
-    return this.request(`/submissions/${id}`, {
+    return apiRequest(`/submissions/${id}`, {
       method: 'PUT',
       body: JSON.stringify(submissionData),
     });
   }
 
   async deleteSubmission(id: string) {
-    return this.request(`/submissions/${id}`, {
+    return apiRequest(`/submissions/${id}`, {
       method: 'DELETE',
     });
   }
@@ -200,49 +186,44 @@ class ApiService {
       formData.append('files', file);
     });
     
-    return fetch(`${API_BASE_URL}/materials/upload/${courseId}`, {
-      method: 'POST',
-      body: formData,
-    }).then(response => {
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
-      return response.json();
-    });
+    return apiUpload(ENDPOINTS.MATERIALS.UPLOAD(courseId), formData);
   }
+
   async createMessage(messageData: any) {
-    return this.request('/messages', {
+    return apiRequest(ENDPOINTS.MESSAGES.BASE, {
       method: 'POST',
       body: JSON.stringify(messageData),
     });
   }
 
   async getMessages() {
-    return this.request('/messages');
+    return apiRequest(ENDPOINTS.MESSAGES.BASE);
   }
 
   async toggleMessageStar(messageId: string) {
-    return this.request(`/messages/${messageId}/star`, {
+    return apiRequest(ENDPOINTS.MESSAGES.STAR(messageId), {
       method: 'POST',
     });
   }
 
   async toggleMessageArchive(messageId: string) {
-    return this.request(`/messages/${messageId}/archive`, {
+    return apiRequest(ENDPOINTS.MESSAGES.ARCHIVE(messageId), {
       method: 'POST',
     });
   }
 
   // Notifications
   async getNotifications(userId: number) {
-    return this.request(`/notifications/user/${userId}`);
+    return apiRequest(ENDPOINTS.NOTIFICATIONS.BY_USER(userId));
   }
 
   async getUnreadCount(userId: number) {
-    return this.request(`/notifications/user/${userId}/unread-count`);
+    return apiRequest(ENDPOINTS.NOTIFICATIONS.UNREAD_COUNT(userId));
   }
 
   async markNotificationAsRead(notificationId: number) {
     try {
-      return this.request(`/notifications/${notificationId}/mark-read`, {
+      return apiRequest(ENDPOINTS.NOTIFICATIONS.MARK_READ(notificationId), {
         method: 'PUT',
       });
     } catch (error) {
@@ -252,20 +233,9 @@ class ApiService {
   }
 
   async markMessageAsRead(messageId: string) {
-    const response = await fetch(`${API_BASE_URL}/messages/${messageId}/mark-read`, {
+    return apiRequest(ENDPOINTS.MESSAGES.MARK_READ(messageId), {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
     });
-    
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('Erreur API mark-read:', response.status, text);
-      throw new Error(`API Error: ${response.status}`);
-    }
-    
-    return response.json();
   }
 }
 

@@ -1,2 +1,42 @@
-The JAVA_HOME environment variable is not defined correctly,
-this environment variable is needed to run this program.
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------< com.campusmaster:campusmaster-backend >----------------
+[INFO] Building campusmaster-backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] >>> spring-boot:3.5.10:run (default-cli) > test-compile @ campusmaster-backend >>>
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ campusmaster-backend ---
+[INFO] Copying 2 resources from src/main/resources to target/classes
+[INFO] Copying 1 resource from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ campusmaster-backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 49 source files with javac [debug parameters release 17] to target/classes
+[WARNING] /Users/7maksacodpc/Documents/Données professionnelles/Master 2/campusmaster/campusmaster-backend/src/main/java/com/campusmaster/config/SecurityConfig.java:[29,40] frameOptions() in org.springframework.security.config.annotation.web.configurers.HeadersConfigurer has been deprecated and marked for removal
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ campusmaster-backend ---
+[INFO] skip non existing resourceDirectory /Users/7maksacodpc/Documents/Données professionnelles/Master 2/campusmaster/campusmaster-backend/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ campusmaster-backend ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 1 source file with javac [debug parameters release 17] to target/test-classes
+[INFO] 
+[INFO] <<< spring-boot:3.5.10:run (default-cli) < test-compile @ campusmaster-backend <<<
+[INFO] 
+[INFO] 
+[INFO] --- spring-boot:3.5.10:run (default-cli) @ campusmaster-backend ---
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  24.229 s
+[INFO] Finished at: 2026-02-01T18:27:29Z
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.5.10:run (default-cli) on project campusmaster-backend: Unable to find a suitable main class, please add a 'mainClass' property -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

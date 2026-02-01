@@ -1,12 +1,14 @@
+import { API_CONFIG, ENDPOINTS } from '@/lib/config';
+
 // API Service with complete CRUD operations
 class ApiService {
-  private baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
+  private baseUrl = API_CONFIG.BASE_URL;
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     const config: RequestInit = {
       headers: {
-        'Content-Type': 'application/json',
+        ...API_CONFIG.HEADERS,
         ...options.headers,
       },
       ...options,
@@ -29,109 +31,109 @@ class ApiService {
   // Auth endpoints
   auth = {
     login: (credentials: { email: string; password: string }) =>
-      this.request('/auth/login', {
+      this.request(ENDPOINTS.AUTH.LOGIN, {
         method: 'POST',
         body: JSON.stringify(credentials),
       }),
     
     register: (userData: any) =>
-      this.request('/auth/register', {
+      this.request(ENDPOINTS.AUTH.REGISTER, {
         method: 'POST',
         body: JSON.stringify(userData),
       }),
     
     logout: () =>
-      this.request('/auth/logout', { method: 'POST' }),
+      this.request(ENDPOINTS.AUTH.LOGOUT, { method: 'POST' }),
     
     getProfile: () =>
-      this.request('/auth/profile'),
+      this.request(ENDPOINTS.AUTH.PROFILE),
   };
 
   // Users endpoints
   users = {
     getAll: (params?: any) =>
-      this.request(`/users${params ? `?${new URLSearchParams(params)}` : ''}`),
+      this.request(`${ENDPOINTS.USERS.BASE}${params ? `?${new URLSearchParams(params)}` : ''}`),
     
     getById: (id: string) =>
-      this.request(`/users/${id}`),
+      this.request(ENDPOINTS.USERS.BY_ID(id)),
     
     update: (id: string, data: any) =>
-      this.request(`/users/${id}`, {
+      this.request(ENDPOINTS.USERS.BY_ID(id), {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
     
     delete: (id: string) =>
-      this.request(`/users/${id}`, { method: 'DELETE' }),
+      this.request(ENDPOINTS.USERS.BY_ID(id), { method: 'DELETE' }),
     
     approve: (id: string) =>
-      this.request(`/users/${id}/approve`, { method: 'POST' }),
+      this.request(ENDPOINTS.USERS.APPROVE(id), { method: 'POST' }),
     
     suspend: (id: string) =>
-      this.request(`/users/${id}/suspend`, { method: 'POST' }),
+      this.request(ENDPOINTS.USERS.SUSPEND(id), { method: 'POST' }),
   };
 
   // Courses endpoints
   courses = {
     getAll: (filters?: any) =>
-      this.request(`/courses${filters ? `?${new URLSearchParams(filters)}` : ''}`),
+      this.request(`${ENDPOINTS.COURSES.BASE}${filters ? `?${new URLSearchParams(filters)}` : ''}`),
     
     getById: (id: string) =>
-      this.request(`/courses/${id}`),
+      this.request(ENDPOINTS.COURSES.BY_ID(id)),
     
     create: (courseData: any) =>
-      this.request('/courses', {
+      this.request(ENDPOINTS.COURSES.BASE, {
         method: 'POST',
         body: JSON.stringify(courseData),
       }),
     
     update: (id: string, data: any) =>
-      this.request(`/courses/${id}`, {
+      this.request(ENDPOINTS.COURSES.BY_ID(id), {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
     
     delete: (id: string) =>
-      this.request(`/courses/${id}`, { method: 'DELETE' }),
+      this.request(ENDPOINTS.COURSES.BY_ID(id), { method: 'DELETE' }),
     
     getStudents: (id: string) =>
-      this.request(`/courses/${id}/students`),
+      this.request(ENDPOINTS.COURSES.STUDENTS(id)),
     
     getMaterials: (id: string) =>
-      this.request(`/courses/${id}/materials`),
+      this.request(ENDPOINTS.COURSES.MATERIALS(id)),
   };
 
   // Assignments endpoints
   assignments = {
     getAll: (params?: any) =>
-      this.request(`/assignments${params ? `?${new URLSearchParams(params)}` : ''}`),
+      this.request(`${ENDPOINTS.ASSIGNMENTS.BASE}${params ? `?${new URLSearchParams(params)}` : ''}`),
     
     getById: (id: string) =>
-      this.request(`/assignments/${id}`),
+      this.request(ENDPOINTS.ASSIGNMENTS.BY_ID(id)),
     
     create: (data: any) =>
-      this.request('/assignments', {
+      this.request(ENDPOINTS.ASSIGNMENTS.BASE, {
         method: 'POST',
         body: JSON.stringify(data),
       }),
     
     update: (id: string, data: any) =>
-      this.request(`/assignments/${id}`, {
+      this.request(ENDPOINTS.ASSIGNMENTS.BY_ID(id), {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
     
     delete: (id: string) =>
-      this.request(`/assignments/${id}`, { method: 'DELETE' }),
+      this.request(ENDPOINTS.ASSIGNMENTS.BY_ID(id), { method: 'DELETE' }),
     
     submit: (id: string, submission: any) =>
-      this.request(`/assignments/${id}/submit`, {
+      this.request(ENDPOINTS.ASSIGNMENTS.SUBMIT(id), {
         method: 'POST',
         body: JSON.stringify(submission),
       }),
     
     grade: (id: string, submissionId: string, grade: any) =>
-      this.request(`/assignments/${id}/submissions/${submissionId}/grade`, {
+      this.request(ENDPOINTS.ASSIGNMENTS.GRADE(id, submissionId), {
         method: 'POST',
         body: JSON.stringify(grade),
       }),
@@ -140,28 +142,28 @@ class ApiService {
   // Messages endpoints
   messages = {
     getAll: (params?: any) =>
-      this.request(`/messages${params ? `?${new URLSearchParams(params)}` : ''}`),
+      this.request(`${ENDPOINTS.MESSAGES.BASE}${params ? `?${new URLSearchParams(params)}` : ''}`),
     
     getById: (id: string) =>
-      this.request(`/messages/${id}`),
+      this.request(ENDPOINTS.MESSAGES.BY_ID(id)),
     
     send: (messageData: any) =>
-      this.request('/messages', {
+      this.request(ENDPOINTS.MESSAGES.BASE, {
         method: 'POST',
         body: JSON.stringify(messageData),
       }),
     
     markAsRead: (id: string) =>
-      this.request(`/messages/${id}/read`, { method: 'POST' }),
+      this.request(ENDPOINTS.MESSAGES.MARK_READ(id), { method: 'POST' }),
     
     delete: (id: string) =>
-      this.request(`/messages/${id}`, { method: 'DELETE' }),
+      this.request(ENDPOINTS.MESSAGES.BY_ID(id), { method: 'DELETE' }),
   };
 
   // Notifications endpoints
   notifications = {
     getAll: () =>
-      this.request('/notifications'),
+      this.request(ENDPOINTS.NOTIFICATIONS.BASE),
     
     markAsRead: (id: string) =>
       this.request(`/notifications/${id}/read`, { method: 'POST' }),

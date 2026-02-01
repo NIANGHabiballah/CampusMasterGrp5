@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/materials")
+@RequestMapping("/api/materials")
 @CrossOrigin(origins = "http://localhost:3000")
 public class MaterialController {
 

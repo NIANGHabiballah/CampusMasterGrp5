@@ -1,6 +1,7 @@
 package com.campusmaster.entity;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,10 +14,12 @@ public class Submission {
 
     @ManyToOne
     @JoinColumn(name = "assignment_id", nullable = false)
+    @JsonIgnoreProperties({"submissions", "files"})
     private Assignment assignment;
 
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
+    @JsonIgnoreProperties({"assignments", "courses"})
     private User student;
 
     @Column(columnDefinition = "TEXT")
@@ -36,9 +39,11 @@ public class Submission {
 
     @ManyToOne
     @JoinColumn(name = "graded_by")
+    @JsonIgnoreProperties({"assignments", "courses"})
     private User gradedBy;
 
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"submission"})
     private List<SubmissionFile> files;
 
     @PrePersist
