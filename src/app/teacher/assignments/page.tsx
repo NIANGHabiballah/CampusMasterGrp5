@@ -535,7 +535,22 @@ export default function TeacherAssignmentsPage() {
                               </CardDescription>
                             </div>
                             <div className="ml-3">
-                              {getStatusBadge(assignment.status, assignment.submissions || 0, assignment.totalStudents || 0)}
+                              {(() => {
+                                const assignmentSubmissions = submissions[assignment.id] || [];
+                                const totalSubmissions = assignmentSubmissions.length;
+                                const gradedSubmissions = assignmentSubmissions.filter(s => s.grade !== null).length;
+                                
+                                if (totalSubmissions === 0) {
+                                  return <Badge variant="outline">Aucune soumission</Badge>;
+                                } else if (gradedSubmissions === totalSubmissions) {
+                                  return <Badge variant="default" className="bg-green-600 text-white">Tout corrigé ({gradedSubmissions}/{totalSubmissions})</Badge>;
+                                } else if (gradedSubmissions > 0) {
+                                  return <Badge variant="secondary">Partiellement corrigé ({gradedSubmissions}/{totalSubmissions})</Badge>;
+                                } else {
+                                  return <Badge variant="destructive">En attente ({totalSubmissions} soumissions)</Badge>;
+                                }
+                              })()
+                              }
                             </div>
                           </div>
                         </CardHeader>
@@ -578,7 +593,7 @@ export default function TeacherAssignmentsPage() {
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-medium text-gray-600">Soumissions</span>
                                 <span className="text-sm font-bold text-gray-900">
-                                  {submissions[assignment.id]?.length || 0}/{assignment.totalStudents || 0}
+                                  {submissions[assignment.id]?.length || 0}/{submissions[assignment.id]?.length || 0}
                                 </span>
                               </div>
                               <div className="relative">
@@ -618,9 +633,18 @@ export default function TeacherAssignmentsPage() {
                               variant="outline" 
                               size="sm" 
                               className="flex-1 bg-gradient-to-r from-gray-50 to-slate-50 hover:from-gray-100 hover:to-slate-100 border-gray-200 hover:border-gray-300 text-gray-700 hover:text-gray-800 transition-all duration-300 hover:shadow-md font-medium"
-                              onClick={() => handleEditAssignment(assignment)}
+                              onClick={() => {
+                                // Vérifier s'il y a des soumissions pour ce devoir
+                                const hasSubmissions = submissions[assignment.id] && submissions[assignment.id].length > 0;
+                                if (hasSubmissions) {
+                                  // Rediriger vers l'onglet correction
+                                  setSelectedTab('grading');
+                                } else {
+                                  toast.info('Aucune soumission pour ce devoir');
+                                }
+                              }}
                             >
-                              <FileText className="h-4 w-4 mr-2" />
+                              <CheckCircle className="h-4 w-4 mr-2" />
                               Corriger
                             </Button>
                           </div>
@@ -688,7 +712,10 @@ export default function TeacherAssignmentsPage() {
                                   <CardHeader className="pb-3">
                                     <CardTitle className="text-lg flex items-center justify-between">
                                       <span>{submission.student?.firstName} {submission.student?.lastName}</span>
-                                      <Badge variant={submission.grade >= 14 ? "default" : submission.grade >= 10 ? "secondary" : "destructive"} className="text-black">
+                                      <Badge 
+                                        variant={submission.grade >= 14 ? "default" : submission.grade >= 10 ? "secondary" : "destructive"} 
+                                        className="text-black font-bold text-lg px-3 py-1 shadow-md"
+                                      >
                                         {submission.grade}/20
                                       </Badge>
                                     </CardTitle>
@@ -747,7 +774,10 @@ export default function TeacherAssignmentsPage() {
                               <CardHeader className="pb-3">
                                 <CardTitle className="text-lg flex items-center justify-between">
                                   <span>{submission.student?.firstName} {submission.student?.lastName}</span>
-                                  <Badge variant={submission.grade >= 14 ? "default" : submission.grade >= 10 ? "secondary" : "destructive"} className="text-black">
+                                  <Badge 
+                                    variant={submission.grade >= 14 ? "default" : submission.grade >= 10 ? "secondary" : "destructive"} 
+                                    className="text-black font-bold text-lg px-3 py-1 shadow-md"
+                                  >
                                     {submission.grade}/20
                                   </Badge>
                                 </CardTitle>
