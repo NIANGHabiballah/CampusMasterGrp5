@@ -32,6 +32,10 @@ public class CourseController {
 
     @PostMapping
     public ResponseEntity<Course> createCourse(@RequestBody Course course) {
+        // Si professorId est fourni, récupérer le professeur
+        if (course.getTeacher() != null && course.getTeacher().getId() != null) {
+            // Le teacher sera automatiquement résolu par JPA
+        }
         Course createdCourse = courseService.createCourse(course);
         return ResponseEntity.ok(createdCourse);
     }

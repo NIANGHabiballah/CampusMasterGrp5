@@ -42,6 +42,9 @@ public class Course {
     @Column(name = "max_students")
     private Integer maxStudents;
 
+    @Column(name = "schedule")
+    private String schedule;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -95,4 +98,7 @@ public class Course {
 
     public List<Material> getMaterials() { return materials; }
     public void setMaterials(List<Material> materials) { this.materials = materials; }
+
+    public String getSchedule() { return schedule; }
+    public void setSchedule(String schedule) { this.schedule = schedule; }
 }

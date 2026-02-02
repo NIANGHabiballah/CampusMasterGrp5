@@ -55,6 +55,21 @@ public class CourseService {
     }
 
     public Course updateCourse(Course course) {
+        // Récupérer le cours existant pour préserver les champs obligatoires
+        Optional<Course> existingCourseOpt = courseRepository.findById(course.getId());
+        if (existingCourseOpt.isPresent()) {
+            Course existingCourse = existingCourseOpt.get();
+            
+            // Préserver le code existant si pas fourni
+            if (course.getCode() == null || course.getCode().isEmpty()) {
+                course.setCode(existingCourse.getCode());
+            }
+            
+            // Préserver les timestamps
+            course.setCreatedAt(existingCourse.getCreatedAt());
+            course.setUpdatedAt(java.time.LocalDateTime.now());
+        }
+        
         return courseRepository.save(course);
     }
 
