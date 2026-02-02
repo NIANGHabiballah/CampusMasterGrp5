@@ -6,6 +6,9 @@ import com.campusmaster.entity.Notification;
 import com.campusmaster.repository.UserRepository;
 import com.campusmaster.repository.NotificationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +25,12 @@ public class AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private JavaMailSender mailSender;
+    
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     public LoginResponse login(LoginRequest request) throws Exception {
         Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
@@ -144,5 +153,54 @@ public class AuthService {
 
     public boolean emailExists(String email) {
         return userRepository.existsByEmail(email);
+    }
+    
+    public void sendPasswordResetEmail(String email) throws Exception {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            throw new Exception("Aucun compte avec cet email");
+        }
+        
+        User user = userOpt.get();
+        String token = java.util.UUID.randomUUID().toString();
+        user.setResetToken(token);
+        user.setResetTokenExpiry(java.time.LocalDateTime.now().plusHours(1));
+        userRepository.save(user);
+        
+        String resetUrl = frontendUrl + "/auth/reset-password?token=" + token;
+        
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(email);
+        message.setSubject("Réinitialisation de votre mot de passe - CampusMaster");
+        message.setText(
+            "Bonjour " + user.getFirstName() + ",\n\n" +
+            "Vous avez demandé la réinitialisation de votre mot de passe.\n\n" +
+            "Cliquez sur le lien suivant pour réinitialiser votre mot de passe :\n" +
+            resetUrl + "\n\n" +
+            "Ce lien expire dans 1 heure.\n\n" +
+            "Si vous n'avez pas demandé cette réinitialisation, ignorez cet email.\n\n" +
+            "Cordialement,\n" +
+            "L'équipe CampusMaster"
+        );
+        
+        mailSender.send(message);
+        System.out.println("Email envoyé à " + email + " avec le lien: " + resetUrl);
+    }
+    
+    public void resetPassword(String token, String newPassword) throws Exception {
+        Optional<User> userOpt = userRepository.findByResetToken(token);
+        if (userOpt.isEmpty()) {
+            throw new Exception("Token invalide");
+        }
+        
+        User user = userOpt.get();
+        if (user.getResetTokenExpiry().isBefore(java.time.LocalDateTime.now())) {
+            throw new Exception("Token expiré");
+        }
+        
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setResetToken(null);
+        user.setResetTokenExpiry(null);
+        userRepository.save(user);
     }
 }

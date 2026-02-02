@@ -18,12 +18,16 @@ const protectedRoutes = [
 const publicRoutes = [
   '/auth/login',
   '/auth/register',
+  '/auth/forgot-password',
+  '/auth/reset-password',
   '/legal',
   '/support',
 ];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  
+  console.log('🔍 Middleware - pathname:', pathname);
   
   // Vérifier si c'est une route protégée
   const isProtectedRoute = protectedRoutes.some(route => 
@@ -38,16 +42,23 @@ export function middleware(request: NextRequest) {
   // Récupérer le token depuis les cookies ou localStorage (simulé via headers)
   const token = request.cookies.get('auth-token')?.value;
   
+  console.log('🔍 isProtectedRoute:', isProtectedRoute);
+  console.log('🔍 isPublicRoute:', isPublicRoute);
+  console.log('🔍 token:', token ? 'EXISTS' : 'NONE');
+  
   // Si c'est une route protégée et qu'il n'y a pas de token
   if (isProtectedRoute && !token) {
+    console.log('❌ Redirect to login - protected route without token');
     return NextResponse.redirect(new URL('/auth/login', request.url));
   }
   
-  // Si l'utilisateur est connecté et essaie d'accéder aux pages d'auth
-  if (token && isPublicRoute) {
+  // Si l'utilisateur est connecté et essaie d'accéder aux pages d'auth (sauf forgot/reset password)
+  if (token && (pathname === '/auth/login' || pathname === '/auth/register')) {
+    console.log('❌ Redirect to dashboard - logged in user on auth page');
     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
   
+  console.log('✅ Allow access');
   return NextResponse.next();
 }
 

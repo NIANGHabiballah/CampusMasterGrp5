@@ -37,7 +37,8 @@ import {
   CheckCircle,
   AlertCircle,
   Star,
-  Plus
+  Plus,
+  Megaphone
 } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { useDashboardStore } from '@/store/dashboard';
@@ -67,6 +68,7 @@ export default function DashboardPage() {
   const [recentCourses, setRecentCourses] = useState([]);
   const [recentSubmissions, setRecentSubmissions] = useState([]);
   const [upcomingAssignments, setUpcomingAssignments] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('7d');
 
@@ -179,10 +181,16 @@ export default function DashboardPage() {
         }
         
         if (user?.role === 'STUDENT') {
-          const [courses, assignments] = await Promise.all([
+          const [courses, assignments, announcementsData] = await Promise.all([
             apiService.getCourses(),
-            apiService.getAssignments()
+            apiService.getAssignments(),
+            apiService.getAnnouncements()
           ]);
+          
+          // Trier les annonces par date (plus récentes en premier)
+          setAnnouncements(announcementsData.sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          ).slice(0, 5)); // Limiter aux 5 plus récentes
           
           // Tous les cours disponibles pour l'étudiant
           setRecentCourses(courses);
@@ -335,36 +343,64 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Recent Activity */}
-      <Card>
+      {/* Annonces récentes */}
+      <Card className="border-l-4 border-l-blue-500">
         <CardHeader>
-          <CardTitle>Activité récente</CardTitle>
+          <div className="flex items-center gap-2">
+            <Megaphone className="h-5 w-5 text-blue-600" />
+            <CardTitle>Annonces récentes</CardTitle>
+          </div>
+          <CardDescription>Dernières annonces de vos enseignants</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Devoir "API REST" noté</p>
-                <p className="text-xs text-gray-500">Il y a 2 heures • Note: 18/20</p>
+            {announcements.length > 0 ? announcements.map((announcement) => {
+              const priorityColors = {
+                HIGH: { bg: 'bg-red-500', text: 'text-red-600', badge: 'Urgent' },
+                MEDIUM: { bg: 'bg-yellow-500', text: 'text-yellow-600', badge: 'Important' },
+                LOW: { bg: 'bg-blue-500', text: 'text-blue-600', badge: 'Info' }
+              };
+              const priority = priorityColors[announcement.priority] || priorityColors.MEDIUM;
+              
+              return (
+                <div key={announcement.id} className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors border border-gray-100">
+                  <div className={`w-2 h-2 ${priority.bg} rounded-full mt-2 flex-shrink-0`}></div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{announcement.title}</p>
+                    <p className="text-xs text-gray-600 mt-1 line-clamp-2">{announcement.content}</p>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <p className="text-xs text-gray-500">
+                        {new Date(announcement.createdAt).toLocaleDateString('fr-FR', { 
+                          day: 'numeric', 
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                      {announcement.course && (
+                        <Badge variant="outline" className="text-xs">
+                          {announcement.course.title}
+                        </Badge>
+                      )}
+                      {announcement.author && (
+                        <span className="text-xs text-gray-500">
+                          • {announcement.author.firstName} {announcement.author.lastName}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <Badge variant="secondary" className={`${priority.text} flex-shrink-0`}>
+                    {priority.badge}
+                  </Badge>
+                </div>
+              );
+            }) : (
+              <div className="text-center py-8 text-gray-500">
+                <Megaphone className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                <p>Aucune annonce récente</p>
+                <p className="text-xs mt-1">Les annonces de vos enseignants apparaîtront ici</p>
               </div>
-              <Badge variant="secondary">Nouveau</Badge>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Nouveau cours "Architecture Microservices"</p>
-                <p className="text-xs text-gray-500">Hier • Prof. Martin</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-              <div className="flex-1">
-                <p className="text-sm font-medium">Rappel: Devoir "Base de données" à rendre</p>
-                <p className="text-xs text-gray-500">Dans 2 jours</p>
-              </div>
-              <Badge variant="outline">Urgent</Badge>
-            </div>
+            )}
           </div>
         </CardContent>
       </Card>

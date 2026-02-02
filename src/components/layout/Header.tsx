@@ -123,7 +123,7 @@ export function Header() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href={ROUTES.DASHBOARD} className="flex items-center space-x-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 shadow-lg">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg">
               <GraduationCap className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold text-academic-900 hidden sm:block">CampusMaster</span>
@@ -137,15 +137,18 @@ export function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={cn(
-                    "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                    isActive
-                      ? "bg-academic-100 text-academic-700 border border-academic-200"
-                      : "text-gray-600 hover:text-academic-600 hover:bg-academic-50"
-                  )}
+                  className="group px-3 py-2 text-sm font-medium transition-colors relative"
                 >
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.name}</span>
+                  <span className={cn(
+                    "transition-colors",
+                    isActive ? "text-blue-600" : "text-gray-600 group-hover:text-blue-600"
+                  )}>
+                    {item.name}
+                  </span>
+                  <span className={cn(
+                    "absolute bottom-0 left-0 h-0.5 bg-blue-600 transition-all duration-300",
+                    isActive ? "w-full" : "w-0 group-hover:w-full"
+                  )} />
                 </Link>
               );
             })}
@@ -223,7 +226,7 @@ export function Header() {
                   {/* Mobile Header */}
                   <div className="flex items-center justify-between p-6 border-b bg-white">
                     <div className="flex items-center space-x-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 shadow-lg">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg">
                         <GraduationCap className="h-5 w-5 text-white" />
                       </div>
                       <span className="text-lg font-bold text-academic-900">CampusMaster</span>
@@ -261,20 +264,27 @@ export function Header() {
                             key={item.name}
                             href={item.href}
                             onClick={() => setIsMobileMenuOpen(false)}
-                            className={cn(
-                              "flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors",
-                              isActive
-                                ? "bg-academic-100 text-academic-700 border border-academic-200"
-                                : "text-gray-600 hover:text-academic-600 hover:bg-academic-50"
-                            )}
+                            className="group flex items-center space-x-3 px-3 py-3 rounded-lg text-sm font-medium transition-colors relative"
                           >
-                            <item.icon className="h-5 w-5" />
-                            <span>{item.name}</span>
+                            <item.icon className={cn(
+                              "h-5 w-5 transition-colors",
+                              isActive ? "text-blue-600" : "text-gray-600 group-hover:text-blue-600"
+                            )} />
+                            <span className={cn(
+                              "transition-colors",
+                              isActive ? "text-blue-600" : "text-gray-600 group-hover:text-blue-600"
+                            )}>
+                              {item.name}
+                            </span>
                             {item.href === ROUTES.MESSAGES && unreadCount > 0 && (
                               <Badge className="ml-auto bg-red-500 hover:bg-red-500 text-white">
                                 {unreadCount > 9 ? '9+' : unreadCount}
                               </Badge>
                             )}
+                            <span className={cn(
+                              "absolute left-0 top-0 bottom-0 w-1 bg-blue-600 rounded-r transition-all duration-300",
+                              isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            )} />
                           </Link>
                         );
                       })}

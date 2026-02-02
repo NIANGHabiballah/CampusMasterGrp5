@@ -6,7 +6,7 @@ import { Header } from '@/components/layout/Header';
 import { useAuthStore } from '@/store/auth';
 import { useNotifications } from '@/hooks/use-notifications';
 
-const publicRoutes = ['/auth/login', '/auth/register', '/'];
+const publicRoutes = ['/auth/login', '/auth/register', '/auth/forgot-password', '/auth/reset-password', '/'];
 
 export function AuthenticatedLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading, isHydrated } = useAuthStore();

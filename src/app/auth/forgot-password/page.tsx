@@ -14,6 +14,8 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
 
+  console.log('🔵 ForgotPasswordPage rendered');
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
@@ -22,10 +24,25 @@ export default function ForgotPasswordPage() {
     }
 
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsLoading(false);
-    setIsEmailSent(true);
-    toast.success('Email de réinitialisation envoyé !');
+    try {
+      const response = await fetch('http://localhost:8082/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erreur lors de l\'envoi');
+      }
+      
+      setIsEmailSent(true);
+      toast.success('Email de réinitialisation envoyé !');
+    } catch (error: any) {
+      toast.error(error.message || 'Erreur lors de l\'envoi');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
