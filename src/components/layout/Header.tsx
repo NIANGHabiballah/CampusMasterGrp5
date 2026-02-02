@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import { Bell, BookOpen, GraduationCap, Menu, MessageSquare, Settings, User, LogOut, FileText, BarChart3, Users, Shield } from 'lucide-react';
+import { Bell, BookOpen, GraduationCap, Menu, MessageSquare, Settings, User, LogOut, FileText, BarChart3, Users, Shield, Megaphone } from 'lucide-react';
 import { useAuthStore } from '@/store/auth';
 import { useNotificationStore } from '@/store/notifications';
 import { apiService } from '@/services/api';
@@ -22,26 +22,30 @@ export function Header() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const [localUnreadCount, setLocalUnreadCount] = useState(0);
+
   // Charger le compteur de notifications basé sur les messages non lus
   useEffect(() => {
-    if (user?.id) {
-      const fetchMessageCount = async () => {
-        try {
-          const messages = await apiService.getMessages();
-          const unreadMessages = messages.filter((msg: any) => 
-            !msg.isRead && msg.receiver?.id?.toString() === user.id && msg.sender?.id?.toString() !== user.id
-          );
-          useNotificationStore.setState({ unreadCount: unreadMessages.length });
-        } catch (error) {
-          // Ignorer les erreurs si l'API n'est pas disponible
-        }
-      };
-      
-      fetchMessageCount();
-      // Recharger toutes les 5 secondes
-      const interval = setInterval(fetchMessageCount, 5000);
-      return () => clearInterval(interval);
-    }
+    if (!user?.id) return;
+    
+    const fetchMessageCount = async () => {
+      try {
+        const messages = await apiService.getMessages();
+        const unreadMessages = messages.filter((msg: any) => 
+          !msg.isRead && msg.receiver?.id?.toString() === user.id && msg.sender?.id?.toString() !== user.id
+        );
+        const newCount = unreadMessages.length;
+        
+        // Mettre à jour uniquement si différent
+        setLocalUnreadCount(prev => prev !== newCount ? newCount : prev);
+      } catch (error) {
+        // Ignorer les erreurs
+      }
+    };
+    
+    fetchMessageCount();
+    const interval = setInterval(fetchMessageCount, 30000); // 30 secondes
+    return () => clearInterval(interval);
   }, [user?.id]);
 
   const handleLogout = () => {
@@ -62,13 +66,14 @@ export function Header() {
           ...baseNav,
           { name: 'Mes Cours', href: ROUTES.COURSES, icon: BookOpen },
           { name: 'Mes Devoirs', href: ROUTES.ASSIGNMENTS, icon: FileText },
+          { name: 'Annonces', href: '/announcements', icon: Megaphone },
         ];
       case USER_ROLES.TEACHER:
         return [
           ...baseNav,
           { name: 'Mes Cours', href: '/teacher/courses', icon: BookOpen },
           { name: 'Devoirs', href: '/teacher/assignments', icon: FileText },
-          { name: 'Annonces', href: '/teacher/announcements', icon: MessageSquare },
+          { name: 'Annonces', href: '/teacher/announcements', icon: Megaphone },
           { name: 'Étudiants', href: '/teacher/students', icon: Users },
         ];
       case USER_ROLES.ADMIN:
@@ -160,9 +165,9 @@ export function Header() {
             <Button variant="ghost" size="icon" className="relative" asChild>
               <Link href={ROUTES.MESSAGES}>
                 <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
+                {localUnreadCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-500 text-white">
-                    {unreadCount > 9 ? '9+' : unreadCount}
+                    {localUnreadCount > 9 ? '9+' : localUnreadCount}
                   </Badge>
                 )}
               </Link>
@@ -276,9 +281,9 @@ export function Header() {
                             )}>
                               {item.name}
                             </span>
-                            {item.href === ROUTES.MESSAGES && unreadCount > 0 && (
+                            {item.href === ROUTES.MESSAGES && localUnreadCount > 0 && (
                               <Badge className="ml-auto bg-red-500 hover:bg-red-500 text-white">
-                                {unreadCount > 9 ? '9+' : unreadCount}
+                                {localUnreadCount > 9 ? '9+' : localUnreadCount}
                               </Badge>
                             )}
                             <span className={cn(
