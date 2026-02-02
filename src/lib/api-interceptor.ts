@@ -58,7 +58,19 @@ export const apiRequest = async <T = any>(
   options: RequestInit = {}
 ): Promise<T> => {
   const response = await createApiRequest(endpoint, options);
-  return response.json();
+  
+  // Vérifier si la réponse a du contenu
+  const text = await response.text();
+  if (!text) {
+    return {} as T; // Retourner un objet vide si pas de contenu
+  }
+  
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    console.warn('Réponse non-JSON:', text);
+    return {} as T;
+  }
 };
 
 export const apiUpload = async <T = any>(

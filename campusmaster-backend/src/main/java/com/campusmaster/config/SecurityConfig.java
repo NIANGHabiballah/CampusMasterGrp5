@@ -26,7 +26,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/**").permitAll()
                 .anyRequest().permitAll()
             )
-            .headers(headers -> headers.frameOptions().disable());
+            .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()));
         
         return http.build();
     }

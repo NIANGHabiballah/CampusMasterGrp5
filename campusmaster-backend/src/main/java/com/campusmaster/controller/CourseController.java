@@ -2,8 +2,10 @@ package com.campusmaster.controller;
 
 import com.campusmaster.entity.Course;
 import com.campusmaster.service.CourseService;
+import com.campusmaster.repository.CourseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +18,9 @@ public class CourseController {
 
     @Autowired
     private CourseService courseService;
+    
+    @Autowired
+    private CourseRepository courseRepository;
 
     @GetMapping
     public ResponseEntity<List<Course>> getAllCourses() {
@@ -48,9 +53,26 @@ public class CourseController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCourse(@PathVariable Long id) {
-        courseService.deleteCourse(id);
-        return ResponseEntity.noContent().build();
+    @Transactional
+    public ResponseEntity<?> deleteCourse(@PathVariable Long id) {
+        System.out.println("\n=== CONTROLLER: DELETE /api/courses/" + id + " ===");
+        
+        try {
+            // Suppression SQL directe
+            courseRepository.deleteSubmissionFilesByCourseId(id);
+            courseRepository.deleteAssignmentFilesByCourseId(id);
+            courseRepository.deleteSubmissionsByCourseId(id);
+            courseRepository.deleteAssignmentsByCourseId(id);
+            courseRepository.deleteMaterialsByCourseId(id);
+            courseRepository.deleteById(id);
+            
+            System.out.println("Cours supprimé avec succès: " + id);
+            return ResponseEntity.ok("{\"success\": true}");
+        } catch (Exception e) {
+            System.err.println("Erreur: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.ok("{\"success\": false}");
+        }
     }
 
     @GetMapping("/{id}/materials")

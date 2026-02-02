@@ -68,6 +68,7 @@ export function Header() {
           ...baseNav,
           { name: 'Mes Cours', href: '/teacher/courses', icon: BookOpen },
           { name: 'Devoirs', href: '/teacher/assignments', icon: FileText },
+          { name: 'Annonces', href: '/teacher/announcements', icon: MessageSquare },
           { name: 'Étudiants', href: '/teacher/students', icon: Users },
         ];
       case USER_ROLES.ADMIN:

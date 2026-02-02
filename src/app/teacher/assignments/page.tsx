@@ -519,35 +519,35 @@ export default function TeacherAssignmentsPage() {
                         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500"></div>
                         
                         <CardHeader className="pb-4">
-                          <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-start justify-between mb-3 gap-2">
                             <div className="flex-1 min-w-0">
-                              <CardTitle className="text-xl font-bold text-gray-900 truncate group-hover:text-blue-700 transition-colors duration-300">
+                              <CardTitle className="text-lg font-bold text-gray-900 truncate group-hover:text-blue-700 transition-colors duration-300 leading-tight">
                                 {assignment.title}
                               </CardTitle>
                               <CardDescription className="text-sm font-semibold mt-2">
-                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                <span className={`px-2 py-1 rounded text-xs font-medium truncate inline-block max-w-[100px] ${
                                   assignment.course?.title 
                                     ? 'bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 border border-blue-200' 
                                     : 'bg-gray-100 text-gray-600 border border-gray-200'
-                                }`}>
+                                }`} title={assignment.course?.title || 'Cours non défini'}>
                                   {assignment.course?.title || 'Cours non défini'}
                                 </span>
                               </CardDescription>
                             </div>
-                            <div className="ml-3">
+                            <div className="flex-shrink-0">
                               {(() => {
                                 const assignmentSubmissions = submissions[assignment.id] || [];
                                 const totalSubmissions = assignmentSubmissions.length;
                                 const gradedSubmissions = assignmentSubmissions.filter(s => s.grade !== null).length;
                                 
                                 if (totalSubmissions === 0) {
-                                  return <Badge variant="outline">Aucune soumission</Badge>;
+                                  return <Badge variant="outline" className="text-xs whitespace-nowrap">Aucune soumission</Badge>;
                                 } else if (gradedSubmissions === totalSubmissions) {
-                                  return <Badge variant="default" className="bg-green-600 text-white">Tout corrigé ({gradedSubmissions}/{totalSubmissions})</Badge>;
+                                  return <Badge variant="default" className="bg-green-600 text-white text-xs px-2 py-1">Corrigé</Badge>;
                                 } else if (gradedSubmissions > 0) {
-                                  return <Badge variant="secondary">Partiellement corrigé ({gradedSubmissions}/{totalSubmissions})</Badge>;
+                                  return <Badge variant="secondary" className="text-xs px-2 py-1">Partiel</Badge>;
                                 } else {
-                                  return <Badge variant="destructive">En attente ({totalSubmissions} soumissions)</Badge>;
+                                  return <Badge variant="destructive" className="text-xs px-2 py-1">Attente</Badge>;
                                 }
                               })()
                               }

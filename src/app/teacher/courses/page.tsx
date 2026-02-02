@@ -515,12 +515,17 @@ export default function TeacherCoursesPage() {
                           label: 'Confirmer',
                           onClick: async () => {
                             try {
-                              await apiService.deleteCourse(course.id);
-                              const updated = await apiService.getCourses();
-                              setCourses(updated);
-                              toast.success('Cours supprimé');
+                              await apiService.deleteCourse(course.id.toString());
+                              // Mise à jour immédiate de l'interface
+                              setCourses(prevCourses => prevCourses.filter(c => c.id !== course.id));
+                              toast.success('Cours supprimé avec succès');
                             } catch (error) {
-                              toast.error('Backend non démarré - Impossible de supprimer');
+                              console.error('Erreur suppression:', error);
+                              if (error.message?.includes('Network') || error.message?.includes('fetch')) {
+                                toast.error('Backend non démarré - Impossible de supprimer');
+                              } else {
+                                toast.error('Erreur lors de la suppression: ' + (error.message || 'Erreur inconnue'));
+                              }
                             }
                           }
                         },
@@ -564,6 +569,15 @@ export default function TeacherCoursesPage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <label className="text-sm font-medium">Code du cours</label>
+                  <Input 
+                    id="editCode"
+                    defaultValue={selectedCourse.code} 
+                    className="bg-white border-gray-300" 
+                    disabled
+                  />
+                </div>
+                <div className="space-y-2">
                   <label className="text-sm font-medium flex items-center gap-1">
                     Description
                     <span className="text-red-500">*</span>
@@ -580,7 +594,7 @@ export default function TeacherCoursesPage() {
                   <label className="text-sm font-medium">Professeur</label>
                   <select 
                     id="editProfessorId"
-                    defaultValue={selectedCourse.professorId || ''}
+                    defaultValue={selectedCourse.teacher?.id || ''}
                     className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Sélectionner un professeur</option>

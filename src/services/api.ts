@@ -40,6 +40,10 @@ class ApiService {
     return apiRequest(ENDPOINTS.COURSES.BASE);
   }
 
+  async getCourseById(id: string) {
+    return apiRequest(ENDPOINTS.COURSES.BY_ID(id));
+  }
+
   async createCourse(courseData: any) {
     return apiRequest(ENDPOINTS.COURSES.BASE, {
       method: 'POST',
@@ -60,6 +64,10 @@ class ApiService {
   }
 
   async deleteCourse(id: string) {
+    console.log('\n=== FRONTEND: deleteCourse appelé ===');
+    console.log('ID:', id);
+    console.log('URL complète:', `${API_CONFIG.BASE_URL}${ENDPOINTS.COURSES.BY_ID(id)}`);
+    
     return apiRequest(ENDPOINTS.COURSES.BY_ID(id), {
       method: 'DELETE',
     });
@@ -250,6 +258,35 @@ class ApiService {
 
   async downloadMaterial(materialId: string) {
     return apiRequest(ENDPOINTS.MATERIALS.DOWNLOAD(materialId));
+  }
+
+  // Announcements
+  async getAnnouncements() {
+    return apiRequest(ENDPOINTS.ANNOUNCEMENTS.BASE);
+  }
+
+  async getAnnouncementsByAuthor(authorId: string) {
+    return apiRequest(ENDPOINTS.ANNOUNCEMENTS.BY_AUTHOR(authorId));
+  }
+
+  async createAnnouncement(announcementData: any) {
+    return apiRequest(ENDPOINTS.ANNOUNCEMENTS.BASE, {
+      method: 'POST',
+      body: JSON.stringify(announcementData),
+    });
+  }
+
+  async updateAnnouncement(id: string, announcementData: any) {
+    return apiRequest(ENDPOINTS.ANNOUNCEMENTS.BY_ID(id), {
+      method: 'PUT',
+      body: JSON.stringify(announcementData),
+    });
+  }
+
+  async deleteAnnouncement(id: string) {
+    return apiRequest(ENDPOINTS.ANNOUNCEMENTS.BY_ID(id), {
+      method: 'DELETE',
+    });
   }
 }
 

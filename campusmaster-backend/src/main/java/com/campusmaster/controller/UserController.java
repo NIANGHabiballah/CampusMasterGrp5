@@ -35,7 +35,8 @@ public class UserController {
         System.out.println("ID: " + id);
         System.out.println("Données reçues: " + user);
         
-        User updatedUser = userService.updateUser(id, user);
+        user.setId(id);
+        User updatedUser = userService.updateUser(user);
         if (updatedUser != null) {
             System.out.println("Utilisateur modifié avec succès: " + updatedUser.getEmail());
             return ResponseEntity.ok(updatedUser);

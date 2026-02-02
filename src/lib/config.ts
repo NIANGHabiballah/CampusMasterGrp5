@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8082',
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
   TIMEOUT: 10000,
   HEADERS: {
     'Content-Type': 'application/json',
@@ -64,5 +64,12 @@ export const ENDPOINTS = {
     UPLOAD: (courseId: string) => `/api/materials/upload/${courseId}`,
     BY_COURSE: (courseId: string) => `/api/materials/course/${courseId}`,
     DOWNLOAD: (materialId: string) => `/api/materials/download/${materialId}`,
+  },
+  ANNOUNCEMENTS: {
+    BASE: '/api/announcements',
+    BY_ID: (id: string) => `/api/announcements/${id}`,
+    BY_AUTHOR: (authorId: string) => `/api/announcements/author/${authorId}`,
+    BY_COURSE: (courseId: string) => `/api/announcements/course/${courseId}`,
+    GENERAL: '/api/announcements/general',
   },
 };
