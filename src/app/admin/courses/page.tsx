@@ -174,7 +174,7 @@ export default function AdminCoursesPage() {
                         teacherId: parseInt(teacherId)
                       };
                       
-                      const response = await fetch('http://localhost:8080/api/courses', {
+                      const response = await fetch('http://localhost:8082/api/courses', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(courseData)
@@ -437,7 +437,7 @@ export default function AdminCoursesPage() {
                       console.log('Type de l\'ID:', typeof selectedCourse.id);
                       console.log('URL complète:', `http://localhost:8080/api/courses/${selectedCourse.id}`);
                       
-                      const response = await fetch(`http://localhost:8080/api/courses/${selectedCourse.id}`, {
+                      const response = await fetch(`http://localhost:8082/api/courses/${selectedCourse.id}`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(updateData)

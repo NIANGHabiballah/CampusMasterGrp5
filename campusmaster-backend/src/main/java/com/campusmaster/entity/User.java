@@ -63,7 +63,7 @@ public class User {
     }
 
     public enum Status {
-        ACTIVE, INACTIVE, PENDING, SUSPENDED
+        ACTIVE, INACTIVE, PENDING, SUSPENDED, APPROVED, REJECTED
     }
 
     @PrePersist

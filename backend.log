@@ -35,27 +35,27 @@
 
  :: Spring Boot ::               (v3.5.10)
 
-2026-02-02T12:41:51.412Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] c.c.CampusmasterBackendApplication       : Starting CampusmasterBackendApplication using Java 17.0.17 with PID 59106 (/Users/7maksacodpc/Documents/Données professionnelles/Master 2/campusmaster/campusmaster-backend/target/classes started by 7maksacodpc in /Users/7maksacodpc/Documents/Données professionnelles/Master 2/campusmaster/campusmaster-backend)
-2026-02-02T12:41:51.416Z DEBUG 59106 --- [campusmaster-backend] [  restartedMain] c.c.CampusmasterBackendApplication       : Running with Spring Boot v3.5.10, Spring v6.2.15
-2026-02-02T12:41:51.417Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] c.c.CampusmasterBackendApplication       : No active profile set, falling back to 1 default profile: "default"
-2026-02-02T12:41:51.490Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
-2026-02-02T12:41:51.491Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
-2026-02-02T12:41:53.399Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2026-02-02T12:41:53.665Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 251 ms. Found 10 JPA repository interfaces.
-2026-02-02T12:41:55.253Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8082 (http)
-2026-02-02T12:41:55.275Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
-2026-02-02T12:41:55.275Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.50]
-2026-02-02T12:41:55.345Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
-2026-02-02T12:41:55.347Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3854 ms
-2026-02-02T12:41:55.748Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2026-02-02T12:41:55.957Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.41.Final
-2026-02-02T12:41:56.057Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2026-02-02T12:41:56.727Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2026-02-02T12:41:56.803Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2026-02-02T12:41:57.406Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@d821198
-2026-02-02T12:41:57.410Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2026-02-02T12:41:57.470Z  WARN 59106 --- [campusmaster-backend] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
-2026-02-02T12:41:57.506Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+2026-02-02T20:49:11.997Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] c.c.CampusmasterBackendApplication       : Starting CampusmasterBackendApplication using Java 17.0.17 with PID 13986 (/Users/7maksacodpc/Documents/Données professionnelles/Master 2/campusmaster/campusmaster-backend/target/classes started by 7maksacodpc in /Users/7maksacodpc/Documents/Données professionnelles/Master 2/campusmaster/campusmaster-backend)
+2026-02-02T20:49:12.000Z DEBUG 13986 --- [campusmaster-backend] [  restartedMain] c.c.CampusmasterBackendApplication       : Running with Spring Boot v3.5.10, Spring v6.2.15
+2026-02-02T20:49:12.001Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] c.c.CampusmasterBackendApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-02-02T20:49:12.073Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-02-02T20:49:12.075Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-02-02T20:49:13.341Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-02-02T20:49:13.471Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 117 ms. Found 11 JPA repository interfaces.
+2026-02-02T20:49:14.610Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8082 (http)
+2026-02-02T20:49:14.635Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-02T20:49:14.636Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.50]
+2026-02-02T20:49:14.712Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-02-02T20:49:14.714Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 2638 ms
+2026-02-02T20:49:15.089Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-02-02T20:49:15.169Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.41.Final
+2026-02-02T20:49:15.222Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-02-02T20:49:15.612Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-02-02T20:49:15.663Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-02-02T20:49:15.942Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7a3f699c
+2026-02-02T20:49:15.944Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-02-02T20:49:15.982Z  WARN 13986 --- [campusmaster-backend] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-02-02T20:49:16.010Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
 	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
 	Database driver: undefined/unknown
 	Database version: 15.15
@@ -63,38 +63,127 @@
 	Isolation level: undefined/unknown
 	Minimum pool size: undefined/unknown
 	Maximum pool size: undefined/unknown
-2026-02-02T12:42:00.263Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2026-02-02T12:42:00.878Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2026-02-02T12:42:01.509Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
-2026-02-02T12:42:03.355Z  WARN 59106 --- [campusmaster-backend] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2026-02-02T12:42:03.756Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
-2026-02-02T12:42:03.976Z DEBUG 59106 --- [campusmaster-backend] [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, CorsFilter, LogoutFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, ExceptionTranslationFilter, AuthorizationFilter
-2026-02-02T12:42:04.368Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:postgresql://localhost:5432/campusmaster'
-2026-02-02T12:42:04.471Z  WARN 59106 --- [campusmaster-backend] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : Unable to start LiveReload server
-2026-02-02T12:42:04.512Z  WARN 59106 --- [campusmaster-backend] [  restartedMain] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
-2026-02-02T12:42:04.516Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
-2026-02-02T12:42:04.523Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
-2026-02-02T12:42:04.532Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
-2026-02-02T12:42:04.596Z  INFO 59106 --- [campusmaster-backend] [  restartedMain] .s.b.a.l.ConditionEvaluationReportLogger : 
-
-Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
-2026-02-02T12:42:04.653Z ERROR 59106 --- [campusmaster-backend] [  restartedMain] o.s.b.d.LoggingFailureAnalysisReporter   : 
-
-***************************
-APPLICATION FAILED TO START
-***************************
-
-Description:
-
-Web server failed to start. Port 8082 was already in use.
-
-Action:
-
-Identify and stop the process that's listening on port 8082 or configure this application to listen on another port.
-
+2026-02-02T20:49:17.825Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-02-02T20:49:18.112Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-02-02T20:49:18.423Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-02-02T20:49:19.789Z  WARN 13986 --- [campusmaster-backend] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-02-02T20:49:20.221Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2026-02-02T20:49:20.410Z DEBUG 13986 --- [campusmaster-backend] [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with filters: DisableEncodeUrlFilter, WebAsyncManagerIntegrationFilter, SecurityContextHolderFilter, HeaderWriterFilter, CorsFilter, LogoutFilter, RequestCacheAwareFilter, SecurityContextHolderAwareRequestFilter, AnonymousAuthenticationFilter, ExceptionTranslationFilter, AuthorizationFilter
+2026-02-02T20:49:20.667Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] o.s.b.a.h2.H2ConsoleAutoConfiguration    : H2 console available at '/h2-console'. Database available at 'jdbc:postgresql://localhost:5432/campusmaster'
+2026-02-02T20:49:20.745Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-02-02T20:49:20.790Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8082 (http) with context path '/'
+2026-02-02T20:49:20.805Z  INFO 13986 --- [campusmaster-backend] [  restartedMain] c.c.CampusmasterBackendApplication       : Started CampusmasterBackendApplication in 9.514 seconds (process running for 10.065)
+Hibernate: 
+    select
+        count(*) 
+    from
+        users u1_0
+Contrainte de statut corrigée avec succès
+2026-02-02T20:50:21.902Z  INFO 13986 --- [campusmaster-backend] [nio-8082-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-02-02T20:50:21.913Z  INFO 13986 --- [campusmaster-backend] [nio-8082-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-02-02T20:50:21.916Z  INFO 13986 --- [campusmaster-backend] [nio-8082-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+2026-02-02T20:50:22.038Z DEBUG 13986 --- [campusmaster-backend] [nio-8082-exec-1] o.s.security.web.FilterChainProxy        : Securing OPTIONS /api/notifications/user/1
+2026-02-02T20:50:22.139Z DEBUG 13986 --- [campusmaster-backend] [nio-8082-exec-2] o.s.security.web.FilterChainProxy        : Securing GET /api/notifications/user/1
+2026-02-02T20:50:22.159Z DEBUG 13986 --- [campusmaster-backend] [nio-8082-exec-2] o.s.security.web.FilterChainProxy        : Secured GET /api/notifications/user/1
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.action_url,
+        n1_0.created_at,
+        n1_0.is_read,
+        n1_0.message,
+        n1_0.title,
+        n1_0.type,
+        n1_0.user_id 
+    from
+        notifications n1_0 
+    left join
+        users u1_0 
+            on u1_0.id=n1_0.user_id 
+    where
+        u1_0.id=? 
+    order by
+        n1_0.created_at desc
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.address,
+        u1_0.bio,
+        u1_0.created_at,
+        u1_0.department,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password,
+        u1_0.permissions,
+        u1_0.phone,
+        u1_0.role,
+        u1_0.semester,
+        u1_0.specialty,
+        u1_0.status,
+        u1_0.student_id,
+        u1_0.updated_at 
+    from
+        users u1_0 
+    where
+        u1_0.id=?
+2026-02-02T20:50:23.119Z DEBUG 13986 --- [campusmaster-backend] [nio-8082-exec-2] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
+2026-02-02T20:50:51.735Z DEBUG 13986 --- [campusmaster-backend] [nio-8082-exec-3] o.s.security.web.FilterChainProxy        : Securing OPTIONS /api/notifications/user/1
+2026-02-02T20:50:51.744Z DEBUG 13986 --- [campusmaster-backend] [nio-8082-exec-4] o.s.security.web.FilterChainProxy        : Securing GET /api/notifications/user/1
+2026-02-02T20:50:51.748Z DEBUG 13986 --- [campusmaster-backend] [nio-8082-exec-4] o.s.security.web.FilterChainProxy        : Secured GET /api/notifications/user/1
+Hibernate: 
+    select
+        n1_0.id,
+        n1_0.action_url,
+        n1_0.created_at,
+        n1_0.is_read,
+        n1_0.message,
+        n1_0.title,
+        n1_0.type,
+        n1_0.user_id 
+    from
+        notifications n1_0 
+    left join
+        users u1_0 
+            on u1_0.id=n1_0.user_id 
+    where
+        u1_0.id=? 
+    order by
+        n1_0.created_at desc
+Hibernate: 
+    select
+        u1_0.id,
+        u1_0.address,
+        u1_0.bio,
+        u1_0.created_at,
+        u1_0.department,
+        u1_0.email,
+        u1_0.first_name,
+        u1_0.last_name,
+        u1_0.password,
+        u1_0.permissions,
+        u1_0.phone,
+        u1_0.role,
+        u1_0.semester,
+        u1_0.specialty,
+        u1_0.status,
+        u1_0.student_id,
+        u1_0.updated_at 
+    from
+        users u1_0 
+    where
+        u1_0.id=?
+2026-02-02T20:50:51.788Z DEBUG 13986 --- [campusmaster-backend] [nio-8082-exec-4] o.s.s.w.a.AnonymousAuthenticationFilter  : Set SecurityContextHolder to anonymous SecurityContext
 [INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
+[INFO] BUILD FAILURE
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  19.935 s
-[INFO] Finished at: 2026-02-02T12:42:04Z
+[INFO] Total time:  02:10 min
+[INFO] Finished at: 2026-02-02T20:51:18Z
 [INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.5.10:run (default-cli) on project campusmaster-backend: Process terminated with exit code: 137 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException

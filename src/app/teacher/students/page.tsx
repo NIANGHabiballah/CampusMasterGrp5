@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Search, UserCheck, UserX, Eye, Mail, Phone, MapPin, Calendar, GraduationCap, AlertCircle, CheckCircle } from 'lucide-react';
+import { apiService } from '@/services/api';
 import { toast } from 'sonner';
 
 export default function TeacherStudentsPage() {
@@ -18,6 +19,14 @@ export default function TeacherStudentsPage() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    pendingValidation: 0,
+    activeStudents: 0,
+    suspendedStudents: 0,
+    averageGrade: 0,
+    averageAttendance: 0
+  });
 
   useEffect(() => {
     loadData();
@@ -26,62 +35,38 @@ export default function TeacherStudentsPage() {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      // Simuler le chargement des données
-      setStudents([
-        {
-          id: 1,
-          firstName: 'Marie',
-          lastName: 'Dubois',
-          email: 'marie.dubois@email.com',
-          phone: '06 12 34 56 78',
-          address: '123 Rue de la Paix, Paris',
-          studentId: 'M2IL001',
-          specialty: 'Informatique',
-          semester: 'M2',
-          status: 'ACTIVE',
-          enrolledCourses: ['Java Spring Boot', 'Angular'],
-          averageGrade: 15.5,
-          attendance: 92,
-          lastActivity: '2024-02-10T14:30:00',
-          profileComplete: true
-        },
-        {
-          id: 2,
-          firstName: 'Pierre',
-          lastName: 'Martin',
-          email: 'pierre.martin@email.com',
-          phone: '06 98 76 54 32',
-          address: '456 Avenue des Champs, Lyon',
-          studentId: 'M2IL002',
-          specialty: 'Informatique',
-          semester: 'M2',
-          status: 'ACTIVE',
-          enrolledCourses: ['Java Spring Boot', 'Base de Données'],
-          averageGrade: 13.2,
-          attendance: 88,
-          lastActivity: '2024-02-09T16:45:00',
-          profileComplete: false
-        }
-      ]);
-
-      setPendingStudents([
-        {
-          id: 3,
-          firstName: 'Sophie',
-          lastName: 'Leroy',
-          email: 'sophie.leroy@email.com',
-          phone: '06 11 22 33 44',
-          studentId: 'M2IL003',
-          specialty: 'Informatique',
-          semester: 'M2',
-          status: 'PENDING',
-          requestedCourses: ['Java Spring Boot'],
-          submittedAt: '2024-02-08T10:00:00',
-          profileComplete: true
-        }
-      ]);
+      const usersData = await apiService.getUsers();
+      
+      const activeStudents = usersData.filter(user => 
+        user.role === 'STUDENT' && user.status === 'APPROVED'
+      );
+      
+      const pendingStudentsData = usersData.filter(user => 
+        user.role === 'STUDENT' && user.status === 'PENDING'
+      );
+      
+      const suspendedStudents = usersData.filter(user => 
+        user.role === 'STUDENT' && user.status === 'SUSPENDED'
+      );
+      
+      setStudents(activeStudents);
+      setPendingStudents(pendingStudentsData);
+      
+      // Calculer les statistiques
+      const totalGrades = activeStudents.reduce((sum, s) => sum + (s.averageGrade || 0), 0);
+      const totalAttendance = activeStudents.reduce((sum, s) => sum + (s.attendance || 0), 0);
+      
+      setStats({
+        totalStudents: usersData.filter(u => u.role === 'STUDENT').length,
+        pendingValidation: pendingStudentsData.length,
+        activeStudents: activeStudents.length,
+        suspendedStudents: suspendedStudents.length,
+        averageGrade: activeStudents.length > 0 ? totalGrades / activeStudents.length : 0,
+        averageAttendance: activeStudents.length > 0 ? totalAttendance / activeStudents.length : 0
+      });
     } catch (error) {
       console.error('Erreur:', error);
+      toast.error('Erreur lors du chargement des données');
     } finally {
       setIsLoading(false);
     }
@@ -89,21 +74,9 @@ export default function TeacherStudentsPage() {
 
   const validateStudent = async (studentId: number) => {
     try {
-      const student = pendingStudents.find(s => s.id === studentId);
-      if (student) {
-        const validatedStudent = {
-          ...student,
-          status: 'ACTIVE',
-          enrolledCourses: student.requestedCourses,
-          averageGrade: 0,
-          attendance: 100,
-          lastActivity: new Date().toISOString()
-        };
-        
-        setStudents(prev => [...prev, validatedStudent]);
-        setPendingStudents(prev => prev.filter(s => s.id !== studentId));
-        toast.success(`Profil de ${student.firstName} ${student.lastName} validé`);
-      }
+      await apiService.updateUser(studentId.toString(), { status: 'APPROVED' });
+      toast.success('Profil étudiant validé');
+      loadData();
     } catch (error) {
       toast.error('Erreur lors de la validation');
     }
@@ -111,11 +84,21 @@ export default function TeacherStudentsPage() {
 
   const rejectStudent = async (studentId: number) => {
     try {
-      const student = pendingStudents.find(s => s.id === studentId);
-      setPendingStudents(prev => prev.filter(s => s.id !== studentId));
-      toast.success(`Demande de ${student?.firstName} ${student?.lastName} rejetée`);
+      await apiService.updateUser(studentId.toString(), { status: 'REJECTED' });
+      toast.success('Demande rejetée');
+      loadData();
     } catch (error) {
       toast.error('Erreur lors du rejet');
+    }
+  };
+
+  const suspendStudent = async (studentId: number) => {
+    try {
+      await apiService.updateUser(studentId.toString(), { status: 'SUSPENDED' });
+      toast.success('Étudiant suspendu');
+      loadData();
+    } catch (error) {
+      toast.error('Erreur lors de la suspension');
     }
   };
 
@@ -162,6 +145,49 @@ export default function TeacherStudentsPage() {
             Validez les profils et suivez vos étudiants
           </p>
         </div>
+      </div>
+
+      {/* Statistiques */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Étudiants</CardTitle>
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalStudents}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">En Attente</CardTitle>
+            <AlertCircle className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">{stats.pendingValidation}</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Moyenne Générale</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">{stats.averageGrade.toFixed(1)}/20</div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Assiduité Moyenne</CardTitle>
+            <Calendar className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">{stats.averageAttendance.toFixed(0)}%</div>
+          </CardContent>
+        </Card>
       </div>
 
       <Tabs defaultValue="active" className="space-y-6">
@@ -223,16 +249,16 @@ export default function TeacherStudentsPage() {
                   <CardContent>
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
+                        <div className="text-sm">
                           <div className="text-gray-500">Moyenne</div>
-                          <div className={`font-semibold ${getGradeColor(student.averageGrade)}`}>
-                            {student.averageGrade}/20
+                          <div className={`font-semibold ${getGradeColor(student.averageGrade || 0)}`}>
+                            {student.averageGrade || 'N/A'}/20
                           </div>
                         </div>
                         <div>
                           <div className="text-gray-500">Assiduité</div>
-                          <div className={`font-semibold ${getAttendanceColor(student.attendance)}`}>
-                            {student.attendance}%
+                          <div className={`font-semibold ${getAttendanceColor(student.attendance || 0)}`}>
+                            {student.attendance || 'N/A'}%
                           </div>
                         </div>
                       </div>
@@ -240,11 +266,14 @@ export default function TeacherStudentsPage() {
                       <div className="text-sm">
                         <div className="text-gray-500">Cours inscrits</div>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {student.enrolledCourses.map((course, index) => (
+                          {(student.enrolledCourses || []).map((course, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {course}
                             </Badge>
                           ))}
+                          {(!student.enrolledCourses || student.enrolledCourses.length === 0) && (
+                            <span className="text-gray-400 text-xs">Aucun cours</span>
+                          )}
                         </div>
                       </div>
 
@@ -255,15 +284,27 @@ export default function TeacherStudentsPage() {
                         </div>
                       )}
                       
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="w-full"
-                        onClick={() => viewStudentDetails(student)}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        Voir détails
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => viewStudentDetails(student)}
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          Détails
+                        </Button>
+                        {student.status !== 'SUSPENDED' && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => suspendStudent(student.id)}
+                          >
+                            <UserX className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -329,11 +370,14 @@ export default function TeacherStudentsPage() {
                       <div className="text-sm">
                         <div className="text-gray-500">Cours demandés</div>
                         <div className="flex flex-wrap gap-1 mt-1">
-                          {student.requestedCourses.map((course, index) => (
+                          {(student.requestedCourses || []).map((course, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {course}
                             </Badge>
                           ))}
+                          {(!student.requestedCourses || student.requestedCourses.length === 0) && (
+                            <span className="text-gray-400 text-xs">Aucun cours demandé</span>
+                          )}
                         </div>
                       </div>
                       

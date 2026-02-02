@@ -29,6 +29,18 @@ class ApiService {
     });
   }
 
+  async approveUser(id: string) {
+    return apiRequest(ENDPOINTS.USERS.APPROVE(id), {
+      method: 'PUT',
+    });
+  }
+
+  async suspendUser(id: string) {
+    return apiRequest(ENDPOINTS.USERS.SUSPEND(id), {
+      method: 'PUT',
+    });
+  }
+
   async deleteUser(id: string) {
     return apiRequest(ENDPOINTS.USERS.BY_ID(id), {
       method: 'DELETE',

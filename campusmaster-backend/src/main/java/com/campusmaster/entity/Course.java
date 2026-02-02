@@ -39,6 +39,10 @@ public class Course {
     @JsonIgnoreProperties("course")
     private List<Material> materials;
 
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnoreProperties("course")
+    private List<Announcement> announcements;
+
     @Column(name = "max_students")
     private Integer maxStudents;
 
@@ -101,4 +105,7 @@ public class Course {
 
     public String getSchedule() { return schedule; }
     public void setSchedule(String schedule) { this.schedule = schedule; }
+
+    public List<Announcement> getAnnouncements() { return announcements; }
+    public void setAnnouncements(List<Announcement> announcements) { this.announcements = announcements; }
 }

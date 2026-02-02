@@ -18,6 +18,8 @@ export const createApiRequest = async (
   const url = `${API_CONFIG.BASE_URL}${endpoint}`;
   const token = getTokenFromCookie();
   
+  console.log('🔵 API Request:', options.method || 'GET', url);
+  
   const config: RequestInit = {
     headers: {
       ...API_CONFIG.HEADERS,
@@ -29,6 +31,7 @@ export const createApiRequest = async (
 
   try {
     const response = await fetch(url, config);
+    console.log('✅ Response:', response.status, url);
     
     if (response.status === 401) {
       if (typeof document !== 'undefined') {
@@ -43,7 +46,9 @@ export const createApiRequest = async (
     }
     
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('❌ API Error:', response.status, errorText);
+      throw new Error(`API Error: ${response.status} - ${errorText}`);
     }
     
     return response;

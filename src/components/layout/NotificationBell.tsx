@@ -1,1 +1,229 @@
-'use client';\n\nimport { useState, useEffect } from 'react';\nimport { Button } from '@/components/ui/button';\nimport { Badge } from '@/components/ui/badge';\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';\nimport { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';\nimport { ScrollArea } from '@/components/ui/scroll-area';\nimport { Separator } from '@/components/ui/separator';\nimport { \n  Bell, \n  Check, \n  CheckCheck, \n  Trash2, \n  FileText, \n  MessageSquare, \n  Award, \n  Megaphone,\n  ExternalLink\n} from 'lucide-react';\nimport { useNotificationStore } from '@/store/notifications';\nimport { useRouter } from 'next/navigation';\nimport { format } from 'date-fns';\nimport { fr } from 'date-fns/locale';\nimport { toast } from 'sonner';\n\nexport function NotificationBell() {\n  const router = useRouter();\n  const { \n    notifications, \n    unreadCount, \n    isLoading, \n    fetchNotifications, \n    markAsRead, \n    markAllAsRead, \n    deleteNotification \n  } = useNotificationStore();\n  \n  const [isOpen, setIsOpen] = useState(false);\n\n  useEffect(() => {\n    fetchNotifications();\n  }, [fetchNotifications]);\n\n  const getNotificationIcon = (type: string) => {\n    switch (type) {\n      case 'assignment':\n        return <FileText className=\"w-4 h-4 text-blue-500\" />;\n      case 'grade':\n        return <Award className=\"w-4 h-4 text-green-500\" />;\n      case 'message':\n        return <MessageSquare className=\"w-4 h-4 text-purple-500\" />;\n      case 'announcement':\n        return <Megaphone className=\"w-4 h-4 text-orange-500\" />;\n      default:\n        return <Bell className=\"w-4 h-4 text-gray-500\" />;\n    }\n  };\n\n  const handleNotificationClick = (notification: any) => {\n    if (!notification.isRead) {\n      markAsRead(notification.id);\n    }\n    \n    if (notification.actionUrl) {\n      router.push(notification.actionUrl);\n      setIsOpen(false);\n    }\n  };\n\n  const handleMarkAllAsRead = () => {\n    markAllAsRead();\n    toast.success('Toutes les notifications ont été marquées comme lues');\n  };\n\n  const recentNotifications = notifications.slice(0, 10);\n\n  return (\n    <Popover open={isOpen} onOpenChange={setIsOpen}>\n      <PopoverTrigger asChild>\n        <Button variant=\"ghost\" size=\"icon\" className=\"relative\">\n          <Bell className=\"h-5 w-5\" />\n          {unreadCount > 0 && (\n            <Badge \n              variant=\"destructive\" \n              className=\"absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs\"\n            >\n              {unreadCount > 99 ? '99+' : unreadCount}\n            </Badge>\n          )}\n        </Button>\n      </PopoverTrigger>\n      <PopoverContent className=\"w-80 p-0\" align=\"end\">\n        <Card className=\"border-0 shadow-lg\">\n          <CardHeader className=\"pb-3\">\n            <div className=\"flex items-center justify-between\">\n              <CardTitle className=\"text-lg\">Notifications</CardTitle>\n              {unreadCount > 0 && (\n                <Button \n                  variant=\"ghost\" \n                  size=\"sm\" \n                  onClick={handleMarkAllAsRead}\n                  className=\"text-xs\"\n                >\n                  <CheckCheck className=\"w-3 h-3 mr-1\" />\n                  Tout marquer lu\n                </Button>\n              )}\n            </div>\n            {unreadCount > 0 && (\n              <CardDescription>\n                {unreadCount} notification{unreadCount > 1 ? 's' : ''} non lue{unreadCount > 1 ? 's' : ''}\n              </CardDescription>\n            )}\n          </CardHeader>\n          \n          <Separator />\n          \n          <CardContent className=\"p-0\">\n            <ScrollArea className=\"h-96\">\n              {recentNotifications.length === 0 ? (\n                <div className=\"p-6 text-center text-gray-500\">\n                  <Bell className=\"w-8 h-8 mx-auto mb-2 text-gray-300\" />\n                  <p className=\"text-sm\">Aucune notification</p>\n                </div>\n              ) : (\n                <div className=\"space-y-1\">\n                  {recentNotifications.map((notification, index) => (\n                    <div key={notification.id}>\n                      <div \n                        className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${\n                          !notification.isRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''\n                        }`}\n                        onClick={() => handleNotificationClick(notification)}\n                      >\n                        <div className=\"flex items-start space-x-3\">\n                          <div className=\"flex-shrink-0 mt-1\">\n                            {getNotificationIcon(notification.type)}\n                          </div>\n                          \n                          <div className=\"flex-1 min-w-0\">\n                            <div className=\"flex items-center justify-between\">\n                              <h4 className={`text-sm font-medium truncate ${\n                                !notification.isRead ? 'text-gray-900' : 'text-gray-700'\n                              }`}>\n                                {notification.title}\n                              </h4>\n                              \n                              <div className=\"flex items-center space-x-1 ml-2\">\n                                {notification.actionUrl && (\n                                  <ExternalLink className=\"w-3 h-3 text-gray-400\" />\n                                )}\n                                \n                                <Button\n                                  variant=\"ghost\"\n                                  size=\"sm\"\n                                  onClick={(e) => {\n                                    e.stopPropagation();\n                                    deleteNotification(notification.id);\n                                  }}\n                                  className=\"h-6 w-6 p-0 hover:bg-red-100\"\n                                >\n                                  <Trash2 className=\"w-3 h-3 text-gray-400 hover:text-red-500\" />\n                                </Button>\n                              </div>\n                            </div>\n                            \n                            <p className=\"text-xs text-gray-600 mt-1 line-clamp-2\">\n                              {notification.message}\n                            </p>\n                            \n                            <div className=\"flex items-center justify-between mt-2\">\n                              <span className=\"text-xs text-gray-400\">\n                                {format(new Date(notification.createdAt), 'dd MMM à HH:mm', { locale: fr })}\n                              </span>\n                              \n                              {!notification.isRead && (\n                                <Button\n                                  variant=\"ghost\"\n                                  size=\"sm\"\n                                  onClick={(e) => {\n                                    e.stopPropagation();\n                                    markAsRead(notification.id);\n                                  }}\n                                  className=\"h-6 px-2 text-xs\"\n                                >\n                                  <Check className=\"w-3 h-3 mr-1\" />\n                                  Marquer lu\n                                </Button>\n                              )}\n                            </div>\n                          </div>\n                        </div>\n                      </div>\n                      \n                      {index < recentNotifications.length - 1 && <Separator />}\n                    </div>\n                  ))}\n                </div>\n              )}\n            </ScrollArea>\n          </CardContent>\n          \n          {notifications.length > 10 && (\n            <>\n              <Separator />\n              <div className=\"p-3\">\n                <Button \n                  variant=\"ghost\" \n                  className=\"w-full text-sm\"\n                  onClick={() => {\n                    router.push('/notifications');\n                    setIsOpen(false);\n                  }}\n                >\n                  Voir toutes les notifications\n                </Button>\n              </div>\n            </>\n          )}\n        </Card>\n      </PopoverContent>\n    </Popover>\n  );\n}"
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Bell, 
+  Check, 
+  CheckCheck, 
+  Trash2, 
+  FileText, 
+  MessageSquare, 
+  Award, 
+  Megaphone,
+  ExternalLink
+} from 'lucide-react';
+import { useNotificationStore } from '@/store/notifications';
+import { useAuthStore } from '@/store/auth';
+import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
+
+export function NotificationBell() {
+  const router = useRouter();
+  const { user } = useAuthStore();
+  const { 
+    notifications, 
+    unreadCount, 
+    isLoading, 
+    fetchNotifications, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification 
+  } = useNotificationStore();
+  
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (user?.id) {
+      fetchNotifications(user.id);
+    }
+  }, [fetchNotifications, user?.id]);
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'assignment':
+        return <FileText className="w-4 h-4 text-blue-500" />;
+      case 'grade':
+        return <Award className="w-4 h-4 text-green-500" />;
+      case 'message':
+        return <MessageSquare className="w-4 h-4 text-purple-500" />;
+      case 'announcement':
+        return <Megaphone className="w-4 h-4 text-orange-500" />;
+      default:
+        return <Bell className="w-4 h-4 text-gray-500" />;
+    }
+  };
+
+  const handleNotificationClick = (notification: any) => {
+    if (!notification.isRead) {
+      markAsRead(notification.id);
+    }
+    
+    if (notification.actionUrl) {
+      router.push(notification.actionUrl);
+      setIsOpen(false);
+    }
+  };
+
+  const handleMarkAllAsRead = () => {
+    markAllAsRead();
+    toast.success('Toutes les notifications ont été marquées comme lues');
+  };
+
+  const recentNotifications = notifications.slice(0, 10);
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          {unreadCount > 0 && (
+            <Badge 
+              variant="destructive" 
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+            >
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </Badge>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="end">
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Notifications</CardTitle>
+              {unreadCount > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleMarkAllAsRead}
+                  className="text-xs"
+                >
+                  <CheckCheck className="w-3 h-3 mr-1" />
+                  Tout marquer lu
+                </Button>
+              )}
+            </div>
+            {unreadCount > 0 && (
+              <CardDescription>
+                {unreadCount} notification{unreadCount > 1 ? 's' : ''} non lue{unreadCount > 1 ? 's' : ''}
+              </CardDescription>
+            )}
+          </CardHeader>
+          
+          <Separator />
+          
+          <CardContent className="p-0">
+            <ScrollArea className="h-96">
+              {recentNotifications.length === 0 ? (
+                <div className="p-6 text-center text-gray-500">
+                  <Bell className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                  <p className="text-sm">Aucune notification</p>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {recentNotifications.map((notification, index) => (
+                    <div key={notification.id}>
+                      <div 
+                        className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
+                          !notification.isRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                        }`}
+                        onClick={() => handleNotificationClick(notification)}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className="flex-shrink-0 mt-1">
+                            {getNotificationIcon(notification.type)}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <h4 className={`text-sm font-medium truncate ${
+                                !notification.isRead ? 'text-gray-900' : 'text-gray-700'
+                              }`}>
+                                {notification.title}
+                              </h4>
+                              
+                              <div className="flex items-center space-x-1 ml-2">
+                                {notification.actionUrl && (
+                                  <ExternalLink className="w-3 h-3 text-gray-400" />
+                                )}
+                                
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteNotification(notification.id);
+                                  }}
+                                  className="h-6 w-6 p-0 hover:bg-red-100"
+                                >
+                                  <Trash2 className="w-3 h-3 text-gray-400 hover:text-red-500" />
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                              {notification.message}
+                            </p>
+                            
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-xs text-gray-400">
+                                {format(new Date(notification.createdAt), 'dd MMM à HH:mm', { locale: fr })}
+                              </span>
+                              
+                              {!notification.isRead && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsRead(notification.id);
+                                  }}
+                                  className="h-6 px-2 text-xs"
+                                >
+                                  <Check className="w-3 h-3 mr-1" />
+                                  Marquer lu
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {index < recentNotifications.length - 1 && <Separator />}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+          
+          {notifications.length > 10 && (
+            <>
+              <Separator />
+              <div className="p-3">
+                <Button 
+                  variant="ghost" 
+                  className="w-full text-sm"
+                  onClick={() => {
+                    router.push('/notifications');
+                    setIsOpen(false);
+                  }}
+                >
+                  Voir toutes les notifications
+                </Button>
+              </div>
+            </>
+          )}
+        </Card>
+      </PopoverContent>
+    </Popover>
+  );
+}

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { useAuthStore } from '@/store/auth';
+import { useNotifications } from '@/hooks/use-notifications';
 
 const publicRoutes = ['/auth/login', '/auth/register', '/'];
 
@@ -11,6 +12,9 @@ export function AuthenticatedLayout({ children }: { children: React.ReactNode })
   const { isAuthenticated, isLoading, isHydrated } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
+  
+  // Charger les notifications automatiquement pour les utilisateurs connectés
+  useNotifications();
 
   useEffect(() => {
     if (isHydrated && !isLoading && !isAuthenticated && !publicRoutes.includes(pathname)) {

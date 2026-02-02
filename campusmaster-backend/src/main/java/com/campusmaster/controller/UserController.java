@@ -31,18 +31,71 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
-        System.out.println("\n=== MODIFICATION UTILISATEUR ===");
-        System.out.println("ID: " + id);
-        System.out.println("Données reçues: " + user);
-        
-        user.setId(id);
-        User updatedUser = userService.updateUser(user);
-        if (updatedUser != null) {
+        try {
+            System.out.println("\n=== MODIFICATION UTILISATEUR ===");
+            System.out.println("ID: " + id);
+            System.out.println("Données reçues: " + user);
+            
+            Optional<User> existingUserOpt = userService.getUserById(id);
+            if (!existingUserOpt.isPresent()) {
+                System.out.println("Utilisateur non trouvé avec ID: " + id);
+                return ResponseEntity.notFound().build();
+            }
+            
+            User existingUser = existingUserOpt.get();
+            
+            // Mettre à jour seulement les champs non null
+            if (user.getFirstName() != null) existingUser.setFirstName(user.getFirstName());
+            if (user.getLastName() != null) existingUser.setLastName(user.getLastName());
+            if (user.getEmail() != null) existingUser.setEmail(user.getEmail());
+            if (user.getRole() != null) existingUser.setRole(user.getRole());
+            if (user.getStatus() != null) existingUser.setStatus(user.getStatus());
+            if (user.getStudentId() != null) existingUser.setStudentId(user.getStudentId());
+            if (user.getDepartment() != null) existingUser.setDepartment(user.getDepartment());
+            if (user.getSemester() != null) existingUser.setSemester(user.getSemester());
+            if (user.getSpecialty() != null) existingUser.setSpecialty(user.getSpecialty());
+            if (user.getPhone() != null) existingUser.setPhone(user.getPhone());
+            
+            User updatedUser = userService.updateUser(existingUser);
             System.out.println("Utilisateur modifié avec succès: " + updatedUser.getEmail());
             return ResponseEntity.ok(updatedUser);
-        } else {
-            System.out.println("Utilisateur non trouvé avec ID: " + id);
+            
+        } catch (Exception e) {
+            System.err.println("Erreur lors de la modification: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PutMapping("/{id}/approve")
+    public ResponseEntity<User> approveUser(@PathVariable Long id) {
+        try {
+            Optional<User> userOpt = userService.getUserById(id);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                user.setStatus(User.Status.APPROVED);
+                User updatedUser = userService.updateUser(user);
+                return ResponseEntity.ok(updatedUser);
+            }
             return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PutMapping("/{id}/suspend")
+    public ResponseEntity<User> suspendUser(@PathVariable Long id) {
+        try {
+            Optional<User> userOpt = userService.getUserById(id);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                user.setStatus(User.Status.SUSPENDED);
+                User updatedUser = userService.updateUser(user);
+                return ResponseEntity.ok(updatedUser);
+            }
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 

@@ -8,7 +8,7 @@ interface NotificationState {
   isLoading: boolean;
   
   // Actions
-  fetchNotifications: (userId: number) => Promise<void>;
+  fetchNotifications: (userId?: number) => Promise<void>;
   fetchUnreadCount: (userId: number) => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => void;
@@ -21,12 +21,16 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   unreadCount: 0,
   isLoading: false,
 
-  fetchNotifications: async (userId: number) => {
+  fetchNotifications: async (userId?: number) => {
     set({ isLoading: true });
     try {
-      const data = await apiService.getNotifications(userId);
+      // Utiliser l'ID utilisateur fourni ou un ID par défaut
+      const userIdToUse = userId || 1;
+      const data = await apiService.getNotifications(userIdToUse);
+      const unreadCount = data.filter(n => !n.isRead).length;
       set({ 
         notifications: data,
+        unreadCount: unreadCount,
         isLoading: false 
       });
     } catch (error) {

@@ -19,7 +19,7 @@ public class Message {
     private User receiver;
 
     @ManyToOne
-    @JoinColumn(name = "course_id")
+    @JoinColumn(name = "course_id", nullable = true)
     private Course course;
 
     @Column(nullable = false)

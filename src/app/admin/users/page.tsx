@@ -105,31 +105,27 @@ export default function AdminUsersPage() {
       return;
     }
     
-    // Validation téléphone si renseigné
-    if (editForm.phone && !/^[+]?[0-9\s-()]{8,15}$/.test(editForm.phone)) {
-      toast.error('Format de téléphone invalide');
-      return;
-    }
-    
-    // Validation spécifique étudiant
-    if (editForm.role === 'STUDENT') {
-      if (!editForm.department) {
-        toast.error('La filière est obligatoire pour un étudiant');
-        return;
-      }
-      if (!editForm.studentId.trim()) {
-        toast.error('Le numéro étudiant est obligatoire');
-        return;
-      }
-    }
-    
     try {
       console.log('Données à envoyer:', editForm);
       
-      // Filtrer les champs vides pour éviter d'écraser les valeurs existantes
-      const dataToSend = Object.fromEntries(
-        Object.entries(editForm).filter(([key, value]) => value !== '' && value !== null)
-      );
+      // Envoyer seulement les champs modifiés
+      const dataToSend = {
+        firstName: editForm.firstName,
+        lastName: editForm.lastName,
+        email: editForm.email,
+        role: editForm.role,
+        status: editForm.status
+      };
+      
+      // Ajouter les champs spécifiques selon le rôle
+      if (editForm.role === 'STUDENT') {
+        if (editForm.studentId) dataToSend.studentId = editForm.studentId;
+        if (editForm.department) dataToSend.department = editForm.department;
+        if (editForm.semester) dataToSend.semester = editForm.semester;
+      }
+      
+      if (editForm.phone) dataToSend.phone = editForm.phone;
+      if (editForm.specialty) dataToSend.specialty = editForm.specialty;
       
       console.log('Données filtrées:', dataToSend);
       
@@ -144,7 +140,7 @@ export default function AdminUsersPage() {
       toast.success('Utilisateur modifié avec succès');
     } catch (error) {
       console.error('Erreur lors de la modification:', error);
-      toast.error('Erreur lors de la modification');
+      toast.error('Erreur lors de la modification: ' + (error.message || 'Erreur inconnue'));
     }
   };
 

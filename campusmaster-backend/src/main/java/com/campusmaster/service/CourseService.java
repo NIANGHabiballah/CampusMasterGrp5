@@ -2,6 +2,7 @@ package com.campusmaster.service;
 
 import com.campusmaster.entity.Course;
 import com.campusmaster.repository.CourseRepository;
+import com.campusmaster.repository.MessageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,9 @@ public class CourseService {
 
     @Autowired
     private CourseRepository courseRepository;
+    
+    @Autowired
+    private MessageRepository messageRepository;
 
     public List<Course> getAllCourses() {
         return courseRepository.findAll();
@@ -83,11 +87,18 @@ public class CourseService {
                 throw new RuntimeException("Cours non trouvé avec l'ID: " + id);
             }
             
-            System.out.println("Suppression directe du cours...");
+            // Mettre à null les références dans messages
+            messageRepository.findByCourseIdOrderByCreatedAtDesc(id)
+                .forEach(msg -> {
+                    msg.setCourse(null);
+                    messageRepository.save(msg);
+                });
+            
+            System.out.println("Suppression du cours...");
             courseRepository.deleteById(id);
             System.out.println("Suppression terminée avec succès");
         } catch (Exception e) {
-            System.err.println("Erreur dans deleteCourse: " + e.getMessage());
+            System.err.println("Erreur suppression cours: " + e.getMessage());
             throw new RuntimeException("Impossible de supprimer: " + e.getMessage());
         }
     }
