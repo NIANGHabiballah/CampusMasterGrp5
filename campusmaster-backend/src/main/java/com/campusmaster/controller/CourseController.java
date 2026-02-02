@@ -48,4 +48,14 @@ public class CourseController {
         courseService.deleteCourse(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{id}/materials")
+    public ResponseEntity<?> getCourseMaterials(@PathVariable Long id) {
+        Optional<Course> courseOpt = courseService.getCourseById(id);
+        if (courseOpt.isPresent()) {
+            Course course = courseOpt.get();
+            return ResponseEntity.ok(course.getMaterials());
+        }
+        return ResponseEntity.notFound().build();
+    }
 }

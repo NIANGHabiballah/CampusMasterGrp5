@@ -85,6 +85,33 @@ public class MaterialController {
         return ResponseEntity.ok(materials);
     }
 
+    @GetMapping("/download/{materialId}")
+    public ResponseEntity<?> downloadMaterial(@PathVariable Long materialId) {
+        try {
+            Optional<Material> materialOpt = materialRepository.findById(materialId);
+            if (!materialOpt.isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Material material = materialOpt.get();
+            Path filePath = Paths.get(material.getFilePath());
+            
+            if (!Files.exists(filePath)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            byte[] fileContent = Files.readAllBytes(filePath);
+            
+            return ResponseEntity.ok()
+                    .header("Content-Disposition", "attachment; filename=\"" + material.getFileName() + "\"")
+                    .header("Content-Type", "application/octet-stream")
+                    .body(fileContent);
+                    
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body("Erreur lors du téléchargement: " + e.getMessage());
+        }
+    }
+
     private String getFileExtension(String fileName) {
         if (fileName == null || fileName.lastIndexOf('.') == -1) {
             return "";
