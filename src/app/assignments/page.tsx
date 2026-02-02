@@ -268,20 +268,40 @@ export default function AssignmentsPage() {
   const getStatusBadge = (assignment: any) => {
     const now = new Date();
     const dueDate = new Date(assignment.dueDate);
-    const userSubmission = submissions.find(s => s.assignment?.id === assignment.id);
+    const userSubmission = submissions.find(s => s?.assignment?.id === assignment.id);
     
     if (userSubmission) {
-      if (userSubmission.grade !== null) {
-        return <Badge variant="outline" className="border-green-600 text-green-600"><CheckCircle className="w-3 h-3 mr-1" />Noté ({userSubmission.grade}/20)</Badge>;
+      if (userSubmission.grade !== null && userSubmission.grade !== undefined) {
+        return (
+          <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-200 transition-colors">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Noté ({userSubmission.grade}/20)
+          </Badge>
+        );
       }
-      return <Badge variant="outline" className="border-blue-600 text-blue-600"><CheckCircle className="w-3 h-3 mr-1" />Soumis</Badge>;
+      return (
+        <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200 transition-colors">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Soumis
+        </Badge>
+      );
     }
     
     if (now > dueDate) {
-      return <Badge variant="outline" className="border-red-600 text-red-600"><AlertCircle className="w-3 h-3 mr-1 text-red-600" />Échéance dépassée</Badge>;
+      return (
+        <Badge className="bg-red-100 text-red-800 border-red-200 hover:bg-red-200 transition-colors">
+          <AlertCircle className="w-3 h-3 mr-1" />
+          Échéance dépassée
+        </Badge>
+      );
     }
     
-    return <Badge variant="outline"><Calendar className="w-3 h-3 mr-1" />À faire</Badge>;
+    return (
+      <Badge className="bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200 transition-colors">
+        <Clock className="w-3 h-3 mr-1" />
+        À faire
+      </Badge>
+    );
   };
 
   const filteredAssignments = selectedCourse === 'all' 
@@ -461,103 +481,113 @@ export default function AssignmentsPage() {
         {filteredAssignments.map((assignment) => {
           const dueDate = new Date(assignment.dueDate);
           const isOverdue = new Date() > dueDate;
+          const userSubmission = submissions.find(s => s.assignment?.id === assignment.id);
           
           return (
-            <Card key={assignment.id} className={`hover:shadow-lg transition-shadow ${
-              isOverdue ? 'border-red-200 bg-red-50' : ''
+            <Card key={assignment.id} className={`group hover:shadow-lg transition-all duration-200 border-l-4 ${
+              userSubmission?.grade !== null 
+                ? 'border-l-green-500 bg-gradient-to-r from-green-50 to-white' 
+                : isOverdue 
+                ? 'border-l-red-500 bg-gradient-to-r from-red-50 to-white' 
+                : 'border-l-blue-500 bg-gradient-to-r from-blue-50 to-white hover:from-blue-100'
             }`}>
               <CardHeader className="pb-3">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-2 sm:space-y-0">
+                <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <CardTitle className="text-base sm:text-lg truncate">{assignment.title}</CardTitle>
-                    <CardDescription className="mt-1 text-sm">
-                      Cours: {assignment.course?.title || 'Cours non défini'} • {assignment.maxPoints} points
+                    <CardTitle className="text-lg font-semibold text-gray-900 group-hover:text-blue-700 transition-colors line-clamp-2">
+                      {assignment.title}
+                    </CardTitle>
+                    <CardDescription className="mt-2 flex items-center text-sm text-gray-600">
+                      <BookOpen className="w-4 h-4 mr-1 flex-shrink-0" />
+                      <span className="truncate">{assignment.course?.title || 'Cours non défini'}</span>
+                      <span className="mx-2">•</span>
+                      <span className="font-medium text-blue-600">{assignment.maxPoints} pts</span>
                     </CardDescription>
                   </div>
-                  <div className="flex-shrink-0">
+                  <div className="ml-3">
                     {getStatusBadge(assignment)}
                   </div>
                 </div>
               </CardHeader>
               
               <CardContent className="space-y-4">
-                <p className="text-sm text-gray-600 line-clamp-2 sm:line-clamp-3">
+                <p className="text-sm text-gray-700 line-clamp-3 leading-relaxed">
                   {assignment.description}
                 </p>
                 
-                <div className="flex items-center text-sm text-gray-500">
-                  <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="truncate">Échéance: {dueDate.toLocaleDateString('fr-FR')}</span>
-                </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center text-gray-600">
+                      <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+                      <span>Échéance: {dueDate.toLocaleDateString('fr-FR')}</span>
+                    </div>
+                    {userSubmission?.grade !== null && userSubmission?.grade !== undefined && (
+                      <div className="flex items-center text-green-700 font-medium">
+                        <Star className="w-4 h-4 mr-1" />
+                        {userSubmission.grade}/20
+                      </div>
+                    )}
+                  </div>
                 
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <div className="pt-2 border-t border-gray-100">
                   {user?.role === 'STUDENT' ? (
                     (() => {
                       const now = new Date();
                       const dueDate = new Date(assignment.dueDate);
-                      const userSubmission = submissions.find(s => s.assignment?.id === assignment.id);
+                      const userSubmission = submissions.find(s => s?.assignment?.id === assignment.id);
                       const isOverdue = now > dueDate;
                       
                       if (userSubmission) {
-                        // Devoir déjà soumis
                         return (
-                          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                          <div className="flex space-x-2">
                             <Button 
                               size="sm" 
                               variant="outline" 
-                              className="flex-1"
+                              className="flex-1 hover:bg-blue-50 hover:border-blue-300"
                               onClick={() => {
                                 setViewingAssignment({...assignment, submission: userSubmission});
                                 setIsDetailDialogOpen(true);
                               }}
                             >
-                              <Eye className="w-4 h-4 mr-1 sm:mr-2" />
-                              <span className="hidden sm:inline">Voir soumission</span>
-                              <span className="sm:hidden">Soumission</span>
+                              <Eye className="w-4 h-4 mr-2" />
+                              Voir soumission
                             </Button>
                             {!isOverdue && (
-                              <Button size="sm" className="flex-1">
-                                <Upload className="w-4 h-4 mr-1 sm:mr-2" />
-                                <span className="hidden sm:inline">Modifier</span>
-                                <span className="sm:hidden">Modif</span>
+                              <Button size="sm" className="flex-1 bg-blue-600 text-white hover:bg-blue-700">
+                                <Upload className="w-4 h-4 mr-2" />
+                                Modifier
                               </Button>
                             )}
                           </div>
                         );
                       } else if (isOverdue) {
-                        // Échéance dépassée
                         return (
-                          <>
+                          <div className="flex space-x-2">
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="flex-1"
+                              className="flex-1 hover:bg-gray-50"
                               onClick={() => handleViewDetails(assignment)}
                             >
-                              <Eye className="w-4 h-4 mr-1 sm:mr-2" />
-                              <span className="hidden sm:inline">Détails</span>
-                              <span className="sm:hidden">Voir</span>
+                              <Eye className="w-4 h-4 mr-2" />
+                              Détails
                             </Button>
-                            <Button size="sm" className="flex-1" disabled>
-                              <AlertCircle className="w-4 h-4 mr-1 sm:mr-2" />
-                              <span className="hidden sm:inline">Échéance dépassée</span>
-                              <span className="sm:hidden">Expiré</span>
+                            <Button size="sm" className="flex-1 bg-red-100 text-red-700 cursor-not-allowed" disabled>
+                              <AlertCircle className="w-4 h-4 mr-2" />
+                              Échéance dépassée
                             </Button>
-                          </>
+                          </div>
                         );
                       } else {
-                        // Pas encore soumis et dans les temps
                         return (
-                          <>
+                          <div className="flex space-x-2">
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="flex-1"
+                              className="flex-1 hover:bg-gray-50"
                               onClick={() => handleViewDetails(assignment)}
                             >
-                              <Eye className="w-4 h-4 mr-1 sm:mr-2" />
-                              <span className="hidden sm:inline">Détails</span>
-                              <span className="sm:hidden">Voir</span>
+                              <Eye className="w-4 h-4 mr-2" />
+                              Détails
                             </Button>
                             <Dialog open={isSubmitDialogOpen && selectedAssignment === assignment.id} 
                                    onOpenChange={(open) => {
@@ -565,10 +595,9 @@ export default function AssignmentsPage() {
                                      if (open) setSelectedAssignment(assignment.id);
                                    }}>
                               <DialogTrigger asChild>
-                                <Button size="sm" className="flex-1">
-                                  <Upload className="w-4 h-4 mr-1 sm:mr-2" />
-                                  <span className="hidden sm:inline">Soumettre</span>
-                                  <span className="sm:hidden">Envoyer</span>
+                                <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                                  <Upload className="w-4 h-4 mr-2" />
+                                  Soumettre
                                 </Button>
                               </DialogTrigger>
                             <DialogContent>
@@ -635,21 +664,19 @@ export default function AssignmentsPage() {
                               </div>
                             </DialogContent>
                             </Dialog>
-                          </>
+                          </div>
                         );
                       }
                     })()
                   ) : (
-                    <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1">
-                      <Button size="sm" variant="outline" className="flex-1 text-xs">
-                        <Edit className="w-3 h-3 mr-1" />
-                        <span className="hidden sm:inline">Modifier</span>
-                        <span className="sm:hidden">Modif</span>
+                    <div className="flex space-x-2">
+                      <Button size="sm" variant="outline" className="flex-1 hover:bg-blue-50">
+                        <Edit className="w-4 h-4 mr-2" />
+                        Modifier
                       </Button>
-                      <Button size="sm" variant="outline" className="flex-1 text-xs text-red-600 hover:text-red-700">
-                        <Trash2 className="w-3 h-3 mr-1" />
-                        <span className="hidden sm:inline">Supprimer</span>
-                        <span className="sm:hidden">Suppr</span>
+                      <Button size="sm" variant="outline" className="flex-1 text-red-600 hover:bg-red-50 hover:text-red-700">
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Supprimer
                       </Button>
                     </div>
                   )}
@@ -681,7 +708,7 @@ export default function AssignmentsPage() {
           <div className="space-y-6">
             <h2 className="text-xl font-semibold">Devoirs à corriger</h2>
               <div className="grid gap-4">
-                {submissions.filter(s => s && s.id && !s.grade).map((submission) => (
+                {submissions.filter(s => s && s.id && (!s.grade || s.grade === null)).map((submission) => (
                   <Card key={submission.id} className="p-4">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -714,7 +741,7 @@ export default function AssignmentsPage() {
                     </div>
                   </Card>
                 ))}
-                {submissions.filter(s => s && s.id && !s.grade).length === 0 && (
+                {submissions.filter(s => s && s.id && (!s.grade || s.grade === null)).length === 0 && (
                   <Card className="p-8 text-center">
                     <p className="text-gray-500">Aucun devoir à corriger pour le moment</p>
                   </Card>

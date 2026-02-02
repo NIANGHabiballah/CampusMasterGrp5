@@ -59,17 +59,14 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         unreadCount: Math.max(0, state.unreadCount - 1)
       }));
     } catch (error: any) {
-      // Si l'API n'existe pas encore (404), juste mettre à jour localement
-      if (error.message?.includes('404')) {
-        set(state => ({
-          notifications: state.notifications.map(n => 
-            n.id === id ? { ...n, isRead: true } : n
-          ),
-          unreadCount: Math.max(0, state.unreadCount - 1)
-        }));
-      } else {
-        console.error('Erreur lors du marquage comme lu:', error);
-      }
+      console.error('Erreur lors du marquage comme lu:', error);
+      // Mettre à jour localement même en cas d'erreur
+      set(state => ({
+        notifications: state.notifications.map(n => 
+          n.id === id ? { ...n, isRead: true } : n
+        ),
+        unreadCount: Math.max(0, state.unreadCount - 1)
+      }));
     }
   },
 

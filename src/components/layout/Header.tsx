@@ -29,20 +29,17 @@ export function Header() {
         try {
           const messages = await apiService.getMessages();
           const unreadMessages = messages.filter((msg: any) => 
-            !msg.isRead && (msg.receiver?.id?.toString() === user.id || msg.course)
+            !msg.isRead && msg.receiver?.id?.toString() === user.id && msg.sender?.id?.toString() !== user.id
           );
-          const { unreadCount: currentCount } = useNotificationStore.getState();
-          if (currentCount !== unreadMessages.length) {
-            useNotificationStore.setState({ unreadCount: unreadMessages.length });
-          }
+          useNotificationStore.setState({ unreadCount: unreadMessages.length });
         } catch (error) {
           // Ignorer les erreurs si l'API n'est pas disponible
         }
       };
       
       fetchMessageCount();
-      // Recharger toutes les 30 secondes
-      const interval = setInterval(fetchMessageCount, 30000);
+      // Recharger toutes les 5 secondes
+      const interval = setInterval(fetchMessageCount, 5000);
       return () => clearInterval(interval);
     }
   }, [user?.id]);
@@ -157,7 +154,7 @@ export function Header() {
           <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Notifications */}
             <Button variant="ghost" size="icon" className="relative" asChild>
-              <Link href={ROUTES.NOTIFICATIONS}>
+              <Link href={ROUTES.MESSAGES}>
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-red-500 hover:bg-red-500 text-white">

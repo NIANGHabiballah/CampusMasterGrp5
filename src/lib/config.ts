@@ -42,7 +42,7 @@ export const ENDPOINTS = {
     BASE: '/api/notifications',
     BY_USER: (userId: number) => `/api/notifications/user/${userId}`,
     UNREAD_COUNT: (userId: number) => `/api/notifications/user/${userId}/unread-count`,
-    MARK_READ: (id: number) => `/api/notifications/${id}/mark-read`,
+    MARK_READ: (id: number) => `/api/notifications/${id}/read`,
   },
   FORUMS: {
     BASE: '/api/forums',
@@ -62,5 +62,7 @@ export const ENDPOINTS = {
   },
   MATERIALS: {
     UPLOAD: (courseId: string) => `/api/materials/upload/${courseId}`,
+    BY_COURSE: (courseId: string) => `/api/materials/course/${courseId}`,
+    DOWNLOAD: (materialId: string) => `/api/materials/download/${materialId}`,
   },
 };

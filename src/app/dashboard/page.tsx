@@ -40,10 +40,11 @@ import {
 import { useAuthStore } from '@/store/auth';
 import { useDashboardStore } from '@/store/dashboard';
 import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
 
+import { ENDPOINTS } from '@/lib/config';
 import { apiService } from '@/services/api';
 
 export default function DashboardPage() {
@@ -53,6 +54,9 @@ export default function DashboardPage() {
   const [activityData, setActivityData] = useState([]);
   const [coursePerformance, setCoursePerformance] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [recentCourses, setRecentCourses] = useState([]);
+  const [recentSubmissions, setRecentSubmissions] = useState([]);
+  const [upcomingAssignments, setUpcomingAssignments] = useState([]);
   
   const [selectedPeriod, setSelectedPeriod] = useState<'7d' | '30d' | '90d'>('7d');
 
@@ -73,10 +77,9 @@ export default function DashboardPage() {
             totalStudents: users.filter(u => u.role === 'STUDENT').length,
             totalCourses: courses.length,
             totalAssignments: assignments.length,
-            submissionRate: 85 // Mock pour l'instant
+            submissionRate: 85
           });
           
-          // Mock data pour les graphiques
           setGradeDistribution([
             { range: '0-5', count: 5, percentage: 8 },
             { range: '6-10', count: 15, percentage: 25 },
@@ -91,6 +94,47 @@ export default function DashboardPage() {
             averageGrade: (Math.random() * 5 + 12).toFixed(1),
             submissionRate: Math.floor(Math.random() * 30) + 70
           })));
+        }
+        
+        if (user?.role === 'TEACHER') {
+          const courses = await apiService.getCourses();
+          setCoursePerformance([
+            { courseId: 1, courseName: 'React Avancé', studentCount: 25, averageGrade: '15.2', submissionRate: 88 },
+            { courseId: 2, courseName: 'Node.js', studentCount: 30, averageGrade: '13.8', submissionRate: 92 },
+            { courseId: 3, courseName: 'Architecture', studentCount: 20, averageGrade: '14.5', submissionRate: 85 }
+          ]);
+        }
+        
+        if (user?.role === 'STUDENT') {
+          const [courses, assignments] = await Promise.all([
+            apiService.getCourses(),
+            apiService.getAssignments()
+          ]);
+          
+          // Tous les cours disponibles pour l'étudiant
+          setRecentCourses(courses);
+          
+          // Devoirs soumis récents
+          const submissions = [];
+          for (const assignment of assignments.slice(0, 3)) {
+            try {
+              const assignmentSubmissions = await apiService.getSubmissionsByAssignment(assignment.id.toString());
+              const userSubmission = assignmentSubmissions.find(s => s.student?.id?.toString() === user.id);
+              if (userSubmission) {
+                submissions.push({
+                  ...userSubmission,
+                  assignmentTitle: assignment.title,
+                  submittedAt: userSubmission.submittedAt || new Date().toISOString()
+                });
+              }
+            } catch (error) {
+              console.log(`Pas de soumissions pour le devoir ${assignment.id}`);
+            }
+          }
+          setRecentSubmissions(submissions.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()));
+          
+          // Stocker tous les devoirs pour les devoirs à venir
+          setUpcomingAssignments(assignments);
         }
         
         setActivityData([
@@ -248,6 +292,207 @@ export default function DashboardPage() {
               </div>
               <Badge variant="outline">Urgent</Badge>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Derniers cours */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Mes cours</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {recentCourses.length > 0 ? recentCourses.map((course, index) => (
+              <div key={course.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="font-semibold text-lg text-gray-900">{course.title}</h3>
+                    <p className="text-sm text-gray-600 flex items-center mt-1">
+                      <Users className="w-4 h-4 mr-2 text-blue-500" />
+                      Prof. {course.teacher ? `${course.teacher.firstName} ${course.teacher.lastName}` : 'Non assigné'}
+                    </p>
+                    <p className="text-sm text-gray-600 flex items-center mt-1">
+                      <Calendar className="w-4 h-4 mr-2 text-green-500" />
+                      {course.schedule || 'Horaire à définir'}
+                    </p>
+                  </div>
+                  {index === 0 && <Badge className="bg-blue-100 text-blue-800">Nouveau</Badge>}
+                </div>
+                
+                <div className="mb-3">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm text-gray-600">Progression</span>
+                    <span className="text-sm font-medium">{Math.floor(Math.random() * 30) + 60}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full" 
+                      style={{ width: `${Math.floor(Math.random() * 30) + 60}%` }}
+                    ></div>
+                  </div>
+                </div>
+                
+                <button 
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(`http://localhost:8082/api/courses/${course.id}/materials`);
+                      if (response.ok) {
+                        const materials = await response.json();
+                        if (materials && materials.length > 0) {
+                          let downloadCount = 0;
+                          for (const material of materials) {
+                            try {
+                              const downloadResponse = await fetch(`http://localhost:8082/api/materials/download/${material.id}`);
+                              if (downloadResponse.ok) {
+                                const blob = await downloadResponse.blob();
+                                const url = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = material.fileName;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(url);
+                                downloadCount++;
+                              }
+                            } catch (error) {
+                              console.error('Erreur téléchargement:', error);
+                            }
+                          }
+                          if (downloadCount > 0) {
+                            toast.success(`${downloadCount} support(s) téléchargé(s)`);
+                          } else {
+                            toast.error('Erreur lors du téléchargement des supports');
+                          }
+                        } else {
+                          toast.info('Aucun support disponible pour ce cours');
+                        }
+                      } else {
+                        toast.info('Aucun support disponible pour ce cours');
+                      }
+                    } catch (error) {
+                      console.error('Erreur:', error);
+                      toast.error('Erreur lors du chargement des supports');
+                    }
+                  }}
+                >
+                  Télécharger les supports
+                </button>
+              </div>
+            )) : (
+              <p className="text-gray-500 text-center py-4">Aucun cours disponible</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Devoirs à venir */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Devoirs à venir</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {upcomingAssignments.filter(assignment => {
+              const hasSubmitted = recentSubmissions.some(sub => 
+                sub.assignmentTitle === assignment.title
+              );
+              return !hasSubmitted;
+            }).slice(0, 3).map((assignment) => {
+              const dueDate = new Date(assignment.dueDate);
+              const isOverdue = new Date() > dueDate;
+              
+              return (
+                <div key={assignment.id} className="border rounded-lg p-4">
+                  <h3 className="font-semibold text-gray-900">{assignment.title}</h3>
+                  <p className="text-sm text-gray-600 flex items-center mt-1">
+                    <BookOpen className="w-4 h-4 mr-2 text-purple-500" />
+                    {assignment.course?.title || 'Cours non défini'}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Date limite : {dueDate.toLocaleDateString('fr-FR')}
+                  </p>
+                  <div className="flex justify-between items-center mt-3">
+                    <Badge className={isOverdue ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}>
+                      {isOverdue ? 'En retard' : 'À rendre'}
+                    </Badge>
+                    <button 
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700"
+                      onClick={() => window.location.href = '/assignments'}
+                    >
+                      Soumettre le devoir
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            {upcomingAssignments.filter(assignment => {
+              const hasSubmitted = recentSubmissions.some(sub => 
+                sub.assignmentTitle === assignment.title
+              );
+              return !hasSubmitted;
+            }).length === 0 && (
+              <p className="text-gray-500 text-center py-4">Aucun devoir à venir</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Emploi du temps */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Emploi du temps de la semaine</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-gray-500">
+            Votre emploi du temps s'affichera ici
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Devoirs rendus */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Devoirs rendus récemment</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {recentSubmissions.length > 0 ? recentSubmissions.map((submission) => {
+              const hasGrade = submission.grade !== null && submission.grade !== undefined;
+              const bgColor = hasGrade ? 'bg-green-50' : 'bg-yellow-50';
+              const textColor = hasGrade ? 'text-green-900' : 'text-yellow-900';
+              const subTextColor = hasGrade ? 'text-green-700' : 'text-yellow-700';
+              
+              return (
+                <div key={submission.id} className={`flex items-center justify-between p-3 rounded-lg ${bgColor}`}>
+                  <div>
+                    <h4 className={`font-medium ${textColor}`}>{submission.assignmentTitle}</h4>
+                    <p className={`text-sm ${subTextColor}`}>
+                      Rendu le {new Date(submission.submittedAt).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    {hasGrade ? (
+                      <>
+                        <Badge className="bg-green-100 text-green-800">{submission.grade}/20</Badge>
+                        <p className="text-xs text-green-600 mt-1">
+                          {submission.grade >= 16 ? 'Excellent' : submission.grade >= 14 ? 'Bien' : submission.grade >= 12 ? 'Assez bien' : 'Passable'}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <Badge className="bg-yellow-100 text-yellow-800">En cours</Badge>
+                        <p className="text-xs text-yellow-600 mt-1">Correction en cours</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            }) : (
+              <p className="text-gray-500 text-center py-4">Aucun devoir rendu</p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -550,8 +795,9 @@ export default function DashboardPage() {
     <div className="container mx-auto p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900">
-          Bonjour, {user?.firstName} {user?.lastName} 👋
+        <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+          <span>Bonjour, {user?.firstName} {user?.lastName}</span>
+          <span className="ml-2 text-2xl">👋</span>
         </h1>
         <p className="text-gray-600 mt-1">
           {user?.role === 'STUDENT' && 'Voici un aperçu de votre progression académique'}

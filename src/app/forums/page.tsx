@@ -52,10 +52,11 @@ export default function ForumsPage() {
 
   const loadRecentTopics = async () => {
     try {
-      const topics = await fetch(`http://localhost:8080/api/forums/1/topics`).then(r => r.json());
+      const topics = await apiService.getTopicsByForum(1);
       setRecentTopics(topics.slice(0, 5));
     } catch (error) {
       console.error('Erreur chargement sujets:', error);
+      setRecentTopics([]);
     }
   };
 
