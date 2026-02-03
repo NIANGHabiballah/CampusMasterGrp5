@@ -22,11 +22,11 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   isLoading: false,
 
   fetchNotifications: async (userId?: number) => {
+    if (!userId) return; // Ne rien faire si pas d'userId
+    
     set({ isLoading: true });
     try {
-      // Utiliser l'ID utilisateur fourni ou un ID par défaut
-      const userIdToUse = userId || 1;
-      const data = await apiService.getNotifications(userIdToUse);
+      const data = await apiService.getNotifications(userId);
       const unreadCount = data.filter(n => !n.isRead).length;
       set({ 
         notifications: data,
@@ -34,7 +34,7 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
         isLoading: false 
       });
     } catch (error) {
-      console.error('Erreur lors du chargement des notifications:', error);
+      // Ignorer silencieusement les erreurs de chargement
       set({ isLoading: false });
     }
   },

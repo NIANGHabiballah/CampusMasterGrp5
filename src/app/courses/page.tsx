@@ -34,35 +34,11 @@ export default function CoursesPage() {
     const loadCourses = async () => {
       try {
         setIsLoading(true);
-        // Appeler directement l'API backend
-        const response = await fetch('http://localhost:8080/courses');
-        if (response.ok) {
-          const data = await response.json();
-          setCourses(data);
-        } else {
-          // Fallback si l'API ne répond pas
-          const fallbackCourses = [
-            {
-              id: 1,
-              title: 'Développement Web Avancé',
-              description: 'Cours sur les technologies web modernes',
-              teacher: { firstName: 'Jean', lastName: 'Dupont' }
-            }
-          ];
-          setCourses(fallbackCourses);
-        }
+        const data = await apiService.getCourses();
+        setCourses(data);
       } catch (error) {
         console.error('Erreur:', error);
-        // Fallback en cas d'erreur
-        const fallbackCourses = [
-          {
-            id: 1,
-            title: 'Développement Web Avancé',
-            description: 'Cours sur les technologies web modernes',
-            teacher: { firstName: 'Jean', lastName: 'Dupont' }
-          }
-        ];
-        setCourses(fallbackCourses);
+        setCourses([]);
       } finally {
         setIsLoading(false);
       }

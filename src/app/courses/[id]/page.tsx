@@ -61,7 +61,7 @@ export default function CourseDetailPage() {
       try {
         setLoading(true);
         // Récupérer les vraies données depuis l'API
-        const response = await fetch(`http://localhost:8080/courses/${courseId}`);
+        const response = await fetch(`http://localhost:8082/api/courses/${courseId}`);
         if (response.ok) {
           const courseData = await response.json();
           setCourse(courseData);
