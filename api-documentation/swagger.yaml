@@ -1,0 +1,485 @@
+openapi: 3.0.3
+info:
+  title: CampusMaster API
+  description: API REST pour la plateforme pédagogique CampusMaster
+  version: 1.0.0
+  contact:
+    name: Équipe CampusMaster
+    email: support@campusmaster.com
+servers:
+  - url: http://localhost:8082
+    description: Serveur de développement
+
+tags:
+  - name: Authentication
+    description: Gestion de l'authentification
+  - name: Users
+    description: Gestion des utilisateurs
+  - name: Courses
+    description: Gestion des cours
+  - name: Assignments
+    description: Gestion des devoirs
+  - name: Messages
+    description: Système de messagerie
+  - name: Notifications
+    description: Système de notifications
+
+paths:
+  # AUTHENTICATION
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Connexion utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "etudiant@campus.sn"
+                password:
+                  type: string
+                  example: "password"
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token:
+                    type: string
+                    example: "mock-token-1"
+        '401':
+          description: Identifiants invalides
+
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Inscription utilisateur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - firstName
+                - lastName
+                - email
+                - password
+                - role
+              properties:
+                firstName:
+                  type: string
+                  example: "Jean"
+                lastName:
+                  type: string
+                  example: "Dupont"
+                email:
+                  type: string
+                  format: email
+                  example: "jean.dupont@campusmaster.com"
+                password:
+                  type: string
+                  example: "password123"
+                role:
+                  type: string
+                  enum: [STUDENT, TEACHER, ADMIN]
+                  example: "STUDENT"
+                studentId:
+                  type: string
+                  example: "20240001"
+                department:
+                  type: string
+                  example: "Informatique"
+      responses:
+        '200':
+          description: Inscription réussie
+
+  # USERS
+  /api/users:
+    get:
+      tags:
+        - Users
+      summary: Liste des utilisateurs
+      responses:
+        '200':
+          description: Liste des utilisateurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /api/users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Détails utilisateur
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Détails de l'utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+    put:
+      tags:
+        - Users
+      summary: Modifier utilisateur
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Utilisateur modifié
+
+  # COURSES
+  /api/courses:
+    get:
+      tags:
+        - Courses
+      summary: Liste des cours
+      responses:
+        '200':
+          description: Liste des cours
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+
+    post:
+      tags:
+        - Courses
+      summary: Créer un cours
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+      responses:
+        '200':
+          description: Cours créé
+
+  /api/courses/{id}:
+    get:
+      tags:
+        - Courses
+      summary: Détails du cours
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Détails du cours
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+
+    put:
+      tags:
+        - Courses
+      summary: Modifier un cours
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Course'
+      responses:
+        '200':
+          description: Cours modifié
+
+    delete:
+      tags:
+        - Courses
+      summary: Supprimer un cours
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Cours supprimé
+
+  # ASSIGNMENTS
+  /api/assignments:
+    get:
+      tags:
+        - Assignments
+      summary: Liste des devoirs
+      responses:
+        '200':
+          description: Liste des devoirs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assignment'
+
+    post:
+      tags:
+        - Assignments
+      summary: Créer un devoir
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "TP1 - Structures de données"
+                description:
+                  type: string
+                  example: "Implémentation d'une liste chaînée"
+                maxPoints:
+                  type: integer
+                  example: 20
+                course:
+                  type: integer
+                  example: 1
+                dueDate:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Devoir créé
+
+  # MESSAGES
+  /api/messages:
+    get:
+      tags:
+        - Messages
+      summary: Liste des messages
+      responses:
+        '200':
+          description: Liste des messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+
+    post:
+      tags:
+        - Messages
+      summary: Envoyer un message
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subject:
+                  type: string
+                  example: "Question sur le TP1"
+                content:
+                  type: string
+                  example: "J'ai une question concernant l'exercice 2"
+                senderId:
+                  type: integer
+                  example: 1
+                receiverId:
+                  type: integer
+                  example: 2
+                courseId:
+                  type: integer
+                  example: 1
+      responses:
+        '200':
+          description: Message envoyé
+
+  # NOTIFICATIONS
+  /api/notifications/user/{userId}:
+    get:
+      tags:
+        - Notifications
+      summary: Notifications utilisateur
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Liste des notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        firstName:
+          type: string
+          example: "Jean"
+        lastName:
+          type: string
+          example: "Dupont"
+        email:
+          type: string
+          format: email
+          example: "jean.dupont@campusmaster.com"
+        role:
+          type: string
+          enum: [STUDENT, TEACHER, ADMIN]
+          example: "STUDENT"
+        status:
+          type: string
+          enum: [PENDING, APPROVED, SUSPENDED]
+          example: "APPROVED"
+        studentId:
+          type: string
+          example: "20240001"
+        department:
+          type: string
+          example: "Informatique"
+
+    Course:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+          example: "Programmation Java Avancée"
+        description:
+          type: string
+          example: "Cours avancé sur la programmation Java"
+        semester:
+          type: string
+          example: "S1"
+        credits:
+          type: integer
+          example: 6
+        maxStudents:
+          type: integer
+          example: 30
+        schedule:
+          type: string
+          example: "Lundi 14h-16h, Mercredi 10h-12h"
+
+    Assignment:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        title:
+          type: string
+          example: "TP1 - Structures de données"
+        description:
+          type: string
+          example: "Implémentation d'une liste chaînée"
+        maxPoints:
+          type: integer
+          example: 20
+        dueDate:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        subject:
+          type: string
+          example: "Question sur le TP1"
+        content:
+          type: string
+          example: "J'ai une question concernant l'exercice 2"
+        isRead:
+          type: boolean
+          example: false
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        type:
+          type: string
+          example: "message"
+        title:
+          type: string
+          example: "Nouveau message"
+        message:
+          type: string
+          example: "Vous avez reçu un nouveau message"
+        isRead:
+          type: boolean
+          example: false

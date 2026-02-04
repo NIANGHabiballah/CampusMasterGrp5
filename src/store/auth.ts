@@ -114,7 +114,6 @@ export const useAuthStore = create<AuthState>()(
           return true;
         } catch (error) {
           set({ isLoading: false });
-          console.error('Login error:', error);
           return false;
         }
       },
