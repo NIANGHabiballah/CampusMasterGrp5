@@ -234,9 +234,9 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 
 ## 👥 Équipe
 
-- **Développement**: Équipe Master 2 IL
+- **Développement principal**: Tafsir Haby NIANG - Développement complet full-stack
 - **Design**: Interface moderne et intuitive
-- **Architecture**: Next.js 14 + TypeScript
+- **Architecture**: Next.js 14 + Spring Boot + PostgreSQL
 
 ## 📞 Support
 
